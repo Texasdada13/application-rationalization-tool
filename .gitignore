@@ -205,3 +205,29 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Application Rationalization Tool - Project Specific
+# Output files (timestamped results)
+output/*.csv
+output/*.xlsx
+!output/.gitkeep
+
+# Logs
+logs/
+*.log
+
+# Configuration files
+config/config.yaml
+config/*.local.yaml
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
