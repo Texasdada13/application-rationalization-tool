@@ -1,0 +1,137 @@
+# Application Rationalization Tool - Configuration Example
+# Copy this file to config.yaml and customize for your organization
+
+# Scoring Weights
+# All weights must sum to 1.0
+scoring_weights:
+  business_value: 0.25
+  tech_health: 0.20
+  cost: 0.15
+  usage: 0.15
+  security: 0.10
+  strategic_fit: 0.10
+  redundancy: 0.05
+
+# Normalization Parameters
+normalization:
+  # Maximum cost for normalization (costs above this are capped)
+  max_cost: 300000
+
+  # Maximum usage for normalization (usage above this scores maximum)
+  max_usage: 1000
+
+# Score Thresholds
+thresholds:
+  high_score: 70.0
+  medium_score: 50.0
+  low_score: 30.0
+
+  critical_business_value: 8.0
+  poor_tech_health: 4.0
+  critical_security: 8.0
+  poor_security: 4.0
+
+# Data Settings
+data:
+  # Default input directory
+  input_dir: "./data"
+
+  # Default output directory
+  output_dir: "./output"
+
+  # Default input file
+  default_input: "assessment_template.csv"
+
+  # Include timestamp in output files by default
+  timestamp_outputs: true
+
+# Output Settings
+output:
+  # Default output format (csv or excel)
+  default_format: "csv"
+
+  # Include retention score in outputs
+  include_retention_score: true
+
+  # Include score breakdown in outputs
+  include_score_breakdown: false
+
+# Reporting Settings
+reporting:
+  # Number of top applications to show in each category
+  top_n: 10
+
+  # Include summary statistics
+  include_summary: true
+
+  # Include recommendation distribution
+  include_distribution: true
+
+# Validation Settings
+validation:
+  # Fail on validation errors
+  strict_validation: false
+
+  # Warn on missing optional columns
+  warn_missing_columns: true
+
+# Logging Settings
+logging:
+  # Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+  level: "INFO"
+
+  # Log to file
+  log_to_file: true
+
+  # Log file path
+  log_file: "./logs/assessment.log"
+
+# Custom Recommendation Rules (optional)
+# Override default recommendation logic
+custom_rules:
+  enabled: false
+
+  # Immediate action triggers
+  immediate_action:
+    - condition: "security < 3 and business_value > 7"
+      reason: "Critical security risk on high-value application"
+
+    - condition: "tech_health < 2 and usage > 500"
+      reason: "High-usage application with critical technical issues"
+
+  # Retirement triggers
+  retire:
+    - condition: "composite_score < 25 and business_value < 4"
+      reason: "Low value and low score"
+
+# Organization-Specific Settings
+organization:
+  # Organization name
+  name: "Your Organization"
+
+  # Assessment cycle
+  cycle: "Q4 2025"
+
+  # Assessment owner
+  owner: "Portfolio Management Team"
+
+# Integration Settings (for future use)
+integrations:
+  # CMDB integration
+  cmdb:
+    enabled: false
+    url: ""
+    api_key: ""
+
+  # ServiceNow integration
+  servicenow:
+    enabled: false
+    instance: ""
+    username: ""
+    password: ""
+
+  # JIRA integration
+  jira:
+    enabled: false
+    url: ""
+    api_token: ""
