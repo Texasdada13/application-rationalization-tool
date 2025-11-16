@@ -30,14 +30,32 @@ The tool is designed for IT leaders, enterprise architects, and portfolio manage
 
 ## Features
 
+### Core Assessment
 - **Multi-Criteria Scoring**: Evaluates applications across 7 key dimensions
 - **TIME Framework Integration**: Industry-standard Tolerate/Invest/Migrate/Eliminate categorization
 - **Flexible Weighting**: Customize scoring weights to match organizational priorities
 - **Smart Recommendations**: AI-driven recommendation engine with detailed rationale
-- **Multiple Export Formats**: CSV and Excel output with formatting
 - **Data Validation**: Built-in validation to ensure data quality
 - **Summary Statistics**: Portfolio-level insights and trends
+
+### Visualization & Reporting (NEW! 🎨)
+- **Professional Heatmaps**: Application score matrices across all dimensions
+- **TIME Quadrant Charts**: Strategic positioning visualizations
+- **Priority Matrices**: Multi-dimensional bubble charts for prioritization
+- **Distribution Analysis**: Score distribution plots and trends
+- **Executive Dashboards**: Comprehensive multi-panel visualizations
+- **Multiple Styles**: Professional, Presentation, and Technical themes
+
+### Export Formats (NEW! 📊)
+- **Power BI-Optimized Excel**: Multi-sheet workbooks with proper table relationships
+- **Enhanced Excel Reports**: Formatted reports with charts and conditional formatting
+- **CSV Export**: Simple, portable data format
+- **Executive Summaries**: Dashboard sheets with key metrics
+
+### Tools & Integration
 - **CLI Interface**: Command-line tools for batch processing and automation
+- **Python API**: Programmatic access for custom workflows
+- **Quick Helpers**: One-line functions for rapid analysis
 - **Extensible Architecture**: Modular design for easy customization
 - **Configurable Thresholds**: Customize TIME framework thresholds for your organization
 
@@ -216,6 +234,62 @@ python -m src.cli list-apps -i output/results.csv -t 5
 python -m src.cli summary -i output/results.csv
 ```
 
+#### Create Visualizations (NEW!)
+
+```bash
+# Create all visualizations
+python -m src.cli visualize -i output/results.csv
+
+# Create specific visualization type
+python -m src.cli visualize -i output/results.csv -t heatmap
+python -m src.cli visualize -i output/results.csv -t time-quadrant
+python -m src.cli visualize -i output/results.csv -t dashboard
+
+# Specify output directory
+python -m src.cli visualize -i output/results.csv -o output/my_visuals/
+
+# Use different style
+python -m src.cli visualize -i output/results.csv --style presentation
+```
+
+**Available visualization types:**
+- `heatmap` - Application score heatmap
+- `time-quadrant` - TIME framework quadrant chart
+- `priority-matrix` - Priority bubble chart
+- `distributions` - Score distribution plots
+- `time-summary` - TIME category summary
+- `dashboard` - Comprehensive dashboard
+- `all` - All visualizations (default)
+
+**Available styles:**
+- `professional` - Clean, business-focused (default)
+- `presentation` - Bold, high contrast for slides
+- `technical` - Detailed, precise for analysis
+
+#### Export Data (NEW!)
+
+```bash
+# Enhanced Excel export (with formatting and charts)
+python -m src.cli export -i output/results.csv -o output/report.xlsx
+
+# Power BI-optimized export
+python -m src.cli export -i output/results.csv -f powerbi -o output/powerbi.xlsx
+
+# Create both formats
+python -m src.cli export -i output/results.csv -f both
+
+# Without charts (smaller file size)
+python -m src.cli export -i output/results.csv --no-charts
+
+# Without timestamp
+python -m src.cli export -i output/results.csv --no-timestamp
+```
+
+**Export format options:**
+- `excel-enhanced` - Professional Excel with formatting and charts (default)
+- `powerbi` - Power BI-optimized with normalized tables
+- `both` - Create both formats
+
 #### Help
 
 ```bash
@@ -224,6 +298,8 @@ python -m src.cli --help
 
 # Help for specific command
 python -m src.cli assess --help
+python -m src.cli visualize --help
+python -m src.cli export --help
 ```
 
 ## Assessment Criteria
@@ -383,15 +459,28 @@ application-rationalization-tool/
 ├── src/
 │   ├── __init__.py               # Package initialization
 │   ├── scoring_engine.py         # Composite score calculation
-│   ├── data_handler.py           # CSV/Excel I/O operations
+│   ├── data_handler.py           # CSV/Excel I/O and advanced exports
 │   ├── recommendation_engine.py  # Recommendation logic
+│   ├── time_framework.py         # TIME framework categorization
+│   ├── config_loader.py          # Configuration management
+│   ├── visualizations.py         # Visualization engine (NEW!)
 │   └── cli.py                    # Command-line interface
 ├── docs/
 │   ├── workflow.md               # Detailed workflow documentation
 │   ├── scoring_methodology.md    # Scoring approach details
-│   └── api_reference.md          # API documentation
+│   ├── time_framework.md         # TIME framework guide
+│   ├── configuration.md          # Configuration guide
+│   └── visualization_guide.md    # Visualization & export guide (NEW!)
+├── examples/
+│   ├── basic_example.py          # Basic usage example
+│   ├── visualization_example.py  # Visualization examples (NEW!)
+│   └── export_example.py         # Export examples (NEW!)
 ├── output/                       # Generated assessment results
-├── config/                       # Configuration files (optional)
+│   ├── visualizations/           # Generated charts and graphs (NEW!)
+│   └── exports/                  # Enhanced Excel and Power BI exports (NEW!)
+├── config/                       # Configuration files
+│   ├── config.example.yaml       # Example configuration
+│   └── time_config.yaml          # TIME framework thresholds
 ├── tests/                        # Unit tests (future)
 ├── main.py                       # Main entry point
 ├── requirements.txt              # Python dependencies
@@ -458,6 +547,134 @@ for file in data/*.csv; do
     python -m src.cli assess -i "$file" -o "output/$(basename $file)"
 done
 ```
+
+### Visualization and Export Usage (NEW!)
+
+#### Creating Visualizations Programmatically
+
+```python
+from src.visualizations import VisualizationEngine, quick_visualize
+from pathlib import Path
+import pandas as pd
+
+# Method 1: Using VisualizationEngine for full control
+viz_engine = VisualizationEngine(
+    output_dir=Path('output/visualizations'),
+    style='professional'  # or 'presentation' or 'technical'
+)
+
+df = pd.read_csv('output/results.csv')
+
+# Create individual visualizations
+heatmap = viz_engine.create_score_heatmap(df, max_apps=20)
+quadrant = viz_engine.create_time_quadrant_heatmap(df, show_labels=True)
+matrix = viz_engine.create_priority_matrix(df)
+dashboard = viz_engine.create_comprehensive_dashboard(df)
+
+# Method 2: Quick visualization (all at once)
+viz_paths = quick_visualize(
+    input_file='output/results.csv',
+    output_dir='output/visualizations',
+    viz_types=['time_quadrant', 'dashboard', 'time_summary']
+)
+```
+
+#### Creating Exports Programmatically
+
+```python
+from src.data_handler import DataHandler
+import pandas as pd
+
+data_handler = DataHandler()
+df = pd.read_csv('output/results.csv')
+
+# Power BI-optimized export
+powerbi_path = data_handler.export_for_powerbi(
+    df,
+    output_path='output/powerbi_export.xlsx',
+    include_timestamp=True
+)
+
+# Enhanced Excel with formatting and charts
+excel_path = data_handler.export_enhanced_excel(
+    df,
+    output_path='output/executive_report.xlsx',
+    include_timestamp=True,
+    include_charts=True  # Set to False for smaller files
+)
+```
+
+#### Complete Workflow Example
+
+```python
+from pathlib import Path
+from src.data_handler import DataHandler
+from src.scoring_engine import ScoringEngine
+from src.recommendation_engine import RecommendationEngine
+from src.time_framework import TIMEFramework
+from src.visualizations import quick_visualize
+
+# 1. Load and process data
+data_handler = DataHandler()
+df = data_handler.read_csv('data/assessment_template.csv')
+
+# 2. Run assessment
+scoring = ScoringEngine()
+recommendations = RecommendationEngine()
+time_framework = TIMEFramework()
+
+apps = df.to_dict('records')
+apps = scoring.batch_calculate_scores(apps)
+apps = recommendations.batch_generate_recommendations(apps)
+apps = time_framework.batch_categorize(apps)
+
+results_df = pd.DataFrame(apps)
+
+# 3. Save CSV results
+csv_path = data_handler.write_csv(results_df, 'output/results.csv')
+
+# 4. Create all visualizations
+viz_paths = quick_visualize(csv_path, output_dir='output/visualizations')
+
+# 5. Create Power BI export for analysts
+powerbi_path = data_handler.export_for_powerbi(
+    results_df,
+    'output/powerbi_export.xlsx'
+)
+
+# 6. Create executive report
+excel_path = data_handler.export_enhanced_excel(
+    results_df,
+    'output/executive_report.xlsx',
+    include_charts=True
+)
+
+print(f"Assessment complete!")
+print(f"  CSV: {csv_path}")
+print(f"  Visualizations: {len(viz_paths)} charts created")
+print(f"  Power BI: {powerbi_path}")
+print(f"  Executive Report: {excel_path}")
+```
+
+#### Visualization Examples
+
+See `examples/visualization_example.py` for 8 detailed examples including:
+- Basic score heatmaps
+- TIME framework quadrants
+- Priority matrices
+- Distribution analysis
+- TIME category summaries
+- Comprehensive dashboards
+- Quick visualization helper
+- Custom styling
+
+Run the examples:
+```bash
+python examples/visualization_example.py
+python examples/export_example.py
+```
+
+**For complete visualization and export documentation, see `docs/visualization_guide.md`**
 
 ## Customization
 
@@ -550,10 +767,13 @@ This project is licensed under the MIT License. See LICENSE file for details.
 ## Acknowledgments
 
 Built with:
-- pandas - Data manipulation
-- openpyxl - Excel file handling
-- click - CLI framework
-- tabulate - Table formatting
+- **pandas** - Data manipulation and analysis
+- **openpyxl** - Excel file handling with advanced formatting
+- **click** - CLI framework
+- **tabulate** - Table formatting
+- **matplotlib** - Professional chart generation
+- **seaborn** - Statistical visualizations
+- **numpy** - Numerical computing
 
 ---
 

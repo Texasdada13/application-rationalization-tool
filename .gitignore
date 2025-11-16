@@ -207,9 +207,8 @@ marimo/_lsp/
 __marimo__/
 
 # Application Rationalization Tool - Project Specific
-# Output files (timestamped results)
-output/*.csv
-output/*.xlsx
+# Output files (timestamped results, visualizations, reports)
+output/
 !output/.gitkeep
 
 # Logs

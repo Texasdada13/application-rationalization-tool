@@ -15,6 +15,7 @@ from .scoring_engine import ScoringEngine, ScoringWeights
 from .recommendation_engine import RecommendationEngine
 from .time_framework import TIMEFramework
 from .config_loader import load_config
+from .visualizations import VisualizationEngine, quick_visualize
 
 # Setup logging
 logging.basicConfig(
@@ -359,6 +360,367 @@ def summary(input: str):
 
     except Exception as e:
         logger.error(f"Summary command failed: {e}", exc_info=True)
+        click.echo(f"Error: {e}", err=True)
+        raise click.Abort()
+
+
+@cli.command()
+@click.option(
+    '--input', '-i',
+    type=click.Path(exists=True),
+    required=True,
+    help='Input CSV or Excel file with assessment results'
+)
+@click.option(
+    '--output-dir', '-o',
+    type=click.Path(),
+    default='output/visualizations',
+    help='Output directory for visualization files'
+)
+@click.option(
+    '--type', '-t',
+    'viz_type',
+    type=click.Choice([
+        'heatmap', 'time-quadrant', 'priority-matrix',
+        'distributions', 'time-summary', 'dashboard', 'all'
+    ], case_sensitive=False),
+    default='all',
+    help='Type of visualization to create'
+)
+@click.option(
+    '--style',
+    type=click.Choice(['professional', 'presentation', 'technical'], case_sensitive=False),
+    default='professional',
+    help='Visualization style'
+)
+def visualize(input: str, output_dir: str, viz_type: str, style: str):
+    """
+    Create visualizations from assessment results.
+
+    Generates professional visualizations including heatmaps, TIME quadrants,
+    priority matrices, and comprehensive dashboards.
+    """
+    click.echo("=" * 70)
+    click.echo("Application Rationalization - Visualization Generator")
+    click.echo("=" * 70)
+    click.echo()
+
+    try:
+        # Load data
+        click.echo(f"Loading data from: {input}")
+        input_path = Path(input)
+
+        if input_path.suffix.lower() in ['.xlsx', '.xls']:
+            df = pd.read_excel(input_path, engine='openpyxl')
+        else:
+            df = pd.read_csv(input_path)
+
+        click.echo(f"Loaded {len(df)} applications")
+        click.echo()
+
+        # Initialize visualization engine
+        viz_engine = VisualizationEngine(output_dir=Path(output_dir), style=style)
+
+        # Determine which visualizations to create
+        if viz_type == 'all':
+            viz_types = ['heatmap', 'time-quadrant', 'priority-matrix',
+                        'distributions', 'time-summary', 'dashboard']
+        else:
+            viz_types = [viz_type]
+
+        click.echo(f"Creating {len(viz_types)} visualization(s)...")
+        click.echo()
+
+        created_files = {}
+
+        # Create visualizations
+        for vtype in viz_types:
+            try:
+                if vtype == 'heatmap':
+                    click.echo("Creating score heatmap...")
+                    path = viz_engine.create_score_heatmap(df)
+                    created_files['Score Heatmap'] = path
+                    click.echo(f"  ✓ Saved to: {path}")
+
+                elif vtype == 'time-quadrant':
+                    click.echo("Creating TIME framework quadrant...")
+                    path = viz_engine.create_time_quadrant_heatmap(df)
+                    created_files['TIME Quadrant'] = path
+                    click.echo(f"  ✓ Saved to: {path}")
+
+                elif vtype == 'priority-matrix':
+                    click.echo("Creating priority matrix...")
+                    path = viz_engine.create_priority_matrix(df)
+                    created_files['Priority Matrix'] = path
+                    click.echo(f"  ✓ Saved to: {path}")
+
+                elif vtype == 'distributions':
+                    click.echo("Creating distribution plots...")
+                    path = viz_engine.create_distribution_plots(df)
+                    created_files['Distributions'] = path
+                    click.echo(f"  ✓ Saved to: {path}")
+
+                elif vtype == 'time-summary':
+                    click.echo("Creating TIME category summary...")
+                    path = viz_engine.create_time_category_summary(df)
+                    created_files['TIME Summary'] = path
+                    click.echo(f"  ✓ Saved to: {path}")
+
+                elif vtype == 'dashboard':
+                    click.echo("Creating comprehensive dashboard...")
+                    path = viz_engine.create_comprehensive_dashboard(df)
+                    created_files['Dashboard'] = path
+                    click.echo(f"  ✓ Saved to: {path}")
+
+            except Exception as e:
+                click.echo(f"  ✗ Failed to create {vtype}: {e}", err=True)
+                logger.error(f"Visualization creation failed for {vtype}: {e}", exc_info=True)
+
+        click.echo()
+        click.echo("=" * 70)
+        click.echo("VISUALIZATION SUMMARY")
+        click.echo("=" * 70)
+        click.echo(f"Created {len(created_files)} visualization(s)")
+        click.echo(f"Output directory: {output_dir}")
+        click.echo()
+
+        if created_files:
+            for viz_name, viz_path in created_files.items():
+                click.echo(f"  • {viz_name}: {viz_path.name}")
+
+        click.echo()
+        click.echo("Visualization complete!")
+
+    except Exception as e:
+        logger.error(f"Visualization command failed: {e}", exc_info=True)
+        click.echo(f"Error: {e}", err=True)
+        raise click.Abort()
+
+
+@cli.command()
+@click.option(
+    '--input', '-i',
+    type=click.Path(exists=True),
+    required=True,
+    help='Input CSV or Excel file with assessment results'
+)
+@click.option(
+    '--output', '-o',
+    type=click.Path(),
+    default='output/export.xlsx',
+    help='Output file path'
+)
+@click.option(
+    '--format', '-f',
+    'export_format',
+    type=click.Choice(['powerbi', 'excel-enhanced', 'both'], case_sensitive=False),
+    default='excel-enhanced',
+    help='Export format type'
+)
+@click.option(
+    '--timestamp/--no-timestamp',
+    default=True,
+    help='Include timestamp in output filename'
+)
+@click.option(
+    '--charts/--no-charts',
+    default=True,
+    help='Include charts in Excel export (only for excel-enhanced format)'
+)
+def export(input: str, output: str, export_format: str, timestamp: bool, charts: bool):
+    """
+    Export assessment results in specialized formats.
+
+    Supports Power BI-optimized exports and enhanced Excel reports with
+    formatting, charts, and professional styling.
+    """
+    click.echo("=" * 70)
+    click.echo("Application Rationalization - Data Export")
+    click.echo("=" * 70)
+    click.echo()
+
+    try:
+        # Load data
+        click.echo(f"Loading data from: {input}")
+        input_path = Path(input)
+
+        if input_path.suffix.lower() in ['.xlsx', '.xls']:
+            df = pd.read_excel(input_path, engine='openpyxl')
+        else:
+            df = pd.read_csv(input_path)
+
+        click.echo(f"Loaded {len(df)} applications")
+        click.echo()
+
+        # Initialize data handler
+        data_handler = DataHandler()
+
+        output_path = Path(output)
+        created_files = []
+
+        # Create exports based on format
+        if export_format in ['powerbi', 'both']:
+            click.echo("Creating Power BI-optimized Excel export...")
+            if export_format == 'both':
+                powerbi_output = output_path.parent / f"{output_path.stem}_powerbi{output_path.suffix}"
+            else:
+                powerbi_output = output_path
+
+            path = data_handler.export_for_powerbi(df, powerbi_output, include_timestamp=timestamp)
+            created_files.append(('Power BI Export', path))
+            click.echo(f"  ✓ Power BI export saved to: {path}")
+            click.echo()
+
+        if export_format in ['excel-enhanced', 'both']:
+            click.echo("Creating enhanced Excel export...")
+            if export_format == 'both':
+                excel_output = output_path.parent / f"{output_path.stem}_enhanced{output_path.suffix}"
+            else:
+                excel_output = output_path
+
+            path = data_handler.export_enhanced_excel(
+                df,
+                excel_output,
+                include_timestamp=timestamp,
+                include_charts=charts
+            )
+            created_files.append(('Enhanced Excel Export', path))
+            click.echo(f"  ✓ Enhanced Excel export saved to: {path}")
+            click.echo()
+
+        # Display summary
+        click.echo("=" * 70)
+        click.echo("EXPORT SUMMARY")
+        click.echo("=" * 70)
+        click.echo()
+
+        for export_name, export_path in created_files:
+            file_size = export_path.stat().st_size / 1024  # KB
+            click.echo(f"  • {export_name}")
+            click.echo(f"    Path: {export_path}")
+            click.echo(f"    Size: {file_size:.1f} KB")
+            click.echo()
+
+        click.echo("Export complete!")
+
+        # Display format-specific tips
+        if 'powerbi' in export_format.lower():
+            click.echo()
+            click.echo("Power BI Import Tips:")
+            click.echo("  1. Open Power BI Desktop")
+            click.echo("  2. Get Data → Excel → Select the exported file")
+            click.echo("  3. Choose 'Applications' table as the main fact table")
+            click.echo("  4. Create relationships using 'Application_ID' field")
+            click.echo("  5. Use 'Dimension_Scores' for detailed analysis")
+
+    except Exception as e:
+        logger.error(f"Export command failed: {e}", exc_info=True)
+        click.echo(f"Error: {e}", err=True)
+        raise click.Abort()
+
+
+@cli.command()
+@click.option(
+    '--input', '-i',
+    type=click.Path(exists=True),
+    required=True,
+    help='Input CSV or Excel file with assessment results'
+)
+@click.option(
+    '--output-dir', '-o',
+    type=click.Path(),
+    default='output/reports',
+    help='Output directory for report bundle'
+)
+@click.option(
+    '--name', '-n',
+    default='assessment_report',
+    help='Base name for report files'
+)
+@click.option(
+    '--visualizations/--no-visualizations',
+    default=True,
+    help='Include visualizations in the bundle'
+)
+def generate_report(input: str, output_dir: str, name: str, visualizations: bool):
+    """
+    Generate a complete report bundle with all formats.
+
+    Creates a comprehensive package including CSV, Power BI, Enhanced Excel,
+    Tableau exports, visualizations, and documentation.
+    """
+    click.echo("=" * 70)
+    click.echo("Application Rationalization - Complete Report Generator")
+    click.echo("=" * 70)
+    click.echo()
+
+    try:
+        # Load data
+        click.echo(f"Loading data from: {input}")
+        input_path = Path(input)
+
+        if input_path.suffix.lower() in ['.xlsx', '.xls']:
+            df = pd.read_excel(input_path, engine='openpyxl')
+        else:
+            df = pd.read_csv(input_path)
+
+        click.echo(f"Loaded {len(df)} applications")
+        click.echo()
+
+        # Initialize data handler
+        data_handler = DataHandler()
+
+        # Generate complete report bundle
+        click.echo(f"Generating complete report bundle in: {output_dir}")
+        click.echo(f"Report name: {name}")
+        click.echo(f"Include visualizations: {'Yes' if visualizations else 'No'}")
+        click.echo()
+
+        click.echo("Creating exports...")
+        bundle_files = data_handler.generate_complete_report_bundle(
+            df,
+            output_dir=output_dir,
+            report_name=name,
+            include_visualizations=visualizations
+        )
+
+        # Display results
+        click.echo()
+        click.echo("=" * 70)
+        click.echo("REPORT BUNDLE GENERATED SUCCESSFULLY!")
+        click.echo("=" * 70)
+        click.echo()
+
+        click.echo(f"Output directory: {output_dir}")
+        click.echo(f"Total files created: {len(bundle_files)}")
+        click.echo()
+
+        click.echo("Generated files:")
+        for file_type, file_path in bundle_files.items():
+            file_size = file_path.stat().st_size / 1024  # KB
+            click.echo(f"  • {file_type:20s} → {file_path.name:40s} ({file_size:7.1f} KB)")
+
+        click.echo()
+        click.echo("=" * 70)
+        click.echo("NEXT STEPS")
+        click.echo("=" * 70)
+        click.echo()
+        click.echo("1. Review README.md in the output directory for detailed instructions")
+        click.echo("2. Open the executive Excel report for high-level insights")
+        click.echo("3. Import Power BI or Tableau files for interactive dashboards")
+        click.echo("4. Share appropriate formats with different stakeholders")
+        click.echo()
+
+        # Display summary statistics
+        stats = data_handler.get_summary_statistics(df)
+        click.echo("Portfolio Summary:")
+        click.echo(f"  • Total Applications: {stats['total_applications']}")
+        click.echo(f"  • Total Annual Cost: ${stats['total_cost']:,.0f}")
+        click.echo(f"  • Average Composite Score: {stats.get('average_composite_score', 0):.1f}/100")
+        click.echo()
+
+    except Exception as e:
+        logger.error(f"Report generation failed: {e}", exc_info=True)
         click.echo(f"Error: {e}", err=True)
         raise click.Abort()
 
