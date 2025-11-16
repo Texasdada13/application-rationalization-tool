@@ -14,6 +14,7 @@ from .data_handler import DataHandler
 from .scoring_engine import ScoringEngine, ScoringWeights
 from .recommendation_engine import RecommendationEngine
 from .time_framework import TIMEFramework
+from .config_loader import load_config
 
 # Setup logging
 logging.basicConfig(
@@ -71,10 +72,22 @@ def assess(input: str, output: str, format: str, timestamp: bool):
     click.echo()
 
     try:
-        # Initialize components
+        # Load configuration
+        config = load_config()
+        scoring_weights = config.get_scoring_weights()
+        time_thresholds = config.get_time_thresholds()
+
+        click.echo("Using configured scoring weights:")
+        click.echo(f"  Business Value: {scoring_weights.business_value:.0%}, "
+                  f"Tech Health: {scoring_weights.tech_health:.0%}, "
+                  f"Cost: {scoring_weights.cost:.0%}")
+        click.echo()
+
+        # Initialize components with configuration
         data_handler = DataHandler()
-        scoring_engine = ScoringEngine()
+        scoring_engine = ScoringEngine(weights=scoring_weights)
         recommendation_engine = RecommendationEngine()
+        time_framework = TIMEFramework(thresholds=time_thresholds)
 
         # Read input data
         click.echo(f"Reading data from: {input}")
@@ -113,7 +126,6 @@ def assess(input: str, output: str, format: str, timestamp: bool):
 
         # Apply TIME framework categorization
         click.echo("Applying TIME framework categorization...")
-        time_framework = TIMEFramework()
         final_apps = time_framework.batch_categorize(final_apps)
         click.echo("TIME categories assigned successfully")
         click.echo()

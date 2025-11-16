@@ -23,6 +23,7 @@ from src.data_handler import DataHandler
 from src.scoring_engine import ScoringEngine
 from src.recommendation_engine import RecommendationEngine
 from src.time_framework import TIMEFramework
+from src.config_loader import load_config
 
 # Setup logging
 logging.basicConfig(
@@ -44,11 +45,32 @@ def main():
     print()
 
     try:
-        # Initialize components
+        # Load configuration
+        logger.info("Loading configuration...")
+        config = load_config()
+
+        # Display current configuration
+        print("Configuration Loaded:")
+        print("-" * 80)
+        scoring_weights = config.get_scoring_weights()
+        print("\nScoring Weights:")
+        print(f"  Business Value:  {scoring_weights.business_value:.0%}")
+        print(f"  Tech Health:     {scoring_weights.tech_health:.0%}")
+        print(f"  Cost:            {scoring_weights.cost:.0%}")
+        print(f"  Usage:           {scoring_weights.usage:.0%}")
+        print(f"  Security:        {scoring_weights.security:.0%}")
+        print(f"  Strategic Fit:   {scoring_weights.strategic_fit:.0%}")
+        print(f"  Redundancy:      {scoring_weights.redundancy:.0%}")
+        print("-" * 80)
+        print()
+
+        # Initialize components with configuration
         logger.info("Initializing assessment components...")
         data_handler = DataHandler()
-        scoring_engine = ScoringEngine()
+        scoring_engine = ScoringEngine(weights=scoring_weights)
         recommendation_engine = RecommendationEngine()
+        time_thresholds = config.get_time_thresholds()
+        time_framework = TIMEFramework(thresholds=time_thresholds)
 
         # Default data file
         input_file = Path('data/assessment_template.csv')
@@ -92,7 +114,6 @@ def main():
 
         # Apply TIME framework categorization
         print("Applying TIME framework categorization...")
-        time_framework = TIMEFramework()
         final_apps = time_framework.batch_categorize(final_apps)
         print(f"TIME categories assigned to {len(final_apps)} applications")
         print()

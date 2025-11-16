@@ -95,6 +95,77 @@ python main.py
 
 That's it! The tool will calculate scores, generate recommendations, and provide a detailed summary.
 
+## Configuration
+
+The tool uses a flexible configuration system that allows you to customize scoring weights, TIME framework thresholds, and other settings.
+
+### Configuration Files
+
+**config/config.yaml** - Global default configuration
+**config/config.local.yaml** - User-specific overrides (gitignored)
+
+Configuration is loaded in cascading order:
+1. Built-in defaults
+2. `config/config.yaml` (if exists)
+3. `config/config.local.yaml` (if exists)
+4. Runtime parameters
+
+### Customizing Scoring Weights
+
+Edit `config/config.yaml` to customize how criteria are weighted:
+
+```yaml
+scoring_weights:
+  business_value: 0.25    # 25% - Business impact
+  tech_health: 0.20       # 20% - Technical health
+  cost: 0.15              # 15% - Annual cost (lower is better)
+  usage: 0.15             # 15% - Active usage
+  security: 0.10          # 10% - Security posture
+  strategic_fit: 0.10     # 10% - Strategic alignment
+  redundancy: 0.05        # 5% - Redundancy penalty
+```
+
+**All weights must sum to 1.0 (100%)**
+
+### Example Configurations
+
+**Security-First Organization:**
+```yaml
+scoring_weights:
+  security: 0.25          # Increased from 0.10
+  business_value: 0.20
+  tech_health: 0.20
+  # ... adjust others to sum to 1.0
+```
+
+**Cost Reduction Initiative:**
+```yaml
+scoring_weights:
+  cost: 0.30              # Increased from 0.15
+  business_value: 0.20
+  tech_health: 0.15
+  # ... adjust others to sum to 1.0
+```
+
+### Creating Custom Configuration
+
+```bash
+# Copy example to create your config
+cp config/config.example.yaml config/config.yaml
+
+# Or create user-specific config (gitignored)
+cp config/config.example.yaml config/config.local.yaml
+```
+
+### Viewing Current Configuration
+
+```bash
+# Display current configuration
+python -c "from src.config_loader import load_config; print(load_config().display_current_config())"
+```
+
+**See `docs/configuration_guide.md` for complete configuration documentation.**
+
 ## Usage
 
 ### Basic Usage
