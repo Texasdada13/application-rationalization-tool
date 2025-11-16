@@ -1385,3 +1385,543 @@ Security:        {stats['average_security']:.2f}
 
         summary_path.write_text(content)
         return summary_path
+
+    # ==================================================================================
+    # STAKEHOLDER SURVEY INTEGRATION METHODS
+    # ==================================================================================
+
+    SURVEY_REQUIRED_COLUMNS = [
+        'Application Name',
+        'Stakeholder Name',
+        'Stakeholder Role',
+        'Survey Date'
+    ]
+
+    SURVEY_RATING_COLUMNS = [
+        'Critical to Business',
+        'Easy to Replace',
+        'User Satisfaction',
+        'Performance Rating',
+        'Strategic Importance'
+    ]
+
+    def read_survey_data(self, file_path: Union[str, Path]) -> pd.DataFrame:
+        """
+        Read stakeholder survey data from CSV file.
+
+        Survey data should include stakeholder feedback on applications with
+        ratings and qualitative comments.
+
+        Args:
+            file_path: Path to the survey CSV file
+
+        Returns:
+            DataFrame containing survey data
+
+        Raises:
+            FileNotFoundError: If file doesn't exist
+            ValueError: If required columns are missing
+
+        Example:
+            >>> handler = DataHandler()
+            >>> survey_df = handler.read_survey_data('data/sample_survey.csv')
+        """
+        file_path = Path(file_path)
+
+        if not file_path.exists():
+            raise FileNotFoundError(f"Survey file not found: {file_path}")
+
+        try:
+            df = pd.read_csv(file_path)
+            logger.info(f"Successfully loaded {len(df)} survey responses from {file_path}")
+
+            # Validate required columns
+            missing_cols = set(self.SURVEY_REQUIRED_COLUMNS) - set(df.columns)
+            if missing_cols:
+                raise ValueError(f"Missing required survey columns: {missing_cols}")
+
+            # Parse survey dates
+            if 'Survey Date' in df.columns:
+                df['Survey Date'] = pd.to_datetime(df['Survey Date'], errors='coerce')
+
+            # Ensure rating columns are numeric
+            for col in self.SURVEY_RATING_COLUMNS:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+            return df
+
+        except Exception as e:
+            logger.error(f"Error reading survey file {file_path}: {e}")
+            raise
+
+    def validate_survey_data(self, survey_df: pd.DataFrame) -> tuple[bool, List[str]]:
+        """
+        Validate survey data for completeness and correctness.
+
+        Args:
+            survey_df: DataFrame containing survey data
+
+        Returns:
+            Tuple of (is_valid, list_of_errors)
+
+        Example:
+            >>> handler = DataHandler()
+            >>> survey_df = handler.read_survey_data('data/sample_survey.csv')
+            >>> is_valid, errors = handler.validate_survey_data(survey_df)
+        """
+        errors = []
+
+        # Check for required columns
+        missing_cols = set(self.SURVEY_REQUIRED_COLUMNS) - set(survey_df.columns)
+        if missing_cols:
+            errors.append(f"Missing required columns: {missing_cols}")
+
+        # Check for empty application names
+        if 'Application Name' in survey_df.columns:
+            empty_apps = survey_df['Application Name'].isna().sum()
+            if empty_apps > 0:
+                errors.append(f"{empty_apps} survey responses have empty application names")
+
+        # Check for empty stakeholder names
+        if 'Stakeholder Name' in survey_df.columns:
+            empty_stakeholders = survey_df['Stakeholder Name'].isna().sum()
+            if empty_stakeholders > 0:
+                errors.append(f"{empty_stakeholders} survey responses have empty stakeholder names")
+
+        # Validate rating ranges (1-5 scale)
+        for col in self.SURVEY_RATING_COLUMNS:
+            if col in survey_df.columns:
+                valid_ratings = survey_df[col].dropna()
+                invalid = ((valid_ratings < 1) | (valid_ratings > 5)).sum()
+                if invalid > 0:
+                    errors.append(f"{invalid} invalid values in {col} (must be 1-5)")
+
+        # Check for invalid dates
+        if 'Survey Date' in survey_df.columns:
+            invalid_dates = survey_df['Survey Date'].isna().sum()
+            if invalid_dates > 0:
+                errors.append(f"{invalid_dates} survey responses have invalid dates")
+
+        is_valid = len(errors) == 0
+        return is_valid, errors
+
+    def aggregate_survey_responses(
+        self,
+        survey_df: pd.DataFrame,
+        method: str = 'mean'
+    ) -> pd.DataFrame:
+        """
+        Aggregate multiple stakeholder responses per application.
+
+        When multiple stakeholders provide feedback for the same application,
+        this method aggregates their responses into single scores per application.
+
+        Args:
+            survey_df: DataFrame containing raw survey data
+            method: Method to aggregate ('mean', 'median', 'weighted')
+
+        Returns:
+            DataFrame with one row per application containing aggregated scores
+
+        Example:
+            >>> handler = DataHandler()
+            >>> survey_df = handler.read_survey_data('data/sample_survey.csv')
+            >>> agg_df = handler.aggregate_survey_responses(survey_df, 'mean')
+        """
+        if method not in ['mean', 'median', 'weighted']:
+            raise ValueError(f"Invalid aggregation method: {method}")
+
+        # Group by application
+        grouped = survey_df.groupby('Application Name')
+
+        # Determine aggregation function
+        agg_func = np.mean if method == 'mean' else np.median
+
+        # Aggregate numeric columns
+        agg_dict = {}
+        for col in self.SURVEY_RATING_COLUMNS:
+            if col in survey_df.columns:
+                agg_dict[col] = agg_func
+
+        # Add response count
+        agg_dict['Response Count'] = 'count'
+
+        # Perform aggregation
+        if method == 'mean':
+            aggregated = grouped.agg({
+                **{col: 'mean' for col in self.SURVEY_RATING_COLUMNS if col in survey_df.columns},
+                'Stakeholder Name': 'count',
+                'Qualitative Feedback': lambda x: ' | '.join(x.dropna().astype(str))
+            })
+        elif method == 'median':
+            aggregated = grouped.agg({
+                **{col: 'median' for col in self.SURVEY_RATING_COLUMNS if col in survey_df.columns},
+                'Stakeholder Name': 'count',
+                'Qualitative Feedback': lambda x: ' | '.join(x.dropna().astype(str))
+            })
+        else:  # weighted - weight by stakeholder seniority (simplified: all equal for now)
+            aggregated = grouped.agg({
+                **{col: 'mean' for col in self.SURVEY_RATING_COLUMNS if col in survey_df.columns},
+                'Stakeholder Name': 'count',
+                'Qualitative Feedback': lambda x: ' | '.join(x.dropna().astype(str))
+            })
+
+        # Rename count column
+        aggregated = aggregated.rename(columns={'Stakeholder Name': 'Survey Response Count'})
+
+        # Calculate consensus metrics (standard deviation to measure agreement)
+        consensus_metrics = {}
+        for col in self.SURVEY_RATING_COLUMNS:
+            if col in survey_df.columns:
+                consensus_metrics[f'{col} Consensus'] = grouped[col].std()
+
+        consensus_df = pd.DataFrame(consensus_metrics)
+
+        # Merge aggregated scores with consensus metrics
+        result = aggregated.join(consensus_df)
+
+        # Calculate overall consensus score (lower std = higher consensus)
+        consensus_cols = [col for col in result.columns if 'Consensus' in col]
+        if consensus_cols:
+            result['Overall Consensus Score'] = (
+                5 - result[consensus_cols].mean(axis=1)
+            ).clip(1, 5)  # Invert so high score = high consensus
+
+        result = result.reset_index()
+
+        logger.info(f"Aggregated {len(survey_df)} responses into {len(result)} applications")
+
+        return result
+
+    def merge_survey_with_assessment(
+        self,
+        assessment_df: pd.DataFrame,
+        survey_df: pd.DataFrame,
+        survey_weight: float = 0.3
+    ) -> pd.DataFrame:
+        """
+        Merge stakeholder survey data with quantitative assessment scores.
+
+        This method combines survey feedback with existing assessment scores,
+        creating adjusted scores that reflect both quantitative metrics and
+        stakeholder sentiment.
+
+        Args:
+            assessment_df: DataFrame with quantitative assessment data
+            survey_df: DataFrame with aggregated survey data
+            survey_weight: Weight given to survey data (0-1), default 0.3 (30%)
+
+        Returns:
+            DataFrame with merged assessment and survey data, including:
+            - Original quantitative scores
+            - Survey ratings
+            - Survey-adjusted scores
+            - Variance analysis (differences between quantitative and qualitative)
+
+        Example:
+            >>> handler = DataHandler()
+            >>> assessment_df = handler.read_csv('results.csv')
+            >>> survey_df = handler.read_survey_data('survey.csv')
+            >>> agg_survey = handler.aggregate_survey_responses(survey_df)
+            >>> merged = handler.merge_survey_with_assessment(assessment_df, agg_survey, 0.3)
+        """
+        if not 0 <= survey_weight <= 1:
+            raise ValueError("survey_weight must be between 0 and 1")
+
+        # Merge on application name
+        merged = assessment_df.merge(
+            survey_df,
+            on='Application Name',
+            how='left',
+            suffixes=('', '_Survey')
+        )
+
+        # Store original scores
+        if 'Business Value' in merged.columns:
+            merged['Business Value Original'] = merged['Business Value']
+
+        # Map survey ratings to assessment scores (1-5 scale to 0-10 scale)
+        survey_to_assessment_mapping = {
+            'Critical to Business': 'Business Value',
+            'User Satisfaction': 'Usage',
+            'Performance Rating': 'Tech Health',
+            'Strategic Importance': 'Strategic Fit'
+        }
+
+        # Calculate survey-adjusted scores
+        for survey_col, assessment_col in survey_to_assessment_mapping.items():
+            if survey_col in merged.columns and assessment_col in merged.columns:
+                # Convert 1-5 scale to 0-10 scale
+                survey_score_scaled = (merged[survey_col] - 1) * 2.5
+
+                # Store original
+                merged[f'{assessment_col} Original'] = merged[assessment_col]
+
+                # Calculate adjusted score (weighted average)
+                merged[f'{assessment_col} Survey Adjusted'] = (
+                    merged[assessment_col] * (1 - survey_weight) +
+                    survey_score_scaled * survey_weight
+                ).round(2)
+
+                # Calculate variance (difference between quantitative and qualitative)
+                merged[f'{assessment_col} Variance'] = (
+                    survey_score_scaled - merged[assessment_col]
+                ).round(2)
+
+        # Calculate "Easy to Replace" inverse score (lower = more critical)
+        if 'Easy to Replace' in merged.columns:
+            merged['Replacement Risk'] = (6 - merged['Easy to Replace']).clip(1, 5)
+
+        # Add survey metadata
+        merged['Has Survey Data'] = merged['Survey Response Count'].notna()
+        merged['Survey Response Count'] = merged['Survey Response Count'].fillna(0).astype(int)
+
+        # Calculate high variance flags (significant difference between scores)
+        variance_cols = [col for col in merged.columns if 'Variance' in col]
+        if variance_cols:
+            merged['High Variance Flag'] = (
+                merged[variance_cols].abs().max(axis=1) > 2
+            ).astype(int)
+
+        logger.info(f"Merged {len(merged)} applications with survey data")
+        logger.info(f"{merged['Has Survey Data'].sum()} applications have survey responses")
+
+        return merged
+
+    def calculate_survey_impact(
+        self,
+        merged_df: pd.DataFrame
+    ) -> Dict:
+        """
+        Analyze the impact of survey data on assessment scores.
+
+        Calculates statistics showing how stakeholder feedback differs from
+        quantitative scores and identifies applications with significant variances.
+
+        Args:
+            merged_df: DataFrame from merge_survey_with_assessment()
+
+        Returns:
+            Dictionary containing:
+            - variance_summary: Statistics on score variances
+            - high_variance_apps: Applications with significant differences
+            - consensus_summary: Stakeholder agreement metrics
+            - sentiment_analysis: Overall stakeholder sentiment by app
+
+        Example:
+            >>> handler = DataHandler()
+            >>> impact = handler.calculate_survey_impact(merged_df)
+            >>> print(impact['variance_summary'])
+        """
+        impact = {}
+
+        # Variance analysis
+        variance_cols = [col for col in merged_df.columns if 'Variance' in col and 'Flag' not in col]
+
+        if variance_cols:
+            variance_summary = {}
+            for col in variance_cols:
+                variance_summary[col] = {
+                    'mean': merged_df[col].mean(),
+                    'median': merged_df[col].median(),
+                    'std': merged_df[col].std(),
+                    'max_positive': merged_df[col].max(),
+                    'max_negative': merged_df[col].min()
+                }
+            impact['variance_summary'] = variance_summary
+
+        # High variance applications
+        if 'High Variance Flag' in merged_df.columns:
+            high_var_apps = merged_df[merged_df['High Variance Flag'] == 1][[
+                'Application Name',
+                *[col for col in variance_cols],
+                'Survey Response Count'
+            ]]
+            impact['high_variance_apps'] = high_var_apps.to_dict('records')
+
+        # Consensus analysis
+        if 'Overall Consensus Score' in merged_df.columns:
+            impact['consensus_summary'] = {
+                'average_consensus': merged_df['Overall Consensus Score'].mean(),
+                'high_consensus_count': len(merged_df[merged_df['Overall Consensus Score'] >= 4]),
+                'low_consensus_count': len(merged_df[merged_df['Overall Consensus Score'] < 3])
+            }
+
+        # Sentiment analysis (based on survey ratings)
+        if 'Critical to Business' in merged_df.columns and 'User Satisfaction' in merged_df.columns:
+            merged_df_with_survey = merged_df[merged_df['Has Survey Data'] == True]
+
+            sentiment_categories = []
+            for _, row in merged_df_with_survey.iterrows():
+                critical = row.get('Critical to Business', 0)
+                satisfaction = row.get('User Satisfaction', 0)
+
+                if critical >= 4 and satisfaction >= 4:
+                    category = 'High Value & Satisfaction'
+                elif critical >= 4 and satisfaction < 3:
+                    category = 'High Value but Poor Satisfaction'
+                elif critical < 3 and satisfaction >= 4:
+                    category = 'Low Value but High Satisfaction'
+                else:
+                    category = 'Low Value & Satisfaction'
+
+                sentiment_categories.append(category)
+
+            sentiment_dist = pd.Series(sentiment_categories).value_counts().to_dict()
+            impact['sentiment_analysis'] = sentiment_dist
+
+        # Applications needing attention (high criticality, low satisfaction)
+        if 'Critical to Business' in merged_df.columns and 'User Satisfaction' in merged_df.columns:
+            needs_attention = merged_df[
+                (merged_df['Critical to Business'] >= 4) &
+                (merged_df['User Satisfaction'] < 3)
+            ][['Application Name', 'Critical to Business', 'User Satisfaction', 'Qualitative Feedback']]
+
+            impact['needs_attention'] = needs_attention.to_dict('records')
+
+        logger.info("Survey impact analysis complete")
+
+        return impact
+
+    def export_survey_analysis(
+        self,
+        merged_df: pd.DataFrame,
+        output_path: Union[str, Path],
+        include_timestamp: bool = True
+    ) -> Path:
+        """
+        Export survey analysis results to Excel with multiple worksheets.
+
+        Creates a comprehensive Excel workbook with:
+        - Merged data with survey-adjusted scores
+        - Variance analysis
+        - Consensus metrics
+        - Qualitative feedback summary
+
+        Args:
+            merged_df: DataFrame from merge_survey_with_assessment()
+            output_path: Path for output Excel file
+            include_timestamp: Whether to include timestamp in filename
+
+        Returns:
+            Path to exported file
+
+        Example:
+            >>> handler = DataHandler()
+            >>> path = handler.export_survey_analysis(merged_df, 'survey_analysis.xlsx')
+        """
+        output_path = Path(output_path)
+
+        if include_timestamp:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            output_path = output_path.parent / f"{output_path.stem}_{timestamp}{output_path.suffix}"
+
+        try:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            logger.info("Creating survey analysis Excel export...")
+
+            with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
+                # Sheet 1: Merged data with all scores
+                main_cols = [
+                    'Application Name',
+                    'Business Value Original',
+                    'Business Value Survey Adjusted',
+                    'Business Value Variance',
+                    'Tech Health Original',
+                    'Tech Health Survey Adjusted',
+                    'Tech Health Variance',
+                    'Critical to Business',
+                    'User Satisfaction',
+                    'Performance Rating',
+                    'Strategic Importance',
+                    'Survey Response Count',
+                    'Overall Consensus Score',
+                    'High Variance Flag',
+                    'Qualitative Feedback'
+                ]
+                export_cols = [col for col in main_cols if col in merged_df.columns]
+                merged_df[export_cols].to_excel(writer, sheet_name='Survey_Analysis', index=False)
+
+                # Sheet 2: High variance applications
+                if 'High Variance Flag' in merged_df.columns:
+                    high_var = merged_df[merged_df['High Variance Flag'] == 1]
+                    if len(high_var) > 0:
+                        var_cols = ['Application Name'] + [col for col in merged_df.columns if 'Variance' in col and 'Flag' not in col]
+                        high_var[var_cols].to_excel(writer, sheet_name='High_Variance', index=False)
+
+                # Sheet 3: Survey impact summary
+                impact = self.calculate_survey_impact(merged_df)
+                impact_data = []
+
+                if 'variance_summary' in impact:
+                    impact_data.append(['VARIANCE SUMMARY', ''])
+                    for metric, values in impact['variance_summary'].items():
+                        impact_data.append([metric, ''])
+                        for stat, value in values.items():
+                            impact_data.append([f'  {stat}', f'{value:.2f}'])
+
+                if 'consensus_summary' in impact:
+                    impact_data.append(['', ''])
+                    impact_data.append(['CONSENSUS SUMMARY', ''])
+                    for metric, value in impact['consensus_summary'].items():
+                        impact_data.append([metric, str(value)])
+
+                if 'sentiment_analysis' in impact:
+                    impact_data.append(['', ''])
+                    impact_data.append(['SENTIMENT ANALYSIS', ''])
+                    for category, count in impact['sentiment_analysis'].items():
+                        impact_data.append([category, str(count)])
+
+                impact_df = pd.DataFrame(impact_data, columns=['Metric', 'Value'])
+                impact_df.to_excel(writer, sheet_name='Impact_Summary', index=False, header=False)
+
+                # Sheet 4: Needs attention (high criticality, low satisfaction)
+                if 'needs_attention' in impact and len(impact['needs_attention']) > 0:
+                    needs_df = pd.DataFrame(impact['needs_attention'])
+                    needs_df.to_excel(writer, sheet_name='Needs_Attention', index=False)
+
+                # Sheet 5: Qualitative feedback by application
+                if 'Qualitative Feedback' in merged_df.columns:
+                    feedback_df = merged_df[merged_df['Qualitative Feedback'].notna()][
+                        ['Application Name', 'Survey Response Count', 'Qualitative Feedback']
+                    ]
+                    if len(feedback_df) > 0:
+                        feedback_df.to_excel(writer, sheet_name='Qualitative_Feedback', index=False)
+
+            # Apply formatting
+            workbook = load_workbook(output_path)
+
+            # Format all sheets
+            for sheet_name in workbook.sheetnames:
+                ws = workbook[sheet_name]
+
+                # Header formatting
+                if ws.max_row > 0:
+                    for cell in ws[1]:
+                        cell.font = Font(bold=True, color="FFFFFF")
+                        cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+                    # Auto-adjust column widths
+                    for column in ws.columns:
+                        max_length = 0
+                        column_letter = column[0].column_letter
+                        for cell in column:
+                            try:
+                                if len(str(cell.value)) > max_length:
+                                    max_length = len(str(cell.value))
+                            except:
+                                pass
+                        adjusted_width = min(max_length + 2, 100)
+                        ws.column_dimensions[column_letter].width = adjusted_width
+
+            workbook.save(output_path)
+
+            logger.info(f"Survey analysis export saved to: {output_path}")
+            return output_path
+
+        except Exception as e:
+            logger.error(f"Error creating survey analysis export {output_path}: {e}")
+            raise

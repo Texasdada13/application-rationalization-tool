@@ -725,5 +725,322 @@ def generate_report(input: str, output_dir: str, name: str, visualizations: bool
         raise click.Abort()
 
 
+@cli.command()
+@click.option(
+    '--input', '-i',
+    type=click.Path(exists=True),
+    required=True,
+    help='Input survey CSV file'
+)
+@click.option(
+    '--output', '-o',
+    type=click.Path(),
+    default='output/survey_aggregated.csv',
+    help='Output file for aggregated survey data'
+)
+@click.option(
+    '--method', '-m',
+    type=click.Choice(['mean', 'median', 'weighted'], case_sensitive=False),
+    default='mean',
+    help='Aggregation method for multiple responses'
+)
+def import_survey(input: str, output: str, method: str):
+    """
+    Import and aggregate stakeholder survey data.
+
+    Reads survey responses, validates data, aggregates multiple stakeholder
+    responses per application, and calculates consensus metrics.
+    """
+    click.echo("=" * 70)
+    click.echo("Application Rationalization - Survey Import")
+    click.echo("=" * 70)
+    click.echo()
+
+    try:
+        # Initialize data handler
+        data_handler = DataHandler()
+
+        # Load survey data
+        click.echo(f"Loading survey data from: {input}")
+        survey_df = data_handler.read_survey_data(input)
+        click.echo(f"Loaded {len(survey_df)} survey responses")
+        click.echo()
+
+        # Validate survey data
+        click.echo("Validating survey data...")
+        is_valid, errors = data_handler.validate_survey_data(survey_df)
+
+        if not is_valid:
+            click.echo("Survey data validation warnings:", err=True)
+            for error in errors:
+                click.echo(f"  - {error}", err=True)
+            click.echo()
+
+        # Show survey statistics
+        unique_apps = survey_df['Application Name'].nunique()
+        unique_stakeholders = survey_df['Stakeholder Name'].nunique()
+        avg_responses_per_app = len(survey_df) / unique_apps
+
+        click.echo("=" * 70)
+        click.echo("SURVEY DATA SUMMARY")
+        click.echo("=" * 70)
+        click.echo(f"Total Responses: {len(survey_df)}")
+        click.echo(f"Unique Applications: {unique_apps}")
+        click.echo(f"Unique Stakeholders: {unique_stakeholders}")
+        click.echo(f"Average Responses per App: {avg_responses_per_app:.1f}")
+        click.echo()
+
+        # Aggregate responses
+        click.echo(f"Aggregating responses using {method} method...")
+        aggregated_df = data_handler.aggregate_survey_responses(survey_df, method)
+        click.echo(f"Aggregated {len(survey_df)} responses into {len(aggregated_df)} applications")
+        click.echo()
+
+        # Show top apps by consensus
+        if 'Overall Consensus Score' in aggregated_df.columns:
+            click.echo("Applications with highest stakeholder consensus:")
+            top_consensus = aggregated_df.nlargest(5, 'Overall Consensus Score')[
+                ['Application Name', 'Overall Consensus Score', 'Survey Response Count']
+            ]
+            click.echo(tabulate(
+                top_consensus,
+                headers='keys',
+                tablefmt='grid',
+                showindex=False
+            ))
+            click.echo()
+
+        # Save aggregated data
+        output_path = Path(output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        aggregated_df.to_csv(output_path, index=False)
+
+        click.echo(f"Aggregated survey data saved to: {output_path}")
+        click.echo()
+        click.echo("Survey import complete!")
+        click.echo()
+        click.echo("Next steps:")
+        click.echo("  1. Use 'merge-survey-data' command to merge with assessment data")
+        click.echo("  2. Review aggregated scores and consensus metrics")
+
+    except Exception as e:
+        logger.error(f"Survey import failed: {e}", exc_info=True)
+        click.echo(f"Error: {e}", err=True)
+        raise click.Abort()
+
+
+@cli.command()
+@click.option(
+    '--assessment', '-a',
+    type=click.Path(exists=True),
+    required=True,
+    help='Input CSV/Excel file with assessment results'
+)
+@click.option(
+    '--survey', '-s',
+    type=click.Path(exists=True),
+    required=True,
+    help='Input CSV file with aggregated survey data'
+)
+@click.option(
+    '--output', '-o',
+    type=click.Path(),
+    default='output/merged_assessment.csv',
+    help='Output file for merged data'
+)
+@click.option(
+    '--survey-weight', '-w',
+    type=float,
+    default=0.3,
+    help='Weight for survey data (0-1), default 0.3 (30%)'
+)
+def merge_survey_data(assessment: str, survey: str, output: str, survey_weight: float):
+    """
+    Merge stakeholder survey data with quantitative assessment scores.
+
+    Combines survey feedback with existing assessment data, creating
+    survey-adjusted scores and variance analysis.
+    """
+    click.echo("=" * 70)
+    click.echo("Application Rationalization - Survey Data Merge")
+    click.echo("=" * 70)
+    click.echo()
+
+    try:
+        # Initialize data handler
+        data_handler = DataHandler()
+
+        # Load assessment data
+        click.echo(f"Loading assessment data from: {assessment}")
+        assessment_path = Path(assessment)
+        if assessment_path.suffix.lower() in ['.xlsx', '.xls']:
+            assessment_df = pd.read_excel(assessment_path, engine='openpyxl')
+        else:
+            assessment_df = pd.read_csv(assessment_path)
+        click.echo(f"Loaded {len(assessment_df)} applications")
+
+        # Load survey data
+        click.echo(f"Loading survey data from: {survey}")
+        survey_df = pd.read_csv(survey)
+        click.echo(f"Loaded {len(survey_df)} survey aggregations")
+        click.echo()
+
+        # Merge data
+        click.echo(f"Merging data with survey weight: {survey_weight:.0%}")
+        merged_df = data_handler.merge_survey_with_assessment(
+            assessment_df,
+            survey_df,
+            survey_weight=survey_weight
+        )
+        click.echo(f"Merged {len(merged_df)} applications")
+        click.echo()
+
+        # Calculate survey impact
+        click.echo("Analyzing survey impact...")
+        impact = data_handler.calculate_survey_impact(merged_df)
+        click.echo()
+
+        # Display impact summary
+        click.echo("=" * 70)
+        click.echo("SURVEY IMPACT SUMMARY")
+        click.echo("=" * 70)
+
+        if 'consensus_summary' in impact:
+            cons = impact['consensus_summary']
+            click.echo(f"\nConsensus Metrics:")
+            click.echo(f"  • Average Consensus Score: {cons['average_consensus']:.2f}/5")
+            click.echo(f"  • High Consensus Apps: {cons['high_consensus_count']}")
+            click.echo(f"  • Low Consensus Apps: {cons['low_consensus_count']}")
+
+        if 'sentiment_analysis' in impact:
+            click.echo(f"\nStakeholder Sentiment Distribution:")
+            for category, count in impact['sentiment_analysis'].items():
+                click.echo(f"  • {category}: {count}")
+
+        if 'high_variance_apps' in impact and len(impact['high_variance_apps']) > 0:
+            click.echo(f"\nApplications with High Variance (qualitative vs quantitative):")
+            click.echo(f"  Found {len(impact['high_variance_apps'])} apps with significant differences")
+
+        if 'needs_attention' in impact and len(impact['needs_attention']) > 0:
+            click.echo(f"\nApplications Needing Attention:")
+            click.echo(f"  {len(impact['needs_attention'])} apps are critical but have low satisfaction")
+
+        click.echo()
+
+        # Save merged data
+        output_path = Path(output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        merged_df.to_csv(output_path, index=False)
+
+        click.echo(f"Merged data saved to: {output_path}")
+        click.echo()
+        click.echo("Survey merge complete!")
+        click.echo()
+        click.echo("Next steps:")
+        click.echo("  1. Use 'generate-survey-report' for detailed Excel analysis")
+        click.echo("  2. Review variance analysis to identify discrepancies")
+        click.echo("  3. Investigate high variance applications")
+
+    except Exception as e:
+        logger.error(f"Survey merge failed: {e}", exc_info=True)
+        click.echo(f"Error: {e}", err=True)
+        raise click.Abort()
+
+
+@cli.command()
+@click.option(
+    '--input', '-i',
+    type=click.Path(exists=True),
+    required=True,
+    help='Input CSV file with merged assessment and survey data'
+)
+@click.option(
+    '--output', '-o',
+    type=click.Path(),
+    default='output/survey_analysis.xlsx',
+    help='Output Excel file for survey analysis report'
+)
+@click.option(
+    '--timestamp/--no-timestamp',
+    default=True,
+    help='Include timestamp in output filename'
+)
+def generate_survey_report(input: str, output: str, timestamp: bool):
+    """
+    Generate comprehensive survey analysis report.
+
+    Creates a multi-sheet Excel workbook with survey analysis, variance
+    analysis, consensus metrics, and qualitative feedback summary.
+    """
+    click.echo("=" * 70)
+    click.echo("Application Rationalization - Survey Analysis Report")
+    click.echo("=" * 70)
+    click.echo()
+
+    try:
+        # Initialize data handler
+        data_handler = DataHandler()
+
+        # Load merged data
+        click.echo(f"Loading merged data from: {input}")
+        merged_df = pd.read_csv(input)
+        click.echo(f"Loaded {len(merged_df)} applications")
+        click.echo()
+
+        # Generate survey analysis report
+        click.echo("Generating comprehensive survey analysis report...")
+        output_path = data_handler.export_survey_analysis(
+            merged_df,
+            output,
+            include_timestamp=timestamp
+        )
+
+        click.echo()
+        click.echo("=" * 70)
+        click.echo("SURVEY ANALYSIS REPORT GENERATED!")
+        click.echo("=" * 70)
+        click.echo()
+
+        file_size = output_path.stat().st_size / 1024
+        click.echo(f"Report saved to: {output_path}")
+        click.echo(f"File size: {file_size:.1f} KB")
+        click.echo()
+
+        click.echo("Report includes:")
+        click.echo("  • Survey Analysis - Merged scores with survey adjustments")
+        click.echo("  • High Variance - Apps with significant score differences")
+        click.echo("  • Impact Summary - Statistical analysis of survey impact")
+        click.echo("  • Needs Attention - Critical apps with low satisfaction")
+        click.echo("  • Qualitative Feedback - Stakeholder comments by app")
+        click.echo()
+
+        # Calculate and display key metrics
+        impact = data_handler.calculate_survey_impact(merged_df)
+
+        apps_with_survey = merged_df['Has Survey Data'].sum()
+        click.echo("Key Findings:")
+        click.echo(f"  • {apps_with_survey} applications have survey data")
+
+        if 'consensus_summary' in impact:
+            avg_consensus = impact['consensus_summary']['average_consensus']
+            click.echo(f"  • Average stakeholder consensus: {avg_consensus:.2f}/5")
+
+        if 'high_variance_apps' in impact:
+            high_var_count = len(impact['high_variance_apps'])
+            click.echo(f"  • {high_var_count} apps show high variance between scores")
+
+        if 'needs_attention' in impact:
+            needs_attn_count = len(impact['needs_attention'])
+            click.echo(f"  • {needs_attn_count} critical apps need attention")
+
+        click.echo()
+        click.echo("Survey analysis complete!")
+
+    except Exception as e:
+        logger.error(f"Survey report generation failed: {e}", exc_info=True)
+        click.echo(f"Error: {e}", err=True)
+        raise click.Abort()
+
+
 if __name__ == '__main__':
     cli()

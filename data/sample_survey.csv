@@ -1,0 +1,69 @@
+Application Name,Stakeholder Name,Stakeholder Role,Survey Date,Critical to Business,Easy to Replace,User Satisfaction,Performance Rating,Strategic Importance,Qualitative Feedback
+Customer Portal,John Smith,VP Sales,2025-01-10,5,2,5,4,5,Essential for customer engagement. Performance could be better during peak hours.
+Customer Portal,Sarah Johnson,Customer Service Manager,2025-01-10,5,1,4,4,5,Critical for our daily operations. Users love the self-service features.
+Customer Portal,Mike Chen,IT Operations,2025-01-11,4,3,4,3,4,Important but has technical debt. We should invest in performance improvements.
+Legacy Billing System,Robert Davis,CFO,2025-01-10,5,1,2,2,3,Absolutely critical but outdated. Replacement is urgent priority.
+Legacy Billing System,Maria Garcia,Finance Manager,2025-01-10,5,1,2,1,2,System is painful to use. Frequent errors require manual intervention.
+Legacy Billing System,Tom Wilson,Accounting Lead,2025-01-11,5,2,1,2,2,We rely on it but hate using it. Training new staff is difficult.
+HR Management Suite,Jennifer Lee,CHRO,2025-01-10,5,3,5,5,5,Excellent system. Has transformed our HR operations.
+HR Management Suite,David Park,HR Manager,2025-01-10,4,3,5,5,4,Very satisfied with functionality and ease of use.
+Email Marketing Platform,Lisa Anderson,CMO,2025-01-11,3,4,3,3,2,Redundant with our CRM. We should consolidate.
+Email Marketing Platform,Kevin Brown,Marketing Manager,2025-01-11,2,5,3,3,2,Functionality overlaps with other tools. Not essential.
+Inventory Management,James Taylor,Operations Director,2025-01-10,5,2,3,3,5,Mission critical but showing its age. Needs modernization.
+Inventory Management,Amanda White,Warehouse Manager,2025-01-10,5,1,4,3,5,Can't operate without it but system is slow.
+Inventory Management,Chris Martinez,Supply Chain Analyst,2025-01-11,5,2,3,2,4,Core to our business. Performance issues are frustrating.
+Analytics Dashboard,Rachel Green,Chief Data Officer,2025-01-11,5,3,5,5,5,Outstanding tool. Recent upgrade was excellent.
+Analytics Dashboard,Daniel Kim,Business Analyst,2025-01-11,5,4,5,5,5,Best analytics platform we've ever had.
+File Sharing Service,Michael Scott,IT Director,2025-01-12,2,5,3,4,1,Redundant. We have better alternatives.
+File Sharing Service,Pam Beesly,Admin Assistant,2025-01-12,3,4,3,3,2,Works fine but we have multiple similar tools.
+CRM System,Stanley Hudson,Sales Director,2025-01-10,5,1,5,5,5,Absolutely essential. Best investment we've made.
+CRM System,Phyllis Vance,Sales Manager,2025-01-10,5,1,5,5,5,Cannot imagine working without it. Drives all our revenue.
+CRM System,Dwight Schrute,Senior Sales Rep,2025-01-11,5,1,4,5,5,Critical for tracking customers and deals.
+Legacy Timesheet App,Angela Martin,HR Director,2025-01-12,3,4,1,1,1,Terrible system. Should be eliminated immediately.
+Legacy Timesheet App,Oscar Martinez,Finance Analyst,2025-01-12,2,5,1,1,1,Manual workarounds are required. Major pain point.
+Mobile Expense Tracker,Kelly Kapoor,Finance Director,2025-01-11,4,3,5,5,4,Great mobile experience. Employees love it.
+Mobile Expense Tracker,Ryan Howard,Business Analyst,2025-01-11,3,4,4,5,3,Good tool. Very user-friendly.
+Project Management Tool,Jim Halpert,PMO Director,2025-01-10,5,2,4,4,5,Central to how we manage projects. Good adoption.
+Project Management Tool,Karen Filippelli,Project Manager,2025-01-10,4,3,4,4,4,Solid tool. Some features could be better.
+Project Management Tool,Toby Flenderson,Senior PM,2025-01-11,5,2,5,4,5,Essential for project visibility and collaboration.
+Old Document Scanner,Creed Bratton,Operations,2025-01-12,1,5,2,2,1,Rarely used. Should retire it.
+Data Warehouse,Andy Bernard,CTO,2025-01-10,5,1,4,3,5,Core infrastructure. Needs performance optimization.
+Data Warehouse,Erin Hannon,Data Engineer,2025-01-11,5,1,4,4,5,Foundation of our data strategy. Some technical debt.
+Data Warehouse,Gabe Lewis,Analytics Manager,2025-01-11,5,2,5,4,5,Critical for all analytics. Performance can be slow.
+Social Media Manager,Jan Levinson,VP Marketing,2025-01-12,2,4,3,3,2,Capabilities overlap with marketing automation platform.
+Social Media Manager,Holly Flax,Social Media Manager,2025-01-12,3,3,4,4,3,Useful but we could consolidate tools.
+VPN Gateway,Darryl Philbin,IT Security Manager,2025-01-10,5,2,4,4,5,Critical for security. Some stability issues.
+VPN Gateway,Roy Anderson,Network Engineer,2025-01-10,5,2,3,3,5,Essential infrastructure. Needs upgrade.
+Legacy Report Generator,Meredith Palmer,Finance,2025-01-12,2,5,2,2,1,Outdated. BI tools have replaced it.
+Legacy Report Generator,Stanley Hudson,Finance Analyst,2025-01-12,1,5,1,2,1,Nobody uses this anymore. Should eliminate.
+Customer Support Portal,Nellie Bertram,VP Customer Success,2025-01-10,5,2,5,5,5,Customers love it. High satisfaction scores.
+Customer Support Portal,Pete Miller,Support Manager,2025-01-11,5,2,5,4,5,Essential for customer support operations.
+Backup Solution A,David Wallace,CIO,2025-01-12,3,3,4,4,3,One of three backup systems. Should consolidate.
+Backup Solution A,Jo Bennett,IT Operations,2025-01-12,4,3,3,3,3,Works well but we have redundancy.
+ERP System,Robert California,CEO,2025-01-10,5,1,4,4,5,Mission critical. Backbone of the business.
+ERP System,Catherine Zeta-Jones,COO,2025-01-10,5,1,4,3,5,Cannot operate without it. Some performance issues.
+ERP System,Jordan Garfield,Finance Director,2025-01-11,5,1,5,4,5,Core system for all financial operations.
+Training Platform,Deangelo Vickers,VP Learning,2025-01-11,4,3,4,4,4,Good platform. Decent adoption rates.
+Training Platform,Val Johnson,Training Manager,2025-01-11,4,3,5,5,4,Employees like it. Good content delivery.
+Old Intranet,Clark Green,Communications,2025-01-12,1,5,1,1,1,Completely outdated. Nobody uses it.
+Old Intranet,Nate Nickerson,IT Support,2025-01-12,1,5,1,1,1,Should be decommissioned immediately.
+API Gateway,Ravi Singh,Enterprise Architect,2025-01-11,5,2,5,5,5,Modern architecture. Critical for microservices.
+API Gateway,Cathy Simms,API Developer,2025-01-11,5,2,5,5,5,Excellent platform. Well implemented.
+Compliance Tracker,Charles Miner,Chief Compliance Officer,2025-01-10,5,1,4,4,5,Required for regulatory compliance. Non-negotiable.
+Compliance Tracker,Madge Madsen,Compliance Analyst,2025-01-11,5,2,4,3,5,Essential for audits and reporting.
+Legacy FTP Server,Glenn,IT Security,2025-01-12,1,5,1,1,1,Major security risk. Eliminate immediately!
+Legacy FTP Server,Hidetoshi Hasagawa,Network Admin,2025-01-12,1,5,1,1,1,Security nightmare. Must be retired ASAP.
+Collaboration Suite,Nick,VP Operations,2025-01-10,5,2,5,5,5,Company-wide tool. Extremely high value.
+Collaboration Suite,Shadow,Department Manager,2025-01-11,5,2,5,5,5,Essential for daily work. Excellent adoption.
+Collaboration Suite,Martin Nash,IT Adoption Lead,2025-01-11,5,3,5,5,5,Best collaboration tool we've implemented.
+Marketing Automation,Brian Baumgartner,Marketing Director,2025-01-11,4,3,4,4,4,Good ROI. Solid platform.
+Marketing Automation,Rashida Jones,Marketing Ops,2025-01-11,5,3,5,4,5,Drives marketing efficiency. Very valuable.
+Old Procurement System,Ellie Kemper,Procurement Director,2025-01-12,2,4,2,2,2,Being replaced. Current system is inadequate.
+Old Procurement System,Ed Helms,Procurement Manager,2025-01-12,3,3,2,2,2,Replacement can't come soon enough.
+Database Cluster,Rainn Wilson,Database Administrator,2025-01-10,5,1,5,5,5,Core infrastructure. Mission critical.
+Database Cluster,Jenna Fischer,Data Architect,2025-01-10,5,1,5,4,5,Foundation of all our systems.
+Database Cluster,John Krasinski,Senior DBA,2025-01-11,5,1,5,5,5,Absolutely essential. Well managed.
+Testing Automation,Mindy Kaling,QA Director,2025-01-11,4,3,4,4,4,Improves development speed significantly.
+Testing Automation,BJ Novak,QA Engineer,2025-01-11,4,3,5,5,4,Great tool. Makes testing much easier.
+Legacy Contractor Portal,Craig Robinson,HR Operations,2025-01-12,1,5,1,1,1,Low usage. Should retire.
+Legacy Contractor Portal,Ellie Kemper,Procurement,2025-01-12,2,4,1,1,1,Hardly anyone uses it. Technical debt.
