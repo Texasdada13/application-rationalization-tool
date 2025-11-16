@@ -619,5 +619,111 @@ def export(input: str, output: str, export_format: str, timestamp: bool, charts:
         raise click.Abort()
 
 
+@cli.command()
+@click.option(
+    '--input', '-i',
+    type=click.Path(exists=True),
+    required=True,
+    help='Input CSV or Excel file with assessment results'
+)
+@click.option(
+    '--output-dir', '-o',
+    type=click.Path(),
+    default='output/reports',
+    help='Output directory for report bundle'
+)
+@click.option(
+    '--name', '-n',
+    default='assessment_report',
+    help='Base name for report files'
+)
+@click.option(
+    '--visualizations/--no-visualizations',
+    default=True,
+    help='Include visualizations in the bundle'
+)
+def generate_report(input: str, output_dir: str, name: str, visualizations: bool):
+    """
+    Generate a complete report bundle with all formats.
+
+    Creates a comprehensive package including CSV, Power BI, Enhanced Excel,
+    Tableau exports, visualizations, and documentation.
+    """
+    click.echo("=" * 70)
+    click.echo("Application Rationalization - Complete Report Generator")
+    click.echo("=" * 70)
+    click.echo()
+
+    try:
+        # Load data
+        click.echo(f"Loading data from: {input}")
+        input_path = Path(input)
+
+        if input_path.suffix.lower() in ['.xlsx', '.xls']:
+            df = pd.read_excel(input_path, engine='openpyxl')
+        else:
+            df = pd.read_csv(input_path)
+
+        click.echo(f"Loaded {len(df)} applications")
+        click.echo()
+
+        # Initialize data handler
+        data_handler = DataHandler()
+
+        # Generate complete report bundle
+        click.echo(f"Generating complete report bundle in: {output_dir}")
+        click.echo(f"Report name: {name}")
+        click.echo(f"Include visualizations: {'Yes' if visualizations else 'No'}")
+        click.echo()
+
+        click.echo("Creating exports...")
+        bundle_files = data_handler.generate_complete_report_bundle(
+            df,
+            output_dir=output_dir,
+            report_name=name,
+            include_visualizations=visualizations
+        )
+
+        # Display results
+        click.echo()
+        click.echo("=" * 70)
+        click.echo("REPORT BUNDLE GENERATED SUCCESSFULLY!")
+        click.echo("=" * 70)
+        click.echo()
+
+        click.echo(f"Output directory: {output_dir}")
+        click.echo(f"Total files created: {len(bundle_files)}")
+        click.echo()
+
+        click.echo("Generated files:")
+        for file_type, file_path in bundle_files.items():
+            file_size = file_path.stat().st_size / 1024  # KB
+            click.echo(f"  • {file_type:20s} → {file_path.name:40s} ({file_size:7.1f} KB)")
+
+        click.echo()
+        click.echo("=" * 70)
+        click.echo("NEXT STEPS")
+        click.echo("=" * 70)
+        click.echo()
+        click.echo("1. Review README.md in the output directory for detailed instructions")
+        click.echo("2. Open the executive Excel report for high-level insights")
+        click.echo("3. Import Power BI or Tableau files for interactive dashboards")
+        click.echo("4. Share appropriate formats with different stakeholders")
+        click.echo()
+
+        # Display summary statistics
+        stats = data_handler.get_summary_statistics(df)
+        click.echo("Portfolio Summary:")
+        click.echo(f"  • Total Applications: {stats['total_applications']}")
+        click.echo(f"  • Total Annual Cost: ${stats['total_cost']:,.0f}")
+        click.echo(f"  • Average Composite Score: {stats.get('average_composite_score', 0):.1f}/100")
+        click.echo()
+
+    except Exception as e:
+        logger.error(f"Report generation failed: {e}", exc_info=True)
+        click.echo(f"Error: {e}", err=True)
+        raise click.Abort()
+
+
 if __name__ == '__main__':
     cli()

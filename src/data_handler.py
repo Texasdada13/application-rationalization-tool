@@ -987,3 +987,401 @@ class DataHandler:
 
         ws.freeze_panes = 'B2'
         ws.auto_filter.ref = f'A1:{ws.cell(1, ws.max_column).column_letter}{ws.max_row}'
+
+    def export_for_tableau(
+        self,
+        df: pd.DataFrame,
+        output_path: Union[str, Path],
+        include_timestamp: bool = True
+    ) -> Path:
+        """
+        Export application data in Tableau-optimized format.
+
+        Creates a clean, denormalized CSV file optimized for Tableau with:
+        - Flat structure (no hierarchies)
+        - Clean column names (no special characters)
+        - Proper data types
+        - Date fields for time-based analysis
+        - Calculated fields pre-computed
+
+        Args:
+            df: DataFrame containing complete assessment data
+            output_path: Path for the output CSV file
+            include_timestamp: Whether to append timestamp to filename
+
+        Returns:
+            Path to the written Tableau-optimized CSV file
+
+        Example:
+            >>> handler = DataHandler()
+            >>> path = handler.export_for_tableau(results_df, 'tableau_data.csv')
+        """
+        output_path = Path(output_path)
+
+        if include_timestamp:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            output_path = output_path.parent / f"{output_path.stem}_{timestamp}{output_path.suffix}"
+
+        try:
+            # Ensure output directory exists
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            logger.info("Creating Tableau-optimized CSV export...")
+
+            # Create Tableau-friendly DataFrame
+            tableau_df = df.copy()
+
+            # Add assessment date for time-based analysis
+            tableau_df.insert(0, 'Assessment_Date', datetime.now().strftime('%Y-%m-%d'))
+
+            # Clean column names (remove spaces, special characters)
+            tableau_df.columns = [
+                col.replace(' ', '_').replace('(', '').replace(')', '').replace('/', '_')
+                for col in tableau_df.columns
+            ]
+
+            # Add calculated fields useful for Tableau
+            if 'Composite_Score' in tableau_df.columns:
+                # Score category
+                tableau_df['Score_Category'] = pd.cut(
+                    tableau_df['Composite_Score'],
+                    bins=[0, 30, 50, 70, 100],
+                    labels=['Poor', 'Fair', 'Good', 'Excellent']
+                )
+
+                # Performance tier
+                tableau_df['Performance_Tier'] = pd.qcut(
+                    tableau_df['Composite_Score'],
+                    q=4,
+                    labels=['Bottom 25%', '25-50%', '50-75%', 'Top 25%'],
+                    duplicates='drop'
+                )
+
+            # Add risk flags
+            if 'Security' in tableau_df.columns and 'Business_Value' in tableau_df.columns:
+                tableau_df['High_Risk_Flag'] = (
+                    (tableau_df['Security'] < 5) & (tableau_df['Business_Value'] > 7)
+                ).astype(int)
+
+            # Add cost efficiency metric
+            if 'Cost' in tableau_df.columns and 'Business_Value' in tableau_df.columns:
+                # Avoid division by zero
+                cost_nonzero = tableau_df['Cost'].replace(0, 1)
+                tableau_df['Value_per_Dollar'] = (
+                    tableau_df['Business_Value'] / cost_nonzero * 10000
+                ).round(2)
+
+            # Ensure consistent data types
+            # Convert any remaining NaN to None for better Tableau handling
+            tableau_df = tableau_df.replace({np.nan: None})
+
+            # Write to CSV with UTF-8 encoding (Tableau standard)
+            tableau_df.to_csv(output_path, index=False, encoding='utf-8')
+
+            logger.info(f"Tableau export saved to: {output_path}")
+            logger.info(f"Exported {len(tableau_df)} rows with {len(tableau_df.columns)} columns")
+
+            return output_path
+
+        except Exception as e:
+            logger.error(f"Error creating Tableau export {output_path}: {e}")
+            raise
+
+    def generate_complete_report_bundle(
+        self,
+        df: pd.DataFrame,
+        output_dir: Union[str, Path],
+        report_name: str = 'assessment_report',
+        include_visualizations: bool = False
+    ) -> Dict[str, Path]:
+        """
+        Generate a complete report bundle with all export formats.
+
+        Creates a comprehensive report package including:
+        - CSV data export
+        - Power BI-optimized Excel
+        - Enhanced Excel with charts
+        - Tableau-optimized CSV
+        - README with usage instructions
+        - Optionally: visualizations
+
+        Args:
+            df: DataFrame containing complete assessment data
+            output_dir: Directory for the report bundle
+            report_name: Base name for the report files
+            include_visualizations: Whether to generate visualizations
+
+        Returns:
+            Dictionary mapping export type to file path
+
+        Example:
+            >>> handler = DataHandler()
+            >>> bundle = handler.generate_complete_report_bundle(
+            ...     results_df,
+            ...     'output/reports/2025-Q1',
+            ...     report_name='Q1_Assessment'
+            ... )
+        """
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        logger.info(f"Generating complete report bundle in: {output_dir}")
+
+        bundle_files = {}
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+        try:
+            # 1. CSV Export
+            logger.info("Creating CSV export...")
+            csv_path = self.write_csv(
+                df,
+                output_dir / f'{report_name}_data.csv',
+                include_timestamp=False
+            )
+            bundle_files['csv'] = csv_path
+
+            # 2. Power BI Export
+            logger.info("Creating Power BI export...")
+            powerbi_path = self.export_for_powerbi(
+                df,
+                output_dir / f'{report_name}_powerbi.xlsx',
+                include_timestamp=False
+            )
+            bundle_files['powerbi'] = powerbi_path
+
+            # 3. Enhanced Excel Report
+            logger.info("Creating enhanced Excel report...")
+            excel_path = self.export_enhanced_excel(
+                df,
+                output_dir / f'{report_name}_executive.xlsx',
+                include_timestamp=False,
+                include_charts=True
+            )
+            bundle_files['excel'] = excel_path
+
+            # 4. Tableau Export
+            logger.info("Creating Tableau export...")
+            tableau_path = self.export_for_tableau(
+                df,
+                output_dir / f'{report_name}_tableau.csv',
+                include_timestamp=False
+            )
+            bundle_files['tableau'] = tableau_path
+
+            # 5. Generate visualizations if requested
+            if include_visualizations:
+                logger.info("Generating visualizations...")
+                viz_dir = output_dir / 'visualizations'
+                viz_dir.mkdir(exist_ok=True)
+
+                from .visualizations import VisualizationEngine
+
+                viz_engine = VisualizationEngine(output_dir=viz_dir)
+
+                try:
+                    bundle_files['viz_heatmap'] = viz_engine.create_score_heatmap(
+                        df, output_file='score_heatmap.png'
+                    )
+                    bundle_files['viz_time_quadrant'] = viz_engine.create_time_quadrant_heatmap(
+                        df, output_file='time_quadrant.png'
+                    )
+                    bundle_files['viz_dashboard'] = viz_engine.create_comprehensive_dashboard(
+                        df, output_file='dashboard.png'
+                    )
+                except Exception as e:
+                    logger.warning(f"Some visualizations failed: {e}")
+
+            # 6. Create README with instructions
+            logger.info("Creating README...")
+            readme_path = self._create_bundle_readme(output_dir, report_name, bundle_files, df)
+            bundle_files['readme'] = readme_path
+
+            # 7. Create summary statistics file
+            logger.info("Creating summary statistics...")
+            summary_path = self._create_summary_stats(output_dir, report_name, df)
+            bundle_files['summary'] = summary_path
+
+            logger.info(f"Report bundle complete! Generated {len(bundle_files)} files")
+
+            return bundle_files
+
+        except Exception as e:
+            logger.error(f"Error generating report bundle: {e}")
+            raise
+
+    def _create_bundle_readme(
+        self,
+        output_dir: Path,
+        report_name: str,
+        files: Dict[str, Path],
+        df: pd.DataFrame
+    ) -> Path:
+        """Create README file for report bundle."""
+        readme_path = output_dir / 'README.md'
+
+        stats = self.get_summary_statistics(df)
+
+        content = f"""# Application Rationalization Assessment Report
+## {report_name}
+
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Applications Assessed:** {len(df)}
+**Total Annual Cost:** ${stats.get('total_cost', 0):,.0f}
+**Average Composite Score:** {stats.get('average_composite_score', 0):.1f}/100
+
+---
+
+## Report Contents
+
+This report bundle contains assessment data in multiple formats for different use cases:
+
+### 1. CSV Data Export
+**File:** `{report_name}_data.csv`
+**Use for:** General data analysis, archival, version control
+**Format:** Standard CSV with all assessment data
+
+### 2. Power BI Export
+**File:** `{report_name}_powerbi.xlsx`
+**Use for:** Interactive dashboards, drill-down analysis
+**Format:** Multi-sheet Excel optimized for Power BI
+
+**Import Instructions:**
+1. Open Power BI Desktop
+2. Get Data → Excel → Select `{report_name}_powerbi.xlsx`
+3. Load these tables: Applications, Dimension_Scores, TIME_Framework
+4. Create relationships using Application_ID field
+5. Build visualizations
+
+### 3. Enhanced Excel Report
+**File:** `{report_name}_executive.xlsx`
+**Use for:** Executive presentations, board reports
+**Format:** Formatted Excel with charts and conditional formatting
+
+**Features:**
+- Summary dashboard with key metrics
+- Detailed scores with color coding
+- TIME framework analysis with charts
+- Action recommendations
+- Cost analysis
+
+### 4. Tableau Export
+**File:** `{report_name}_tableau.csv`
+**Use for:** Tableau dashboards and visualizations
+**Format:** Clean CSV with calculated fields
+
+**Import Instructions:**
+1. Open Tableau Desktop
+2. Connect to Data → Text file → Select `{report_name}_tableau.csv`
+3. Suggested visualizations:
+   - Scatter plot: Business_Value vs Tech_Health (colored by TIME_Category)
+   - Bar chart: Top applications by Composite_Score
+   - Heatmap: Score_Category distribution
+   - Treemap: Applications sized by Cost
+
+"""
+
+        if 'viz_dashboard' in files:
+            content += """
+### 5. Visualizations
+**Folder:** `visualizations/`
+**Files:**
+- `score_heatmap.png` - Application score matrix
+- `time_quadrant.png` - TIME framework positioning
+- `dashboard.png` - Comprehensive executive dashboard
+
+"""
+
+        content += f"""
+---
+
+## Summary Statistics
+
+- **Total Applications:** {stats['total_applications']}
+- **Total Annual Cost:** ${stats['total_cost']:,.0f}
+- **Average Business Value:** {stats['average_business_value']:.2f}/10
+- **Average Tech Health:** {stats['average_tech_health']:.2f}/10
+- **Average Security:** {stats['average_security']:.2f}/10
+- **Redundant Applications:** {int(stats['redundant_applications'])}
+
+"""
+
+        if 'action_distribution' in stats:
+            content += "\n### Action Recommendations:\n"
+            for action, count in stats['action_distribution'].items():
+                content += f"- **{action}:** {count} applications\n"
+
+        content += """
+---
+
+## Next Steps
+
+1. **Review Executive Report** - Start with the enhanced Excel file for high-level insights
+2. **Import to BI Tool** - Use Power BI or Tableau exports for interactive analysis
+3. **Share with Stakeholders** - Distribute appropriate formats to different audiences
+4. **Plan Actions** - Focus on applications flagged for immediate action
+5. **Track Over Time** - Compare with future assessments to measure progress
+
+## Support
+
+For questions about this assessment or the tool:
+- Review full documentation in the repository
+- Check the visualization guide for chart interpretations
+- See TIME framework documentation for category definitions
+
+---
+
+*Generated by Application Rationalization Assessment Tool*
+"""
+
+        readme_path.write_text(content)
+        return readme_path
+
+    def _create_summary_stats(self, output_dir: Path, report_name: str, df: pd.DataFrame) -> Path:
+        """Create summary statistics file."""
+        summary_path = output_dir / f'{report_name}_summary.txt'
+
+        stats = self.get_summary_statistics(df)
+
+        content = f"""APPLICATION RATIONALIZATION ASSESSMENT - SUMMARY STATISTICS
+{'=' * 70}
+
+Report: {report_name}
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+PORTFOLIO OVERVIEW
+{'=' * 70}
+Total Applications: {stats['total_applications']}
+Total Annual Cost: ${stats['total_cost']:,.0f}
+Average Cost per App: ${stats['total_cost'] / stats['total_applications']:,.0f}
+
+AVERAGE SCORES (0-10 scale)
+{'=' * 70}
+Business Value:  {stats['average_business_value']:.2f}
+Tech Health:     {stats['average_tech_health']:.2f}
+Security:        {stats['average_security']:.2f}
+"""
+
+        if 'average_composite_score' in stats:
+            content += f"\nCOMPOSITE SCORES (0-100 scale)\n{'=' * 70}\n"
+            content += f"Average: {stats['average_composite_score']:.2f}\n"
+            content += f"Median:  {stats['median_composite_score']:.2f}\n"
+
+        if 'action_distribution' in stats:
+            content += f"\nACTION RECOMMENDATIONS\n{'=' * 70}\n"
+            for action, count in sorted(stats['action_distribution'].items(), key=lambda x: x[1], reverse=True):
+                percentage = (count / stats['total_applications']) * 100
+                content += f"{action:30s} {count:3d} ({percentage:5.1f}%)\n"
+
+        content += f"\nKEY METRICS\n{'=' * 70}\n"
+        content += f"Redundant Applications: {int(stats['redundant_applications'])}\n"
+
+        if 'Security' in df.columns:
+            low_security = len(df[df['Security'] < 5])
+            content += f"Low Security Score (<5): {low_security}\n"
+
+        if 'Tech Health' in df.columns:
+            poor_health = len(df[df['Tech Health'] < 5])
+            content += f"Poor Tech Health (<5):  {poor_health}\n"
+
+        summary_path.write_text(content)
+        return summary_path
