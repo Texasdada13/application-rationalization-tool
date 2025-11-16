@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.data_handler import DataHandler
 from src.scoring_engine import ScoringEngine
 from src.recommendation_engine import RecommendationEngine
+from src.time_framework import TIMEFramework
 
 # Setup logging
 logging.basicConfig(
@@ -89,6 +90,13 @@ def main():
         print(f"Generated recommendations for {len(final_apps)} applications")
         print()
 
+        # Apply TIME framework categorization
+        print("Applying TIME framework categorization...")
+        time_framework = TIMEFramework()
+        final_apps = time_framework.batch_categorize(final_apps)
+        print(f"TIME categories assigned to {len(final_apps)} applications")
+        print()
+
         # Convert to DataFrame
         results_df = pd.DataFrame(final_apps)
 
@@ -124,6 +132,22 @@ def main():
             if count > 0:
                 percentage = rec_summary['percentages'][action]
                 print(f"{action:30} {count:3d} applications ({percentage:5.1f}%)")
+
+        # Display TIME framework distribution
+        print("\n" + "=" * 80)
+        print(" " * 25 + "TIME FRAMEWORK DISTRIBUTION")
+        print("=" * 80)
+
+        time_summary = time_framework.get_category_summary()
+        print()
+        for category, count in sorted(
+            time_summary['distribution'].items(),
+            key=lambda x: x[1],
+            reverse=True
+        ):
+            if count > 0:
+                percentage = time_summary['percentages'][category]
+                print(f"{category:30} {count:3d} applications ({percentage:5.1f}%)")
 
         # Display top priorities
         print("\n" + "=" * 80)

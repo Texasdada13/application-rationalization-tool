@@ -13,6 +13,7 @@ import pandas as pd
 from .data_handler import DataHandler
 from .scoring_engine import ScoringEngine, ScoringWeights
 from .recommendation_engine import RecommendationEngine
+from .time_framework import TIMEFramework
 
 # Setup logging
 logging.basicConfig(
@@ -110,6 +111,13 @@ def assess(input: str, output: str, format: str, timestamp: bool):
         click.echo("Recommendations generated successfully")
         click.echo()
 
+        # Apply TIME framework categorization
+        click.echo("Applying TIME framework categorization...")
+        time_framework = TIMEFramework()
+        final_apps = time_framework.batch_categorize(final_apps)
+        click.echo("TIME categories assigned successfully")
+        click.echo()
+
         # Convert back to DataFrame
         results_df = pd.DataFrame(final_apps)
 
@@ -145,6 +153,24 @@ def assess(input: str, output: str, format: str, timestamp: bool):
         click.echo(tabulate(
             table_data,
             headers=['Action', 'Count', 'Percentage'],
+            tablefmt='grid'
+        ))
+        click.echo()
+
+        # Display TIME framework distribution
+        time_summary = time_framework.get_category_summary()
+        click.echo("=" * 70)
+        click.echo("TIME FRAMEWORK DISTRIBUTION")
+        click.echo("=" * 70)
+
+        time_table_data = [
+            [category, count, f"{time_summary['percentages'].get(category, 0):.1f}%"]
+            for category, count in time_summary['distribution'].items()
+            if count > 0
+        ]
+        click.echo(tabulate(
+            time_table_data,
+            headers=['TIME Category', 'Count', 'Percentage'],
             tablefmt='grid'
         ))
         click.echo()
@@ -188,6 +214,11 @@ def assess(input: str, output: str, format: str, timestamp: bool):
     help='Filter by action recommendation'
 )
 @click.option(
+    '--time-category', '-tc',
+    type=click.Choice(['Invest', 'Tolerate', 'Migrate', 'Eliminate']),
+    help='Filter by TIME framework category'
+)
+@click.option(
     '--min-score',
     type=float,
     help='Minimum composite score'
@@ -203,8 +234,8 @@ def assess(input: str, output: str, format: str, timestamp: bool):
     default=10,
     help='Number of results to display'
 )
-def list_apps(input: str, action: Optional[str], min_score: Optional[float],
-              max_score: Optional[float], top: int):
+def list_apps(input: str, action: Optional[str], time_category: Optional[str],
+              min_score: Optional[float], max_score: Optional[float], top: int):
     """
     List applications with optional filtering.
     """
@@ -226,6 +257,10 @@ def list_apps(input: str, action: Optional[str], min_score: Optional[float],
             action=action
         )
 
+        # Apply TIME category filter if specified
+        if time_category and 'TIME Category' in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df['TIME Category'] == time_category]
+
         # Limit results
         display_df = filtered_df.head(top)
 
@@ -239,7 +274,7 @@ def list_apps(input: str, action: Optional[str], min_score: Optional[float],
         # Select columns to display
         display_columns = [
             'Application Name', 'Owner', 'Business Value',
-            'Tech Health', 'Composite Score', 'Action Recommendation'
+            'Tech Health', 'Composite Score', 'Action Recommendation', 'TIME Category'
         ]
         display_columns = [col for col in display_columns if col in display_df.columns]
 

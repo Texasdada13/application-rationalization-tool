@@ -31,6 +31,7 @@ The tool is designed for IT leaders, enterprise architects, and portfolio manage
 ## Features
 
 - **Multi-Criteria Scoring**: Evaluates applications across 7 key dimensions
+- **TIME Framework Integration**: Industry-standard Tolerate/Invest/Migrate/Eliminate categorization
 - **Flexible Weighting**: Customize scoring weights to match organizational priorities
 - **Smart Recommendations**: AI-driven recommendation engine with detailed rationale
 - **Multiple Export Formats**: CSV and Excel output with formatting
@@ -38,6 +39,7 @@ The tool is designed for IT leaders, enterprise architects, and portfolio manage
 - **Summary Statistics**: Portfolio-level insights and trends
 - **CLI Interface**: Command-line tools for batch processing and automation
 - **Extensible Architecture**: Modular design for easy customization
+- **Configurable Thresholds**: Customize TIME framework thresholds for your organization
 
 ## Installation
 
@@ -235,6 +237,71 @@ The recommendation engine generates one of 8 possible actions:
 - Poor security with high business value
 - Urgent remediation needed
 - Action: Immediate intervention
+
+## TIME Framework
+
+The tool integrates the industry-standard **TIME Framework** (Tolerate, Invest, Migrate, Eliminate) for portfolio categorization.
+
+### TIME Categories
+
+```
+                    Technical Quality
+                    Low    →    High
+                  ┌────────┬────────┐
+    Business      │TOLERATE│ INVEST │
+    Value    High │        │        │
+                  ├────────┼────────┤
+             Low  │ELIM-   │ MIGRATE│
+                  │INATE   │        │
+                  └────────┴────────┘
+```
+
+**INVEST** - High business value, high technical quality
+- Continue investment for growth
+- Strategic applications with good health
+- Maximize returns through enhancement
+
+**TOLERATE** - High business value, low technical quality
+- Maintain while planning improvements
+- Business-critical but aging
+- Manage technical debt and risk
+
+**MIGRATE** - Low business value OR misaligned
+- Plan consolidation or modernization
+- Good tech but limited business value
+- Evaluate repurposing opportunities
+
+**ELIMINATE** - Low business value, low technical quality
+- Retire or decommission
+- Minimal business impact
+- Reduce technical debt and costs
+
+### Using TIME Framework
+
+The TIME framework is automatically applied during assessment:
+
+```bash
+# Run assessment (TIME categories included automatically)
+python main.py
+
+# Filter by TIME category
+python -m src.cli list-apps -i output/results.csv -tc Invest
+python -m src.cli list-apps -i output/results.csv -tc Eliminate
+```
+
+### TIME Configuration
+
+Customize thresholds in `config/time_config.yaml`:
+
+```yaml
+time_thresholds:
+  business_value_threshold: 6.0      # High BV cutoff (0-10)
+  technical_quality_threshold: 6.0    # High TQ cutoff (0-10)
+  composite_score_high: 65.0          # High performer (0-100)
+  composite_score_low: 40.0           # Low performer (0-100)
+```
+
+**See `docs/time_framework.md` for complete TIME framework documentation.**
 
 ## Project Structure
 

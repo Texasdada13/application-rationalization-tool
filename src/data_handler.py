@@ -34,7 +34,11 @@ class DataHandler:
     OUTPUT_COLUMNS = REQUIRED_COLUMNS + [
         'Composite Score',
         'Action Recommendation',
-        'Comments'
+        'Comments',
+        'TIME Category',
+        'TIME Rationale',
+        'TIME Business Value Score',
+        'TIME Technical Quality Score'
     ]
 
     def __init__(self, data_dir: Optional[Path] = None):

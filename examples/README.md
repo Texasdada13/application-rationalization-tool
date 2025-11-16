@@ -4,7 +4,33 @@ This directory contains example scripts demonstrating various use cases and feat
 
 ## Available Examples
 
-### 1. Custom Weights Example
+### 1. TIME Framework Example
+
+**File:** `time_framework_example.py`
+
+Comprehensive demonstration of the TIME (Tolerate, Invest, Migrate, Eliminate) framework for application rationalization.
+
+**Usage:**
+```bash
+python examples/time_framework_example.py
+```
+
+**What you'll learn:**
+- Using default TIME framework thresholds
+- Creating custom threshold configurations
+- Comparing different threshold strategies (conservative vs. aggressive)
+- Action planning by TIME category
+- Prioritizing applications within each quadrant
+
+**Key Features:**
+- Matrix visualization of TIME categories
+- Threshold comparison analysis
+- ROI-based prioritization
+- Cost savings calculations for eliminations
+
+---
+
+### 2. Custom Weights Example
 
 **File:** `custom_weights_example.py`
 
@@ -25,7 +51,7 @@ python examples/custom_weights_example.py
 
 ---
 
-### 2. Batch Processing Example
+### 3. Batch Processing Example
 
 **File:** `batch_processing_example.py`
 
@@ -53,7 +79,7 @@ portfolios = [
 
 ---
 
-### 3. Score Breakdown Example
+### 4. Score Breakdown Example
 
 **File:** `score_breakdown_example.py`
 

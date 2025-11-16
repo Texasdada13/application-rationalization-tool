@@ -1,0 +1,150 @@
+# TIME Framework Configuration
+# Configure thresholds for the TIME (Tolerate, Invest, Migrate, Eliminate) framework
+
+# TIME Framework Thresholds
+# These values determine how applications are categorized into TIME quadrants
+time_thresholds:
+  # Business Value Threshold (0-10 scale)
+  # Applications with business value >= this threshold are considered "High Business Value"
+  # Default: 6.0
+  # - Higher value (e.g., 7.0) = more selective, fewer apps in high-value categories
+  # - Lower value (e.g., 5.0) = more inclusive, more apps in high-value categories
+  business_value_threshold: 6.0
+
+  # Technical Quality Threshold (0-10 scale)
+  # Applications with technical quality >= this threshold are considered "High Technical Quality"
+  # Default: 6.0
+  # - Higher value (e.g., 7.0) = stricter technical standards
+  # - Lower value (e.g., 5.0) = more lenient technical standards
+  technical_quality_threshold: 6.0
+
+  # Composite Score Thresholds (0-100 scale)
+  # High threshold: Apps above this are generally high performers
+  # Low threshold: Apps below this are generally low performers
+  composite_score_high: 65.0
+  composite_score_low: 40.0
+
+  # Critical Business Value (0-10 scale)
+  # Apps with business value >= this are considered mission-critical
+  # Default: 8.0
+  critical_business_value: 8.0
+
+  # Poor Technical Health (0-10 scale)
+  # Apps with tech health <= this are considered technically troubled
+  # Default: 4.0
+  poor_tech_health: 4.0
+
+  # Poor Security (0-10 scale)
+  # Apps with security score <= this are considered security risks
+  # Default: 5.0
+  poor_security: 5.0
+
+# TIME Category Definitions
+# These are for reference and documentation
+categories:
+  invest:
+    description: "High business value and high technical quality"
+    action: "Continue investment to maximize returns"
+    characteristics:
+      - "Strategic applications"
+      - "Good technical health"
+      - "High user adoption"
+      - "Aligned with business goals"
+    examples:
+      - "Modern CRM systems"
+      - "Cloud-native platforms"
+      - "Strategic customer-facing applications"
+
+  tolerate:
+    description: "High business value but low technical quality"
+    action: "Maintain current operations while planning improvements"
+    characteristics:
+      - "Business-critical but aging"
+      - "Technical debt accumulation"
+      - "Difficult to maintain"
+      - "High operational costs"
+    examples:
+      - "Legacy core banking systems"
+      - "Aging ERP platforms"
+      - "Custom-built business applications"
+
+  migrate:
+    description: "Low business value but good technical quality, or misaligned applications"
+    action: "Plan migration, consolidation, or modernization"
+    characteristics:
+      - "Good tech but limited business value"
+      - "Misaligned with strategy"
+      - "Consolidation opportunities"
+      - "Underutilized capabilities"
+    examples:
+      - "Over-engineered internal tools"
+      - "Niche applications with few users"
+      - "Redundant functionality"
+
+  eliminate:
+    description: "Low business value and low technical quality"
+    action: "Retire or decommission"
+    characteristics:
+      - "Minimal business impact"
+      - "High technical debt"
+      - "Low usage"
+      - "Redundant or obsolete"
+    examples:
+      - "Unused legacy applications"
+      - "Duplicate systems"
+      - "End-of-life software"
+
+# Dimension Calculation Weights
+# These control how composite scores are calculated for the two TIME dimensions
+dimension_weights:
+  # Business Value Dimension Weights (must sum to 1.0)
+  business_value:
+    business_value_score: 0.5   # Direct business value assessment
+    usage_score: 0.2            # Actual usage/adoption
+    strategic_fit: 0.3          # Strategic alignment
+
+  # Technical Quality Dimension Weights (must sum to 1.0)
+  technical_quality:
+    tech_health: 0.4            # Technical health and maintainability
+    security: 0.3               # Security posture
+    strategic_fit: 0.2          # Technology strategy alignment
+    cost_efficiency: 0.1        # Cost effectiveness
+
+# Normalization Parameters
+normalization:
+  # Maximum usage for normalization
+  max_usage: 1000
+
+  # Maximum cost for normalization
+  max_cost: 300000
+
+# Organization-Specific Customization Examples
+# Uncomment and modify these to customize for your organization
+
+# Example 1: Security-First Organization
+# time_thresholds:
+#   business_value_threshold: 5.5
+#   technical_quality_threshold: 7.0  # Higher tech quality bar
+#   poor_security: 6.0                # Stricter security threshold
+
+# Example 2: Cost-Focused Organization
+# dimension_weights:
+#   technical_quality:
+#     tech_health: 0.3
+#     security: 0.2
+#     strategic_fit: 0.2
+#     cost_efficiency: 0.3            # Increased cost importance
+
+# Example 3: Business-Value-Driven Organization
+# dimension_weights:
+#   business_value:
+#     business_value_score: 0.6       # Higher emphasis on direct value
+#     usage_score: 0.25
+#     strategic_fit: 0.15
+
+# Usage Notes:
+# 1. Adjust thresholds based on your portfolio maturity
+# 2. Start with defaults and iterate based on results
+# 3. Document changes and rationale
+# 4. Review and update quarterly or annually
+# 5. Ensure stakeholder alignment on thresholds
