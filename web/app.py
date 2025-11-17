@@ -6,6 +6,7 @@ A professional web interface for C-suite presentations
 import os
 import sys
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any
@@ -19,6 +20,10 @@ import plotly
 import plotly.graph_objects as go
 import plotly.express as px
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Add parent directory to path to import our modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -26,9 +31,13 @@ from src.data_handler import DataHandler
 from src.scoring_engine import ScoringEngine, ScoringWeights
 from src.recommendation_engine import RecommendationEngine
 from src.time_framework import TIMEFramework, TIMEThresholds
+from src.database import Database
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize database
+db = Database()
 
 # Configure upload folder
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
@@ -328,6 +337,26 @@ def upload_page():
     return render_template('upload.html')
 
 
+@app.route('/history')
+def history_page():
+    """Historical tracking and trends page"""
+    # Get recent assessments
+    assessments = db.get_assessment_runs(limit=10)
+
+    # Get portfolio trends
+    trends = db.get_portfolio_trends(num_periods=12)
+
+    # Get top improvers and decliners
+    improvers = db.get_top_improvers(limit=5)
+    decliners = db.get_top_decliners(limit=5)
+
+    return render_template('history.html',
+                         assessments=assessments,
+                         trends=trends,
+                         improvers=improvers,
+                         decliners=decliners)
+
+
 # ==========================
 # API ENDPOINTS
 # ==========================
@@ -368,13 +397,25 @@ def upload_file():
         df = recommendation_engine.batch_generate_recommendations(df)
         df = time_framework.batch_categorize(df)
 
+        # Save to database
+        try:
+            assessment_id = db.save_assessment(
+                df,
+                description=f"Upload: {file.filename}",
+                source_file=filename
+            )
+        except Exception as e:
+            logger.warning(f"Failed to save to database: {e}")
+            assessment_id = None
+
         # Update global data
         current_data = df
 
         return jsonify({
             'success': True,
             'message': f'Successfully processed {len(df)} applications',
-            'applications_count': len(df)
+            'applications_count': len(df),
+            'assessment_id': assessment_id
         })
 
     except Exception as e:
@@ -479,6 +520,109 @@ def health_check():
         'data_loaded': current_data is not None and not current_data.empty,
         'applications_count': len(current_data) if current_data is not None else 0
     })
+
+
+# ==========================
+# HISTORICAL DATA ENDPOINTS
+# ==========================
+
+@app.route('/api/history/assessments')
+def get_assessments():
+    """Get list of all assessment runs"""
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        assessments = db.get_assessment_runs(limit=limit)
+        return jsonify(assessments)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/assessment/<int:assessment_id>')
+def get_assessment_detail(assessment_id: int):
+    """Get detailed information about a specific assessment"""
+    try:
+        assessment = db.get_assessment_by_id(assessment_id)
+        if not assessment:
+            return jsonify({'error': 'Assessment not found'}), 404
+
+        # Get applications from this assessment
+        apps_df = db.get_applications_at_run(assessment_id)
+        apps_data = apps_df.to_dict('records') if not apps_df.empty else []
+
+        return jsonify({
+            'assessment': assessment,
+            'applications': apps_data
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/application/<string:app_name>')
+def get_application_history(app_name: str):
+    """Get historical snapshots for a specific application"""
+    try:
+        limit = request.args.get('limit', 10, type=int)
+        history = db.get_application_history(app_name, limit=limit)
+        return jsonify(history)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/trends')
+def get_trends():
+    """Get portfolio-level trends over time"""
+    try:
+        periods = request.args.get('periods', 12, type=int)
+        trends = db.get_portfolio_trends(num_periods=periods)
+        return jsonify(trends)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/improvers')
+def get_top_improvers():
+    """Get applications with biggest score improvements"""
+    try:
+        limit = request.args.get('limit', 10, type=int)
+        improvers = db.get_top_improvers(limit=limit)
+        return jsonify(improvers)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/decliners')
+def get_top_decliners():
+    """Get applications with biggest score declines"""
+    try:
+        limit = request.args.get('limit', 10, type=int)
+        decliners = db.get_top_decliners(limit=limit)
+        return jsonify(decliners)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/compare/<int:id1>/<int:id2>')
+def compare_assessments_api(id1: int, id2: int):
+    """Compare two assessment runs"""
+    try:
+        comparison = db.compare_assessments(id1, id2)
+        if not comparison:
+            return jsonify({'error': 'One or both assessments not found'}), 404
+        return jsonify(comparison)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/score-changes')
+def get_score_changes():
+    """Get recent score changes"""
+    try:
+        app_name = request.args.get('application')
+        limit = request.args.get('limit', 20, type=int)
+        changes = db.get_score_trends(application_name=app_name, limit=limit)
+        return jsonify(changes)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # ==========================

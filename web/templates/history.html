@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}History & Trends - Application Rationalization{% endblock %}
+
+{% block page_title %}Historical Tracking & Trends{% endblock %}
+{% block page_subtitle %}Track portfolio changes and trends over time{% endblock %}
+
+{% block content %}
+<!-- Recent Assessments -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        <i class="fas fa-clock text-blue-600 mr-2"></i>
+        Recent Assessments
+    </h3>
+
+    {% if assessments %}
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Description</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Apps</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Avg Score</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase">Total Cost</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for assessment in assessments %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {{ assessment.timestamp[:10] }} {{ assessment.timestamp[11:16] }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                        {{ assessment.description or 'Assessment Run' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">
+                        {{ assessment.applications_count }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        {% if assessment.avg_composite_score %}
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold
+                            {% if assessment.avg_composite_score >= 70 %}bg-green-100 text-green-800
+                            {% elif assessment.avg_composite_score >= 40 %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ "%.1f"|format(assessment.avg_composite_score) }}
+                        </span>
+                        {% else %}
+                        <span class="text-gray-400">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                        ${{ "{:,.0f}".format(assessment.total_cost) }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <a href="/api/history/assessment/{{ assessment.id }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            <i class="fas fa-eye mr-1"></i>View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12 text-gray-500">
+        <i class="fas fa-inbox text-5xl mb-4 opacity-50"></i>
+        <p class="text-lg">No assessment history yet</p>
+        <p class="text-sm mt-2">Upload data to start tracking changes over time</p>
+        <a href="{{ url_for('upload_page') }}" class="inline-block mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-upload mr-2"></i>Upload First Assessment
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if trends and trends.timestamps %}
+<!-- Portfolio Trends Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Average Score Trend -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-chart-line text-green-600 mr-2"></i>
+            Average Score Trend
+        </h3>
+        <div id="score-trend-chart" style="height: 300px;"></div>
+    </div>
+
+    <!-- Total Cost Trend -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-dollar-sign text-yellow-600 mr-2"></i>
+            Total Cost Trend
+        </h3>
+        <div id="cost-trend-chart" style="height: 300px;"></div>
+    </div>
+</div>
+
+<!-- Application Count Trend -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        <i class="fas fa-layer-group text-purple-600 mr-2"></i>
+        Portfolio Size Over Time
+    </h3>
+    <div id="app-count-chart" style="height: 300px;"></div>
+</div>
+{% endif %}
+
+<!-- Top Improvers and Decliners -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Top Improvers -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-arrow-up text-green-600 mr-2"></i>
+            Top Improving Applications
+        </h3>
+
+        {% if improvers %}
+        <div class="space-y-3">
+            {% for app in improvers %}
+            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                <div class="flex-1">
+                    <p class="font-medium text-gray-800">{{ app.application_name }}</p>
+                    <p class="text-xs text-gray-500">{{ app.assessment_count }} assessments</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-bold text-green-700">+{{ "%.1f"|format(app.avg_change) }}</p>
+                    <p class="text-xs text-gray-600">Avg change</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500 py-8">No trend data available yet</p>
+        {% endif %}
+    </div>
+
+    <!-- Top Decliners -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-arrow-down text-red-600 mr-2"></i>
+            Declining Applications
+        </h3>
+
+        {% if decliners %}
+        <div class="space-y-3">
+            {% for app in decliners %}
+            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                <div class="flex-1">
+                    <p class="font-medium text-gray-800">{{ app.application_name }}</p>
+                    <p class="text-xs text-gray-500">{{ app.assessment_count }} assessments</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-bold text-red-700">{{ "%.1f"|format(app.avg_change) }}</p>
+                    <p class="text-xs text-gray-600">Avg change</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500 py-8">No trend data available yet</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Insights Section -->
+{% if assessments %}
+<div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-8 text-white">
+    <div class="flex items-start space-x-4">
+        <div class="bg-white bg-opacity-20 rounded-full p-4">
+            <i class="fas fa-lightbulb text-4xl"></i>
+        </div>
+        <div>
+            <h3 class="text-2xl font-bold mb-3">Historical Insights</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-blue-100">
+                <div>
+                    <p class="text-3xl font-bold text-white">{{ assessments|length }}</p>
+                    <p class="text-sm">Total Assessments</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-white">{{ (improvers|length + decliners|length) }}</p>
+                    <p class="text-sm">Applications Tracked</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-white">
+                        {% if trends and trends.timestamps %}{{ trends.timestamps|length }}{% else %}0{% endif %}
+                    </p>
+                    <p class="text-sm">Data Points</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if trends and trends.timestamps %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const timestamps = {{ trends.timestamps|tojson }};
+    const avgScores = {{ trends.avg_scores|tojson }};
+    const totalCosts = {{ trends.total_costs|tojson }};
+    const appCounts = {{ trends.app_counts|tojson }};
+
+    // Format dates for display
+    const dates = timestamps.map(ts => new Date(ts).toLocaleDateString());
+
+    // Average Score Trend Chart
+    const scoreTrace = {
+        x: dates,
+        y: avgScores,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Avg Score',
+        line: {
+            color: '#10B981',
+            width: 3
+        },
+        marker: {
+            size: 8,
+            color: '#10B981'
+        }
+    };
+
+    const scoreLayout = {
+        margin: { l: 50, r: 30, t: 20, b: 50 },
+        xaxis: {
+            title: 'Assessment Date',
+            tickangle: -45
+        },
+        yaxis: {
+            title: 'Average Score',
+            range: [0, 100]
+        },
+        hovermode: 'closest'
+    };
+
+    Plotly.newPlot('score-trend-chart', [scoreTrace], scoreLayout, {responsive: true});
+
+    // Total Cost Trend Chart
+    const costTrace = {
+        x: dates,
+        y: totalCosts,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Total Cost',
+        line: {
+            color: '#F59E0B',
+            width: 3
+        },
+        marker: {
+            size: 8,
+            color: '#F59E0B'
+        },
+        fill: 'tozeroy'
+    };
+
+    const costLayout = {
+        margin: { l: 80, r: 30, t: 20, b: 50 },
+        xaxis: {
+            title: 'Assessment Date',
+            tickangle: -45
+        },
+        yaxis: {
+            title: 'Total Annual Cost ($)',
+            tickformat: '$,.0f'
+        },
+        hovermode: 'closest'
+    };
+
+    Plotly.newPlot('cost-trend-chart', [costTrace], costLayout, {responsive: true});
+
+    // Application Count Trend Chart
+    const appCountTrace = {
+        x: dates,
+        y: appCounts,
+        type: 'bar',
+        name: 'Application Count',
+        marker: {
+            color: '#8B5CF6'
+        }
+    };
+
+    const appCountLayout = {
+        margin: { l: 50, r: 30, t: 20, b: 50 },
+        xaxis: {
+            title: 'Assessment Date',
+            tickangle: -45
+        },
+        yaxis: {
+            title: 'Number of Applications'
+        },
+        hovermode: 'closest'
+    };
+
+    Plotly.newPlot('app-count-chart', [appCountTrace], appCountLayout, {responsive: true});
+
+    // Make charts responsive
+    window.addEventListener('resize', function() {
+        ['score-trend-chart', 'cost-trend-chart', 'app-count-chart'].forEach(function(id) {
+            if (document.getElementById(id)) {
+                Plotly.Plots.resize(id);
+            }
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

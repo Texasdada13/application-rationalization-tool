@@ -230,3 +230,4 @@ config/*.local.yaml
 # Temporary files
 *.tmp
 *.bak
+data/*.db
