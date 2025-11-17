@@ -32,12 +32,14 @@ from src.scoring_engine import ScoringEngine, ScoringWeights
 from src.recommendation_engine import RecommendationEngine
 from src.time_framework import TIMEFramework, TIMEThresholds
 from src.database import Database
+from src.ml_engine import MLEngine
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize database
+# Initialize database and ML engine
 db = Database()
+ml_engine = MLEngine()
 
 # Configure upload folder
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
@@ -357,6 +359,45 @@ def history_page():
                          decliners=decliners)
 
 
+@app.route('/ml-insights')
+def ml_insights_page():
+    """ML-driven insights and recommendations page"""
+    global current_data
+
+    if current_data is None or current_data.empty:
+        load_sample_data()
+
+    # Initialize empty data structures
+    clusters = None
+    anomalies = None
+    ml_recommendations = None
+
+    try:
+        # Get ML insights
+        if current_data is not None and len(current_data) >= 10:
+            try:
+                clusters = ml_engine.cluster_applications(current_data, n_clusters=5)
+            except Exception as e:
+                logger.warning(f"Clustering failed: {e}")
+
+            try:
+                anomalies = ml_engine.detect_anomalies(current_data, contamination=0.1)
+            except Exception as e:
+                logger.warning(f"Anomaly detection failed: {e}")
+
+            try:
+                ml_recommendations = ml_engine.get_ml_recommendations(current_data, top_n=5)
+            except Exception as e:
+                logger.warning(f"ML recommendations failed: {e}")
+    except Exception as e:
+        logger.error(f"Failed to generate ML insights: {e}")
+
+    return render_template('ml_insights.html',
+                         clusters=clusters,
+                         anomalies=anomalies,
+                         ml_recommendations=ml_recommendations)
+
+
 # ==========================
 # API ENDPOINTS
 # ==========================
@@ -622,6 +663,122 @@ def get_score_changes():
         changes = db.get_score_trends(application_name=app_name, limit=limit)
         return jsonify(changes)
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==========================
+# ML/AI ENDPOINTS
+# ==========================
+
+@app.route('/api/ml/clusters')
+def get_ml_clusters():
+    """Get application clusters using ML"""
+    global current_data
+
+    if current_data is None or current_data.empty:
+        return jsonify({'error': 'No data loaded'}), 404
+
+    try:
+        n_clusters = request.args.get('clusters', 5, type=int)
+        results = ml_engine.cluster_applications(current_data, n_clusters=n_clusters)
+        return jsonify(results)
+    except Exception as e:
+        logger.error(f"ML clustering error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ml/anomalies')
+def get_ml_anomalies():
+    """Detect anomalous applications using ML"""
+    global current_data
+
+    if current_data is None or current_data.empty:
+        return jsonify({'error': 'No data loaded'}), 404
+
+    try:
+        contamination = request.args.get('contamination', 0.1, type=float)
+        results = ml_engine.detect_anomalies(current_data, contamination=contamination)
+        return jsonify(results)
+    except Exception as e:
+        logger.error(f"ML anomaly detection error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ml/predict/<string:app_name>')
+def get_ml_prediction(app_name: str):
+    """Predict trends for a specific application"""
+    try:
+        # Get historical data for this application
+        history = db.get_application_history(app_name, limit=20)
+
+        if not history or len(history) < 3:
+            return jsonify({
+                'error': 'Insufficient historical data for prediction',
+                'minimum_required': 3,
+                'available': len(history) if history else 0
+            }), 400
+
+        # Generate prediction
+        prediction = ml_engine.predict_trends(history, app_name)
+        return jsonify(prediction)
+    except Exception as e:
+        logger.error(f"ML prediction error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ml/recommendations')
+def get_ml_recommendations():
+    """Get ML-enhanced recommendations"""
+    global current_data
+
+    if current_data is None or current_data.empty:
+        return jsonify({'error': 'No data loaded'}), 404
+
+    try:
+        top_n = request.args.get('top_n', 10, type=int)
+        results = ml_engine.get_ml_recommendations(current_data, top_n=top_n)
+        return jsonify(results)
+    except Exception as e:
+        logger.error(f"ML recommendations error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ml/insights')
+def get_ml_insights():
+    """Get comprehensive ML insights"""
+    global current_data
+
+    if current_data is None or current_data.empty:
+        return jsonify({'error': 'No data loaded'}), 404
+
+    try:
+        # Run all ML analyses
+        insights = {}
+
+        # Clustering
+        try:
+            insights['clusters'] = ml_engine.cluster_applications(current_data, n_clusters=5)
+        except Exception as e:
+            logger.warning(f"Clustering failed: {e}")
+            insights['clusters'] = None
+
+        # Anomaly detection
+        try:
+            insights['anomalies'] = ml_engine.detect_anomalies(current_data, contamination=0.1)
+        except Exception as e:
+            logger.warning(f"Anomaly detection failed: {e}")
+            insights['anomalies'] = None
+
+        # ML recommendations
+        try:
+            insights['recommendations'] = ml_engine.get_ml_recommendations(current_data, top_n=5)
+        except Exception as e:
+            logger.warning(f"ML recommendations failed: {e}")
+            insights['recommendations'] = None
+
+        return jsonify(insights)
+    except Exception as e:
+        logger.error(f"ML insights error: {e}")
         return jsonify({'error': str(e)}), 500
 
 

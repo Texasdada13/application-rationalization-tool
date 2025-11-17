@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}AI/ML Insights - Application Rationalization Tool{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-robot text-blue-600 mr-3"></i>AI/ML Insights
+{% endblock %}
+{% block page_subtitle %}Machine Learning-Powered Application Analysis{% endblock %}
+
+{% block content %}
+
+<!-- AI/ML Branding Header -->
+<div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-8 mb-8 text-white">
+    <div class="flex items-center justify-between">
+        <div>
+            <div class="flex items-center mb-2">
+                <i class="fas fa-brain text-4xl mr-4"></i>
+                <h2 class="text-3xl font-bold">Intelligent Portfolio Analysis</h2>
+            </div>
+            <p class="text-blue-100 mt-2">Advanced machine learning models analyzing your application portfolio for strategic insights</p>
+        </div>
+        <div class="text-right">
+            <div class="text-sm text-blue-100">
+                <i class="fas fa-check-circle mr-1"></i>AI-Powered
+            </div>
+            <div class="text-xs text-blue-200 mt-2">
+                Models: Clustering, Anomaly Detection, Recommendations
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Check if any data exists -->
+{% if not clusters and not anomalies and not ml_recommendations %}
+<!-- Empty State -->
+<div class="bg-white rounded-xl shadow-md p-12 text-center">
+    <div class="mb-6">
+        <i class="fas fa-inbox text-6xl text-gray-300"></i>
+    </div>
+    <h3 class="text-2xl font-bold text-gray-800 mb-2">No ML Insights Available</h3>
+    <p class="text-gray-600 mb-4">
+        Machine learning models require a minimum dataset to generate meaningful insights. Please ensure you have:
+    </p>
+    <div class="inline-block text-left text-gray-600 mb-6">
+        <ul class="space-y-2">
+            <li><i class="fas fa-check text-green-600 mr-2"></i>At least 10 applications in your portfolio</li>
+            <li><i class="fas fa-check text-green-600 mr-2"></i>Complete data with Business Value, Tech Health, and Cost</li>
+            <li><i class="fas fa-check text-green-600 mr-2"></i>Valid Action Recommendations configured</li>
+        </ul>
+    </div>
+    <a href="{{ url_for('upload_page') }}" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+        <i class="fas fa-upload mr-2"></i>Upload Data
+    </a>
+</div>
+
+{% else %}
+
+<!-- Application Clusters Section -->
+{% if clusters %}
+<div class="mb-8">
+    <div class="flex items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-project-diagram text-blue-600 mr-3"></i>
+            Application Clusters
+        </h2>
+        <span class="ml-auto px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+            {{ clusters.clusters|length }} groups identified
+        </span>
+    </div>
+    <p class="text-gray-600 mb-6">Applications grouped by similar characteristics using K-Means clustering</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for cluster in clusters.clusters %}
+        <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition border-t-4 border-blue-500">
+            <!-- Cluster Header -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">{{ cluster.label }}</h3>
+                <p class="text-sm text-gray-500 mt-1">{{ cluster.description }}</p>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="space-y-3 mb-4 pb-4 border-b">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Applications</span>
+                    <span class="font-semibold text-gray-800">{{ cluster.size }}</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Business Value</span>
+                    <div class="flex items-center">
+                        <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: {{ (cluster.avg_business_value / 10) * 100 }}%"></div>
+                        </div>
+                        <span class="font-semibold text-gray-800 w-8">{{ "%.1f"|format(cluster.avg_business_value) }}</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Tech Health</span>
+                    <div class="flex items-center">
+                        <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: {{ (cluster.avg_tech_health / 10) * 100 }}%"></div>
+                        </div>
+                        <span class="font-semibold text-gray-800 w-8">{{ "%.1f"|format(cluster.avg_tech_health) }}</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Avg Cost</span>
+                    <span class="font-semibold text-gray-800">${{ "{:,.0f}".format(cluster.avg_cost) }}</span>
+                </div>
+            </div>
+
+            <!-- Dominant Recommendation -->
+            {% if cluster.dominant_recommendation %}
+            <div class="mb-4">
+                <p class="text-xs text-gray-500 uppercase mb-2">Primary Recommendation</p>
+                <span class="badge" style="background-color:
+                    {% if cluster.dominant_recommendation == 'Retire' %}#FEE2E2{% elif cluster.dominant_recommendation == 'Invest' %}#DBEAFE{% elif cluster.dominant_recommendation == 'Maintain' %}#FEF3C7{% elif cluster.dominant_recommendation == 'Migrate' %}#EDE9FE{% else %}#F3F4F6{% endif %};
+                    color:
+                    {% if cluster.dominant_recommendation == 'Retire' %}#991B1B{% elif cluster.dominant_recommendation == 'Invest' %}#1E40AF{% elif cluster.dominant_recommendation == 'Maintain' %}#92400E{% elif cluster.dominant_recommendation == 'Migrate' %}#5B21B6{% else %}#6B7280{% endif %}">
+                    {{ cluster.dominant_recommendation }}
+                </span>
+            </div>
+            {% endif %}
+
+            <!-- Top Applications -->
+            <div>
+                <p class="text-xs text-gray-500 uppercase mb-2">Top Applications</p>
+                <ul class="space-y-1">
+                    {% for app_name in cluster.applications[:5] %}
+                    <li class="text-sm text-gray-700 truncate">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>{{ app_name }}
+                    </li>
+                    {% endfor %}
+                    {% if cluster.applications|length > 5 %}
+                    <li class="text-sm text-gray-500 italic">
+                        +{{ cluster.applications|length - 5 }} more
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Anomaly Detection Section -->
+{% if anomalies and anomalies.anomalies_detected > 0 %}
+<div class="mb-8">
+    <div class="flex items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-exclamation-circle text-orange-600 mr-3"></i>
+            Anomaly Detection
+        </h2>
+        <span class="ml-auto px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+            {{ anomalies.anomalies_detected }} anomalies
+        </span>
+    </div>
+    <p class="text-gray-600 mb-6">Applications with unusual characteristics detected using Isolation Forest algorithm</p>
+
+    <div class="space-y-4">
+        {% for anomaly in anomalies.anomaly_list[:10] %}
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 {% if anomaly.severity == 'High' %}border-red-500{% else %}border-yellow-500{% endif %}">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex-1">
+                    <h3 class="font-semibold text-gray-800">{{ anomaly.application_name }}</h3>
+                    <span class="inline-block mt-1 px-2 py-1 text-xs font-medium rounded
+                        {% if anomaly.severity == 'High' %}
+                        bg-red-100 text-red-700
+                        {% else %}
+                        bg-yellow-100 text-yellow-700
+                        {% endif %}">
+                        {{ anomaly.severity }} Severity
+                    </span>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-600">Anomaly Score</p>
+                    <p class="text-xl font-bold text-gray-800">{{ "%.2f"|format(anomaly.anomaly_score) }}</p>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b">
+                <div>
+                    <p class="text-xs text-gray-500">Business Value</p>
+                    <p class="text-lg font-semibold text-gray-800">{{ "%.1f"|format(anomaly.business_value) }}/10</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Tech Health</p>
+                    <p class="text-lg font-semibold text-gray-800">{{ "%.1f"|format(anomaly.tech_health) }}/10</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Annual Cost</p>
+                    <p class="text-lg font-semibold text-gray-800">${{ "{:,.0f}".format(anomaly.cost) }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Recommendation</p>
+                    <p class="text-lg font-semibold text-gray-800">{{ anomaly.recommendation }}</p>
+                </div>
+            </div>
+
+            <!-- Anomaly Reasons -->
+            <div>
+                <p class="text-sm font-medium text-gray-700 mb-2">Why It's Anomalous:</p>
+                <ul class="space-y-1">
+                    {% for reason in anomaly.reasons %}
+                    <li class="text-sm text-gray-600">
+                        <i class="fas fa-arrow-right text-gray-400 mr-2"></i>{{ reason }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if anomalies.anomaly_list|length > 10 %}
+        <div class="bg-gray-50 rounded-xl p-4 text-center text-gray-600 text-sm">
+            Showing 10 of {{ anomalies.anomaly_list|length }} anomalies
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% elif anomalies %}
+<div class="bg-blue-50 rounded-xl p-6 mb-8 border border-blue-200">
+    <div class="flex items-center">
+        <i class="fas fa-info-circle text-blue-600 text-2xl mr-3"></i>
+        <div>
+            <p class="font-semibold text-blue-900">No Anomalies Detected</p>
+            <p class="text-sm text-blue-700">All {{ anomalies.total_applications }} applications appear to be within expected parameters</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ML Recommendations Section -->
+{% if ml_recommendations %}
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">
+        <i class="fas fa-lightbulb text-yellow-500 mr-3"></i>
+        ML-Driven Recommendations
+    </h2>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Retirement Candidates -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-red-50 px-6 py-4 border-b border-red-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-times-circle text-red-600 mr-2"></i>
+                    Retirement Candidates
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">Low value, poor health, high cost</p>
+            </div>
+            <div class="p-6">
+                {% if ml_recommendations.retirement_candidates|length > 0 %}
+                <div class="space-y-4">
+                    {% for app in ml_recommendations.retirement_candidates[:5] %}
+                    <div class="pb-4 border-b last:border-b-0 last:pb-0">
+                        <div class="flex items-start justify-between mb-2">
+                            <p class="font-semibold text-gray-800">{{ app.application_name }}</p>
+                            <span class="badge badge-retire">Retire</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">{{ app.reason }}</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Annual Savings:</span>
+                            <span class="font-semibold text-red-600">${{ "{:,.0f}".format(app.annual_savings) }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i>
+                    <p class="text-sm">No retirement candidates identified</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Investment Opportunities -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-blue-50 px-6 py-4 border-b border-blue-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-arrow-up text-blue-600 mr-2"></i>
+                    Investment Opportunities
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">High value, good health, strategic</p>
+            </div>
+            <div class="p-6">
+                {% if ml_recommendations.investment_opportunities|length > 0 %}
+                <div class="space-y-4">
+                    {% for app in ml_recommendations.investment_opportunities[:5] %}
+                    <div class="pb-4 border-b last:border-b-0 last:pb-0">
+                        <div class="flex items-start justify-between mb-2">
+                            <p class="font-semibold text-gray-800">{{ app.application_name }}</p>
+                            <span class="badge badge-invest">Invest</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">{{ app.reason }}</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Investment Score:</span>
+                            <span class="font-semibold text-blue-600">{{ "%.1f"|format(app.score) }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-inbox text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-sm">No investment opportunities identified</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Wins -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-green-50 px-6 py-4 border-b border-green-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-zap text-green-600 mr-2"></i>
+                    Quick Wins
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">Medium value, improvable health</p>
+            </div>
+            <div class="p-6">
+                {% if ml_recommendations.quick_wins|length > 0 %}
+                <div class="space-y-4">
+                    {% for app in ml_recommendations.quick_wins[:5] %}
+                    <div class="pb-4 border-b last:border-b-0 last:pb-0">
+                        <div class="flex items-start justify-between mb-2">
+                            <p class="font-semibold text-gray-800">{{ app.application_name }}</p>
+                            <span class="badge badge-maintain">Quick Win</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">{{ app.reason }}</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Opportunity Score:</span>
+                            <span class="font-semibold text-green-600">{{ "%.1f"|format(app.score) }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-inbox text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-sm">No quick wins identified</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Consolidation Targets -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-purple-50 px-6 py-4 border-b border-purple-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-object-group text-purple-600 mr-2"></i>
+                    Consolidation Targets
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">Similar applications for merging</p>
+            </div>
+            <div class="p-6">
+                {% if ml_recommendations.consolidation_targets|length > 0 %}
+                <div class="space-y-4">
+                    {% for app in ml_recommendations.consolidation_targets[:5] %}
+                    <div class="pb-4 border-b last:border-b-0 last:pb-0">
+                        <div class="flex items-start justify-between mb-2">
+                            <p class="font-semibold text-gray-800">{{ app.application_name }}</p>
+                            <span class="badge badge-consolidate">Consolidate</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">{{ app.get('reason', 'Similar to other applications in cluster') }}</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Similarity Score:</span>
+                            <span class="font-semibold text-purple-600">{{ "%.1f"|format(app.get('score', 0)) }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-inbox text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-sm">No consolidation targets identified</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Information Footer -->
+<div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6 mt-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+            <h3 class="font-semibold text-gray-800 mb-2">
+                <i class="fas fa-cube text-blue-600 mr-2"></i>Clustering
+            </h3>
+            <p class="text-sm text-gray-600">K-Means clustering identifies groups of similar applications based on business value, technical health, and cost.</p>
+        </div>
+        <div>
+            <h3 class="font-semibold text-gray-800 mb-2">
+                <i class="fas fa-chart-scatter text-indigo-600 mr-2"></i>Anomaly Detection
+            </h3>
+            <p class="text-sm text-gray-600">Isolation Forest algorithm detects unusual applications that deviate from normal portfolio characteristics.</p>
+        </div>
+        <div>
+            <h3 class="font-semibold text-gray-800 mb-2">
+                <i class="fas fa-brain text-purple-600 mr-2"></i>Recommendations
+            </h3>
+            <p class="text-sm text-gray-600">Machine learning models generate prioritized recommendations across retirement, investment, optimization, and consolidation categories.</p>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+// Any future interactive features can be added here
+console.log('ML Insights page loaded');
+{% endblock %}
