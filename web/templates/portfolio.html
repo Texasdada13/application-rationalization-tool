@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio - Application Rationalization Tool{% endblock %}
+
+{% block page_title %}Application Portfolio{% endblock %}
+{% block page_subtitle %}Complete inventory of all applications{% endblock %}
+
+{% block content %}
+<!-- Search and Filter Controls -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search Input -->
+        <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-search mr-1"></i> Search Applications
+            </label>
+            <input type="text" id="searchInput" placeholder="Search by name or owner..."
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <!-- Recommendation Filter -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-filter mr-1"></i> Recommendation
+            </label>
+            <select id="recommendationFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">All Recommendations</option>
+                <option value="Retire">Retire</option>
+                <option value="Invest">Invest</option>
+                <option value="Maintain">Maintain</option>
+                <option value="Migrate">Migrate</option>
+                <option value="Tolerate">Tolerate</option>
+                <option value="Retain">Retain</option>
+                <option value="Consolidate">Consolidate</option>
+            </select>
+        </div>
+
+        <!-- Score Filter -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-star mr-1"></i> Score Range
+            </label>
+            <select id="scoreFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">All Scores</option>
+                <option value="high">High (70-100)</option>
+                <option value="medium">Medium (40-69)</option>
+                <option value="low">Low (0-39)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="flex justify-end mt-4 space-x-3">
+        <button onclick="resetFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+            <i class="fas fa-redo mr-2"></i>Reset Filters
+        </button>
+        <a href="/api/export/csv" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+            <i class="fas fa-file-csv mr-2"></i>Export CSV
+        </a>
+        <a href="/api/export/excel" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-file-excel mr-2"></i>Export Excel
+        </a>
+    </div>
+</div>
+
+<!-- Portfolio Table -->
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full" id="portfolioTable">
+            <thead class="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(0)">
+                        Application Name <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(1)">
+                        Owner <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(2)">
+                        Score <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(3)">
+                        Business Value <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(4)">
+                        Tech Health <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(5)">
+                        Cost <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(6)">
+                        Recommendation <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(7)">
+                        TIME Category <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for app in applications %}
+                <tr class="hover:bg-gray-50 transition app-row">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">{{ app.application_name }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-700">{{ app.owner }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        {% if app.final_score >= 70 %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                                {{ "%.1f"|format(app.final_score) }}
+                            </span>
+                        {% elif app.final_score >= 40 %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
+                                {{ "%.1f"|format(app.final_score) }}
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                                {{ "%.1f"|format(app.final_score) }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="text-sm text-gray-700">{{ app.business_value }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="text-sm text-gray-700">{{ app.technical_health }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="text-sm font-medium text-gray-900">${{ "{:,.0f}".format(app.cost) }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <span class="badge badge-{{ app.recommendation|lower }}">{{ app.recommendation }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <span class="badge badge-{{ app.time_category|lower }}">{{ app.time_category }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Table Footer with Count -->
+    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+                Showing <span id="visibleCount">{{ applications|length }}</span> of <span id="totalCount">{{ applications|length }}</span> applications
+            </div>
+            <div class="text-sm text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i> Click column headers to sort
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+let currentSort = { column: -1, ascending: true };
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('recommendationFilter').addEventListener('change', filterTable);
+document.getElementById('scoreFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const recommendation = document.getElementById('recommendationFilter').value.toLowerCase();
+    const scoreRange = document.getElementById('scoreFilter').value;
+
+    const rows = document.querySelectorAll('.app-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const appName = cells[0].textContent.toLowerCase();
+        const owner = cells[1].textContent.toLowerCase();
+        const score = parseFloat(cells[2].textContent.trim());
+        const appRecommendation = cells[6].textContent.toLowerCase().trim();
+
+        // Search filter
+        const matchesSearch = appName.includes(searchTerm) || owner.includes(searchTerm);
+
+        // Recommendation filter
+        const matchesRecommendation = !recommendation || appRecommendation === recommendation;
+
+        // Score filter
+        let matchesScore = true;
+        if (scoreRange === 'high') {
+            matchesScore = score >= 70;
+        } else if (scoreRange === 'medium') {
+            matchesScore = score >= 40 && score < 70;
+        } else if (scoreRange === 'low') {
+            matchesScore = score < 40;
+        }
+
+        if (matchesSearch && matchesRecommendation && matchesScore) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    document.getElementById('visibleCount').textContent = visibleCount;
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('recommendationFilter').value = '';
+    document.getElementById('scoreFilter').value = '';
+    filterTable();
+}
+
+function sortTable(columnIndex) {
+    const table = document.getElementById('portfolioTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('.app-row'));
+
+    // Determine sort direction
+    if (currentSort.column === columnIndex) {
+        currentSort.ascending = !currentSort.ascending;
+    } else {
+        currentSort.column = columnIndex;
+        currentSort.ascending = true;
+    }
+
+    // Sort rows
+    rows.sort((a, b) => {
+        const aCell = a.querySelectorAll('td')[columnIndex].textContent.trim();
+        const bCell = b.querySelectorAll('td')[columnIndex].textContent.trim();
+
+        let aVal, bVal;
+
+        // Handle numeric columns
+        if (columnIndex === 2 || columnIndex === 3 || columnIndex === 4) {
+            // Score, Business Value, Tech Health
+            aVal = parseFloat(aCell);
+            bVal = parseFloat(bCell);
+        } else if (columnIndex === 5) {
+            // Cost - remove $ and commas
+            aVal = parseFloat(aCell.replace(/[$,]/g, ''));
+            bVal = parseFloat(bCell.replace(/[$,]/g, ''));
+        } else {
+            // String columns
+            aVal = aCell.toLowerCase();
+            bVal = bCell.toLowerCase();
+        }
+
+        if (aVal < bVal) return currentSort.ascending ? -1 : 1;
+        if (aVal > bVal) return currentSort.ascending ? 1 : -1;
+        return 0;
+    });
+
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Update sort indicators
+    const headers = table.querySelectorAll('th');
+    headers.forEach((header, index) => {
+        const icon = header.querySelector('i');
+        if (index === columnIndex) {
+            icon.className = currentSort.ascending ? 'fas fa-sort-up ml-1 text-blue-600' : 'fas fa-sort-down ml-1 text-blue-600';
+        } else {
+            icon.className = 'fas fa-sort ml-1 text-gray-400';
+        }
+    });
+}
+{% endblock %}

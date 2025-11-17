@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}TIME Framework - Application Rationalization Tool{% endblock %}
+
+{% block page_title %}TIME Framework{% endblock %}
+{% block page_subtitle %}Tolerate, Invest, Migrate, Eliminate Analysis{% endblock %}
+
+{% block content %}
+<!-- Framework Explanation -->
+<div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-8 mb-8 text-white">
+    <div class="flex items-start space-x-4">
+        <div class="bg-white bg-opacity-20 rounded-full p-4">
+            <i class="fas fa-th text-4xl"></i>
+        </div>
+        <div>
+            <h3 class="text-2xl font-bold mb-3">What is the TIME Framework?</h3>
+            <p class="text-blue-100 leading-relaxed mb-4">
+                The TIME Framework is a strategic tool for application portfolio rationalization that categorizes applications
+                based on their business value and technical health. This quadrant-based approach helps executives make
+                data-driven decisions about where to allocate resources and which applications require immediate attention.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white bg-opacity-10 rounded-lg p-3">
+                    <p class="font-semibold mb-1"><i class="fas fa-arrow-up mr-2"></i>Invest</p>
+                    <p class="text-sm text-blue-100">High value, high health</p>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-3">
+                    <p class="font-semibold mb-1"><i class="fas fa-pause mr-2"></i>Tolerate</p>
+                    <p class="text-sm text-blue-100">Low value, high health</p>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-3">
+                    <p class="font-semibold mb-1"><i class="fas fa-exchange-alt mr-2"></i>Migrate</p>
+                    <p class="text-sm text-blue-100">High value, low health</p>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-3">
+                    <p class="font-semibold mb-1"><i class="fas fa-times mr-2"></i>Eliminate</p>
+                    <p class="text-sm text-blue-100">Low value, low health</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TIME Category Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Invest Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-t-4 border-blue-500">
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                <i class="fas fa-arrow-up text-3xl text-blue-600"></i>
+            </div>
+            <h4 class="text-lg font-semibold text-gray-800 mb-2">Invest</h4>
+            <p class="text-4xl font-bold text-blue-600 mb-2">{{ stats.invest }}</p>
+            <p class="text-sm text-gray-500">Strategic assets for growth</p>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-xs text-gray-600">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                    Continue investment and enhancement
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tolerate Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-t-4 border-yellow-500">
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
+                <i class="fas fa-pause text-3xl text-yellow-600"></i>
+            </div>
+            <h4 class="text-lg font-semibold text-gray-800 mb-2">Tolerate</h4>
+            <p class="text-4xl font-bold text-yellow-600 mb-2">{{ stats.tolerate }}</p>
+            <p class="text-sm text-gray-500">Maintain with minimal spend</p>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-xs text-gray-600">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                    Monitor and maintain current state
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Migrate Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-t-4 border-purple-500">
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
+                <i class="fas fa-exchange-alt text-3xl text-purple-600"></i>
+            </div>
+            <h4 class="text-lg font-semibold text-gray-800 mb-2">Migrate</h4>
+            <p class="text-4xl font-bold text-purple-600 mb-2">{{ stats.migrate }}</p>
+            <p class="text-sm text-gray-500">Modernize to reduce risk</p>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-xs text-gray-600">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                    Upgrade or replace technology
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eliminate Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-t-4 border-red-500">
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                <i class="fas fa-times text-3xl text-red-600"></i>
+            </div>
+            <h4 class="text-lg font-semibold text-gray-800 mb-2">Eliminate</h4>
+            <p class="text-4xl font-bold text-red-600 mb-2">{{ stats.eliminate }}</p>
+            <p class="text-sm text-gray-500">Candidates for retirement</p>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-xs text-gray-600">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                    Plan for decommissioning
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TIME Framework Chart -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        <i class="fas fa-project-diagram text-indigo-600 mr-2"></i>
+        TIME Framework Visualization
+    </h3>
+    <div id="time-framework-chart" class="w-full" style="height: 600px;"></div>
+</div>
+
+<!-- Strategic Guidance Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Invest Guidance -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center mb-4">
+            <div class="bg-blue-100 rounded-lg p-3 mr-4">
+                <i class="fas fa-arrow-up text-2xl text-blue-600"></i>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold text-gray-800">Invest Strategy</h4>
+                <p class="text-sm text-gray-500">High Business Value, High Technical Health</p>
+            </div>
+        </div>
+        <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-blue-600 mt-1 mr-2"></i>
+                <span>Increase funding for feature development and innovation</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-blue-600 mt-1 mr-2"></i>
+                <span>Expand capabilities to support strategic business goals</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-blue-600 mt-1 mr-2"></i>
+                <span>Maintain technical excellence through continuous improvement</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-blue-600 mt-1 mr-2"></i>
+                <span>Leverage as platforms for competitive advantage</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tolerate Guidance -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center mb-4">
+            <div class="bg-yellow-100 rounded-lg p-3 mr-4">
+                <i class="fas fa-pause text-2xl text-yellow-600"></i>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold text-gray-800">Tolerate Strategy</h4>
+                <p class="text-sm text-gray-500">Low Business Value, High Technical Health</p>
+            </div>
+        </div>
+        <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-yellow-600 mt-1 mr-2"></i>
+                <span>Minimize operational and maintenance costs</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-yellow-600 mt-1 mr-2"></i>
+                <span>Continue running but avoid new feature development</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-yellow-600 mt-1 mr-2"></i>
+                <span>Monitor for potential consolidation opportunities</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-yellow-600 mt-1 mr-2"></i>
+                <span>Consider as candidates for standardization</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Migrate Guidance -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center mb-4">
+            <div class="bg-purple-100 rounded-lg p-3 mr-4">
+                <i class="fas fa-exchange-alt text-2xl text-purple-600"></i>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold text-gray-800">Migrate Strategy</h4>
+                <p class="text-sm text-gray-500">High Business Value, Low Technical Health</p>
+            </div>
+        </div>
+        <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-purple-600 mt-1 mr-2"></i>
+                <span>Prioritize for modernization or replacement</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-purple-600 mt-1 mr-2"></i>
+                <span>Address technical debt and security vulnerabilities</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-purple-600 mt-1 mr-2"></i>
+                <span>Evaluate cloud migration or platform upgrade options</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-purple-600 mt-1 mr-2"></i>
+                <span>Allocate resources for technical improvement projects</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Eliminate Guidance -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center mb-4">
+            <div class="bg-red-100 rounded-lg p-3 mr-4">
+                <i class="fas fa-times text-2xl text-red-600"></i>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold text-gray-800">Eliminate Strategy</h4>
+                <p class="text-sm text-gray-500">Low Business Value, Low Technical Health</p>
+            </div>
+        </div>
+        <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-red-600 mt-1 mr-2"></i>
+                <span>Develop retirement and decommissioning plans</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-red-600 mt-1 mr-2"></i>
+                <span>Identify alternative solutions or consolidation options</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-red-600 mt-1 mr-2"></i>
+                <span>Plan data migration and business process transitions</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check-circle text-red-600 mt-1 mr-2"></i>
+                <span>Capture cost savings from elimination</span>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+// Render TIME Framework Chart
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('time-framework-chart')) {
+        Plotly.newPlot('time-framework-chart', {{ chart|safe }});
+    }
+
+    // Make chart responsive
+    window.addEventListener('resize', function() {
+        if (document.getElementById('time-framework-chart')) {
+            Plotly.Plots.resize('time-framework-chart');
+        }
+    });
+});
+{% endblock %}

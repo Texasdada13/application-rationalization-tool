@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Application Rationalization Tool{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Application Portfolio Overview{% endblock %}
+
+{% block content %}
+<!-- KPI Cards Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Applications Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Total Applications</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ kpis.total_apps }}</p>
+                <p class="text-xs text-gray-400 mt-2">In portfolio</p>
+            </div>
+            <div class="bg-blue-100 rounded-full p-4">
+                <i class="fas fa-laptop-code text-3xl text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Average Score Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Average Score</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ "%.1f"|format(kpis.avg_score) }}</p>
+                <p class="text-xs text-gray-400 mt-2">Out of 100</p>
+            </div>
+            <div class="bg-green-100 rounded-full p-4">
+                <i class="fas fa-chart-line text-3xl text-green-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Cost Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Total Cost</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">${{ "{:,.0f}".format(kpis.total_cost) }}</p>
+                <p class="text-xs text-gray-400 mt-2">Annual spend</p>
+            </div>
+            <div class="bg-yellow-100 rounded-full p-4">
+                <i class="fas fa-dollar-sign text-3xl text-yellow-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- High Risk Count Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">High Risk Apps</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ kpis.high_risk_count }}</p>
+                <p class="text-xs text-gray-400 mt-2">Requires attention</p>
+            </div>
+            <div class="bg-red-100 rounded-full p-4">
+                <i class="fas fa-exclamation-triangle text-3xl text-red-600"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Retire Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Retire</p>
+                <p class="text-2xl font-bold text-gray-800 mt-2">{{ actions.retire }}</p>
+                <p class="text-xs text-red-600 mt-2">Eliminate applications</p>
+            </div>
+            <div class="text-red-500">
+                <i class="fas fa-times-circle text-3xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invest Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Invest</p>
+                <p class="text-2xl font-bold text-gray-800 mt-2">{{ actions.invest }}</p>
+                <p class="text-xs text-blue-600 mt-2">Strategic assets</p>
+            </div>
+            <div class="text-blue-500">
+                <i class="fas fa-arrow-up text-3xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Migrate Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Migrate</p>
+                <p class="text-2xl font-bold text-gray-800 mt-2">{{ actions.migrate }}</p>
+                <p class="text-xs text-purple-600 mt-2">Modernize tech</p>
+            </div>
+            <div class="text-purple-500">
+                <i class="fas fa-exchange-alt text-3xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintain Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Maintain</p>
+                <p class="text-2xl font-bold text-gray-800 mt-2">{{ actions.maintain }}</p>
+                <p class="text-xs text-yellow-600 mt-2">Keep as-is</p>
+            </div>
+            <div class="text-yellow-500">
+                <i class="fas fa-check-circle text-3xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Score Distribution Chart -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-chart-bar text-blue-600 mr-2"></i>
+            Score Distribution
+        </h3>
+        <div id="score-distribution" class="w-full" style="height: 400px;"></div>
+    </div>
+
+    <!-- Recommendations Pie Chart -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-chart-pie text-green-600 mr-2"></i>
+            Recommendations Breakdown
+        </h3>
+        <div id="recommendations-pie" class="w-full" style="height: 400px;"></div>
+    </div>
+</div>
+
+<!-- Value vs Health Scatter -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        <i class="fas fa-project-diagram text-purple-600 mr-2"></i>
+        Business Value vs Technical Health
+    </h3>
+    <div id="value-vs-health" class="w-full" style="height: 500px;"></div>
+</div>
+
+<!-- Bottom Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Top Cost Applications -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-money-bill-wave text-yellow-600 mr-2"></i>
+            Top Cost Applications
+        </h3>
+        <div id="top-cost" class="w-full" style="height: 400px;"></div>
+    </div>
+
+    <!-- TIME Framework Distribution -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-th text-indigo-600 mr-2"></i>
+            TIME Framework Distribution
+        </h3>
+        <div id="time-framework" class="w-full" style="height: 400px;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+// Render Plotly charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Score Distribution Chart
+    if (document.getElementById('score-distribution')) {
+        Plotly.newPlot('score-distribution', {{ charts.score_distribution|safe }});
+    }
+
+    // Recommendations Pie Chart
+    if (document.getElementById('recommendations-pie')) {
+        Plotly.newPlot('recommendations-pie', {{ charts.recommendations_pie|safe }});
+    }
+
+    // Value vs Health Scatter
+    if (document.getElementById('value-vs-health')) {
+        Plotly.newPlot('value-vs-health', {{ charts.value_vs_health|safe }});
+    }
+
+    // Top Cost Applications
+    if (document.getElementById('top-cost')) {
+        Plotly.newPlot('top-cost', {{ charts.top_cost|safe }});
+    }
+
+    // TIME Framework Distribution
+    if (document.getElementById('time-framework')) {
+        Plotly.newPlot('time-framework', {{ charts.time_framework|safe }});
+    }
+
+    // Make charts responsive
+    window.addEventListener('resize', function() {
+        ['score-distribution', 'recommendations-pie', 'value-vs-health', 'top-cost', 'time-framework'].forEach(function(id) {
+            if (document.getElementById(id)) {
+                Plotly.Plots.resize(id);
+            }
+        });
+    });
+});
+{% endblock %}

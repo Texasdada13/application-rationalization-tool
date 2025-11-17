@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Application Rationalization Tool{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); }
+        .nav-link { transition: all 0.2s; }
+        .nav-link:hover { background-color: rgba(59, 130, 246, 0.1); }
+        .nav-link.active { background-color: rgba(59, 130, 246, 0.15); border-left: 4px solid #3B82F6; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .badge-retire { background-color: #FEE2E2; color: #991B1B; }
+        .badge-invest { background-color: #DBEAFE; color: #1E40AF; }
+        .badge-maintain { background-color: #FEF3C7; color: #92400E; }
+        .badge-migrate { background-color: #EDE9FE; color: #5B21B6; }
+        .badge-tolerate { background-color: #FEE2E2; color: #B91C1C; }
+        .badge-retain { background-color: #D1FAE5; color: #065F46; }
+        .badge-consolidate { background-color: #FCE7F3; color: #9F1239; }
+        .badge-immediate { background-color: #7F1D1D; color: #FEE2E2; }
+        .badge-n/a { background-color: #F3F4F6; color: #6B7280; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-64 bg-white shadow-lg">
+            <div class="p-6 border-b">
+                <h1 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-chart-line text-blue-600"></i>
+                    App Rationalization
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">Executive Dashboard</p>
+            </div>
+            <nav class="p-4">
+                <a href="{{ url_for('dashboard') }}" class="nav-link flex items-center px-4 py-3 mb-2 rounded-lg text-gray-700 {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-pie w-6"></i>
+                    <span class="ml-3 font-medium">Dashboard</span>
+                </a>
+                <a href="{{ url_for('portfolio') }}" class="nav-link flex items-center px-4 py-3 mb-2 rounded-lg text-gray-700 {% if request.endpoint == 'portfolio' %}active{% endif %}">
+                    <i class="fas fa-table w-6"></i>
+                    <span class="ml-3 font-medium">Portfolio</span>
+                </a>
+                <a href="{{ url_for('time_framework_page') }}" class="nav-link flex items-center px-4 py-3 mb-2 rounded-lg text-gray-700 {% if request.endpoint == 'time_framework_page' %}active{% endif %}">
+                    <i class="fas fa-th w-6"></i>
+                    <span class="ml-3 font-medium">TIME Framework</span>
+                </a>
+                <a href="{{ url_for('reports') }}" class="nav-link flex items-center px-4 py-3 mb-2 rounded-lg text-gray-700 {% if request.endpoint == 'reports' %}active{% endif %}">
+                    <i class="fas fa-file-alt w-6"></i>
+                    <span class="ml-3 font-medium">Reports</span>
+                </a>
+                <a href="{{ url_for('upload_page') }}" class="nav-link flex items-center px-4 py-3 mb-2 rounded-lg text-gray-700 {% if request.endpoint == 'upload_page' %}active{% endif %}">
+                    <i class="fas fa-upload w-6"></i>
+                    <span class="ml-3 font-medium">Upload Data</span>
+                </a>
+            </nav>
+            <div class="absolute bottom-0 w-64 p-4 border-t bg-gray-50">
+                <div class="text-xs text-gray-500">
+                    <p class="font-semibold mb-1">Status</p>
+                    <div class="flex items-center">
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        <span>System Operational</span>
+                    </div>
+                    <p class="mt-2 text-gray-400">Last updated: <span id="last-updated">--</span></p>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 overflow-y-auto">
+            <header class="bg-white shadow-sm border-b px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h2>
+                        <p class="text-sm text-gray-500 mt-1">{% block page_subtitle %}Application Portfolio Overview{% endblock %}</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                        <div class="relative">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                                <i class="fas fa-user-circle text-xl"></i>
+                                <span class="font-medium">Executive View</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="p-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    <script>
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('last-updated').textContent = now.toLocaleTimeString();
+        }
+        function refreshData() {
+            location.reload();
+        }
+        updateTimestamp();
+        setInterval(updateTimestamp, 60000);
+        {% block extra_js %}{% endblock %}
+    </script>
+</body>
+</html>
