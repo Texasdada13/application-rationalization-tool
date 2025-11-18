@@ -1292,9 +1292,9 @@ if __name__ == '__main__':
     print("=" * 60)
     print("Application Rationalization Tool - Web Dashboard")
     print("=" * 60)
-    print("\n🚀 Starting server...")
-    print(f"📊 Dashboard URL: http://localhost:5000")
-    print(f"📁 Upload folder: {UPLOAD_FOLDER}")
+    print("\n> Starting server...")
+    print(f"> Dashboard URL: http://localhost:5000")
+    print(f"> Upload folder: {UPLOAD_FOLDER}")
     print("\nPress Ctrl+C to stop the server\n")
 
     app.run(debug=True, host='0.0.0.0', port=5000)

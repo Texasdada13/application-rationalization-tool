@@ -502,7 +502,7 @@ class ExecutiveSummaryGenerator:
             overview += f"Health: {health_metrics['health_rating']} ({health_metrics['avg_score']:.1f}/100) | "
             overview += f"Annual Cost: ${health_metrics['total_cost']:,.0f}"
 
-            return {
+            result = {
                 'success': True,
                 'overview': overview,
                 'narrative': narrative,
@@ -511,6 +511,12 @@ class ExecutiveSummaryGenerator:
                 'health_metrics': health_metrics,
                 'generated_at': datetime.now().isoformat()
             }
+
+            # Convert numpy/pandas types to native Python types for JSON serialization
+            import json
+            result = json.loads(json.dumps(result, default=str))
+
+            return result
 
         except Exception as e:
             return {
@@ -521,4 +527,4 @@ class ExecutiveSummaryGenerator:
                 'insights': [],
                 'recommendations': [],
                 'generated_at': datetime.now().isoformat()
-            }
+            }   
