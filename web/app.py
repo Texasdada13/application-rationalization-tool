@@ -33,13 +33,16 @@ from src.recommendation_engine import RecommendationEngine
 from src.time_framework import TIMEFramework, TIMEThresholds
 from src.database import Database
 from src.ml_engine import MLEngine
+from src.scheduler import SchedulerManager
+from src.compliance_engine import ComplianceEngine
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize database and ML engine
+# Initialize database, ML engine, compliance engine, and scheduler
 db = Database()
 ml_engine = MLEngine()
+compliance_engine = ComplianceEngine()
 
 # Configure upload folder
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
@@ -52,6 +55,15 @@ data_handler = DataHandler()
 scoring_engine = ScoringEngine()
 recommendation_engine = RecommendationEngine()
 time_framework = TIMEFramework()
+
+# Initialize scheduler with all components
+scheduler_manager = SchedulerManager(
+    data_handler=data_handler,
+    scoring_engine=scoring_engine,
+    recommendation_engine=recommendation_engine,
+    time_framework=time_framework,
+    database=db
+)
 
 # Global variable to store current assessment data
 current_data = None
@@ -86,6 +98,10 @@ def load_sample_data():
 
 # Load sample data on startup
 load_sample_data()
+
+# Start scheduler
+scheduler_manager.start()
+logger.info("Scheduler started successfully")
 
 
 def get_portfolio_summary(df: pd.DataFrame) -> Dict[str, Any]:
@@ -396,6 +412,30 @@ def ml_insights_page():
                          clusters=clusters,
                          anomalies=anomalies,
                          ml_recommendations=ml_recommendations)
+
+
+@app.route('/compliance')
+def compliance_page():
+    """Compliance assessment page"""
+    # Get list of frameworks
+    frameworks = compliance_engine.list_frameworks()
+    framework_summaries = []
+    for fw_name in frameworks:
+        summary = compliance_engine.get_framework_summary(fw_name)
+        framework_summaries.append(summary)
+
+    return render_template('compliance.html', frameworks=framework_summaries)
+
+
+@app.route('/scheduler')
+def scheduler_page():
+    """Scheduler management page"""
+    # Get scheduler status
+    status = scheduler_manager.get_scheduler_status()
+    jobs = scheduler_manager.get_all_jobs()
+    history = scheduler_manager.get_job_history(limit=20)
+
+    return render_template('scheduler.html', status=status, jobs=jobs, history=history)
 
 
 # ==========================
@@ -779,6 +819,302 @@ def get_ml_insights():
         return jsonify(insights)
     except Exception as e:
         logger.error(f"ML insights error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ==========================
+# SCHEDULER API ENDPOINTS
+# ==========================
+
+@app.route('/api/scheduler/status')
+def get_scheduler_status():
+    """Get scheduler status and statistics"""
+    try:
+        status = scheduler_manager.get_scheduler_status()
+        return jsonify(status)
+    except Exception as e:
+        logger.error(f"Scheduler status error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/scheduler/jobs', methods=['GET'])
+def list_scheduled_jobs():
+    """List all scheduled jobs"""
+    try:
+        jobs = scheduler_manager.get_all_jobs()
+        return jsonify({'jobs': jobs})
+    except Exception as e:
+        logger.error(f"List jobs error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/scheduler/jobs', methods=['POST'])
+def create_scheduled_job():
+    """Create a new scheduled job"""
+    try:
+        data = request.json
+
+        job_id = data.get('job_id')
+        file_path = data.get('file_path')
+        schedule_type = data.get('schedule_type', 'cron')
+        description = data.get('description')
+
+        if not job_id or not file_path:
+            return jsonify({'error': 'job_id and file_path are required'}), 400
+
+        # Get schedule parameters
+        if schedule_type == 'cron':
+            cron_expression = data.get('cron_expression', {'hour': '9', 'minute': '0'})
+            success = scheduler_manager.schedule_assessment(
+                job_id=job_id,
+                file_path=file_path,
+                schedule_type='cron',
+                cron_expression=cron_expression,
+                description=description
+            )
+        elif schedule_type == 'interval':
+            interval_minutes = data.get('interval_minutes', 60)
+            success = scheduler_manager.schedule_assessment(
+                job_id=job_id,
+                file_path=file_path,
+                schedule_type='interval',
+                interval_minutes=interval_minutes,
+                description=description
+            )
+        else:
+            return jsonify({'error': 'Invalid schedule_type'}), 400
+
+        if success:
+            return jsonify({'success': True, 'message': f'Job {job_id} created successfully'})
+        else:
+            return jsonify({'error': 'Failed to create job'}), 500
+
+    except Exception as e:
+        logger.error(f"Create job error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/scheduler/jobs/<string:job_id>', methods=['DELETE'])
+def delete_scheduled_job(job_id: str):
+    """Delete a scheduled job"""
+    try:
+        success = scheduler_manager.remove_job(job_id)
+        if success:
+            return jsonify({'success': True, 'message': f'Job {job_id} deleted'})
+        else:
+            return jsonify({'error': 'Failed to delete job'}), 500
+    except Exception as e:
+        logger.error(f"Delete job error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/scheduler/jobs/<string:job_id>/run', methods=['POST'])
+def run_job_now(job_id: str):
+    """Run a job immediately"""
+    try:
+        success = scheduler_manager.run_job_now(job_id)
+        if success:
+            return jsonify({'success': True, 'message': f'Job {job_id} triggered'})
+        else:
+            return jsonify({'error': 'Failed to run job'}), 500
+    except Exception as e:
+        logger.error(f"Run job error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/scheduler/jobs/<string:job_id>/pause', methods=['POST'])
+def pause_job(job_id: str):
+    """Pause a scheduled job"""
+    try:
+        success = scheduler_manager.pause_job(job_id)
+        if success:
+            return jsonify({'success': True, 'message': f'Job {job_id} paused'})
+        else:
+            return jsonify({'error': 'Failed to pause job'}), 500
+    except Exception as e:
+        logger.error(f"Pause job error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/scheduler/jobs/<string:job_id>/resume', methods=['POST'])
+def resume_job(job_id: str):
+    """Resume a paused job"""
+    try:
+        success = scheduler_manager.resume_job(job_id)
+        if success:
+            return jsonify({'success': True, 'message': f'Job {job_id} resumed'})
+        else:
+            return jsonify({'error': 'Failed to resume job'}), 500
+    except Exception as e:
+        logger.error(f"Resume job error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/scheduler/history')
+def get_job_history():
+    """Get job execution history"""
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        history = scheduler_manager.get_job_history(limit=limit)
+        return jsonify({'history': history})
+    except Exception as e:
+        logger.error(f"Job history error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ==========================
+# COMPLIANCE API ENDPOINTS
+# ==========================
+
+@app.route('/api/compliance/frameworks')
+def list_compliance_frameworks():
+    """List all available compliance frameworks"""
+    try:
+        frameworks = compliance_engine.list_frameworks()
+        framework_details = []
+        for fw_name in frameworks:
+            summary = compliance_engine.get_framework_summary(fw_name)
+            framework_details.append(summary)
+        return jsonify({'frameworks': framework_details})
+    except Exception as e:
+        logger.error(f"List frameworks error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/compliance/frameworks/<string:framework_name>')
+def get_framework_details(framework_name: str):
+    """Get details for a specific framework"""
+    try:
+        framework_name = framework_name.upper()
+        details = compliance_engine.get_framework_summary(framework_name)
+        if 'error' in details:
+            return jsonify(details), 404
+        return jsonify(details)
+    except Exception as e:
+        logger.error(f"Framework details error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/compliance/assess', methods=['POST'])
+def assess_compliance():
+    """Assess application(s) against a compliance framework"""
+    global current_data
+
+    try:
+        data = request.json
+        framework_name = data.get('framework', 'SOX').upper()
+        app_name = data.get('application_name')
+        compliance_data = data.get('compliance_data')
+
+        if app_name:
+            # Single application assessment
+            if not compliance_data:
+                return jsonify({'error': 'compliance_data required for single app assessment'}), 400
+
+            result = compliance_engine.assess_application_compliance(
+                app_name=app_name,
+                framework_name=framework_name,
+                compliance_data=compliance_data
+            )
+            return jsonify(result)
+        else:
+            # Batch assessment
+            if current_data is None or current_data.empty:
+                return jsonify({'error': 'No data loaded'}), 404
+
+            # Use heuristics if no mapping provided
+            compliance_mapping = data.get('compliance_mapping')
+
+            df_result = compliance_engine.batch_assess_compliance(
+                df=current_data,
+                framework_name=framework_name,
+                compliance_mapping=compliance_mapping
+            )
+
+            # Return summary
+            compliance_col = f'{framework_name}_Compliance_Score'
+            summary = {
+                'framework': framework_name,
+                'total_applications': len(df_result),
+                'avg_compliance': float(df_result[compliance_col].mean()),
+                'min_compliance': float(df_result[compliance_col].min()),
+                'max_compliance': float(df_result[compliance_col].max()),
+                'applications': df_result[[
+                    'Application Name',
+                    compliance_col,
+                    f'{framework_name}_Compliance_Level',
+                    f'{framework_name}_Risk_Level',
+                    f'{framework_name}_Gap_Count'
+                ]].to_dict('records')
+            }
+
+            return jsonify(summary)
+
+    except Exception as e:
+        logger.error(f"Compliance assessment error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/compliance/gap-analysis', methods=['POST'])
+def generate_gap_analysis():
+    """Generate gap analysis report for portfolio"""
+    global current_data
+
+    if current_data is None or current_data.empty:
+        return jsonify({'error': 'No data loaded'}), 404
+
+    try:
+        data = request.json if request.json else {}
+        framework_name = data.get('framework', 'SOX').upper()
+        compliance_mapping = data.get('compliance_mapping')
+
+        report = compliance_engine.generate_gap_analysis_report(
+            df=current_data,
+            framework_name=framework_name,
+            compliance_mapping=compliance_mapping
+        )
+
+        return jsonify(report)
+
+    except Exception as e:
+        logger.error(f"Gap analysis error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/compliance/portfolio')
+def get_portfolio_compliance():
+    """Get compliance overview for all frameworks"""
+    global current_data
+
+    if current_data is None or current_data.empty:
+        return jsonify({'error': 'No data loaded'}), 404
+
+    try:
+        frameworks = compliance_engine.list_frameworks()
+        overview = {}
+
+        for framework_name in frameworks:
+            # Quick assessment using heuristics
+            df_result = compliance_engine.batch_assess_compliance(
+                df=current_data,
+                framework_name=framework_name
+            )
+
+            compliance_col = f'{framework_name}_Compliance_Score'
+            overview[framework_name] = {
+                'avg_compliance': float(df_result[compliance_col].mean()),
+                'compliant_apps': len(df_result[df_result[f'{framework_name}_Compliance_Level'] == 'Fully Compliant']),
+                'non_compliant_apps': len(df_result[df_result[f'{framework_name}_Compliance_Level'] == 'Non-Compliant']),
+                'critical_risk_apps': len(df_result[df_result[f'{framework_name}_Risk_Level'] == 'Critical'])
+            }
+
+        return jsonify({
+            'total_applications': len(current_data),
+            'frameworks': overview
+        })
+
+    except Exception as e:
+        logger.error(f"Portfolio compliance error: {e}")
         return jsonify({'error': str(e)}), 500
 
 

@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Compliance Assessment - Application Rationalization{% endblock %}
+
+{% block page_title %}Security & Compliance{% endblock %}
+{% block page_subtitle %}Assess applications against regulatory frameworks{% endblock %}
+
+{% block content %}
+<!-- Framework Overview Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    {% for framework in frameworks %}
+    <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer" onclick="selectFramework('{{ framework.name }}')">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-gray-800">{{ framework.name }}</h3>
+            <i class="fas fa-shield-alt text-3xl text-blue-600"></i>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">{{ framework.description }}</p>
+        <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+                <span class="text-gray-600">Requirements:</span>
+                <span class="font-semibold">{{ framework.total_requirements }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-600">Critical:</span>
+                <span class="font-semibold text-red-700">{{ framework.severity_breakdown.Critical or 0 }}</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Selected Framework Details -->
+<div id="framework-details" class="bg-white rounded-xl shadow-md p-6 mb-8 hidden">
+    <h3 class="text-xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-clipboard-check text-blue-600 mr-2"></i>
+        <span id="selected-framework-name"></span> Assessment
+    </h3>
+
+    <!-- Assessment Actions -->
+    <div class="flex gap-4 mb-6">
+        <button onclick="runComplianceAssessment()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-play mr-2"></i>Run Portfolio Assessment
+        </button>
+        <button onclick="generateGapAnalysis()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+            <i class="fas fa-chart-bar mr-2"></i>Generate Gap Analysis
+        </button>
+    </div>
+
+    <!-- Results Container -->
+    <div id="assessment-results" class="hidden">
+        <!-- Portfolio Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <p class="text-sm text-blue-700 mb-1">Avg Compliance</p>
+                <p class="text-2xl font-bold text-blue-900" id="avg-compliance">-</p>
+            </div>
+            <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                <p class="text-sm text-green-700 mb-1">Compliant Apps</p>
+                <p class="text-2xl font-bold text-green-900" id="compliant-apps">-</p>
+            </div>
+            <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                <p class="text-sm text-red-700 mb-1">Non-Compliant Apps</p>
+                <p class="text-2xl font-bold text-red-900" id="non-compliant-apps">-</p>
+            </div>
+            <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                <p class="text-sm text-orange-700 mb-1">Critical Risk</p>
+                <p class="text-2xl font-bold text-orange-900" id="critical-risk-apps">-</p>
+            </div>
+        </div>
+
+        <!-- Application List -->
+        <div class="overflow-x-auto">
+            <table class="w-full" id="compliance-table">
+                <thead class="bg-gray-50 border-b-2 border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Application</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Compliance Score</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Level</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Risk</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Gaps</th>
+                    </tr>
+                </thead>
+                <tbody id="compliance-tbody" class="divide-y divide-gray-200">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Gap Analysis Results -->
+    <div id="gap-analysis-results" class="hidden">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">Gap Analysis Report</h4>
+
+        <!-- Portfolio Summary -->
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6 border border-blue-200">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Portfolio Compliance</p>
+                    <p class="text-3xl font-bold text-gray-900" id="gap-avg-compliance">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Fully Compliant Apps</p>
+                    <p class="text-3xl font-bold text-green-700" id="gap-compliant-apps">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Critical Risk Apps</p>
+                    <p class="text-3xl font-bold text-red-700" id="gap-critical-apps">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Gaps -->
+        <h5 class="text-md font-semibold text-gray-800 mb-3">Top Critical Gaps</h5>
+        <div id="critical-gaps-container" class="space-y-3 mb-6">
+        </div>
+
+        <!-- Remediation Priorities -->
+        <h5 class="text-md font-semibold text-gray-800 mb-3">Remediation Priorities</h5>
+        <div id="remediation-priorities-container" class="space-y-3">
+        </div>
+    </div>
+</div>
+
+<!-- Portfolio Compliance Overview -->
+<div class="bg-white rounded-xl shadow-md p-6">
+    <h3 class="text-xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-chart-pie text-green-600 mr-2"></i>
+        Portfolio Compliance Overview
+    </h3>
+    <button onclick="loadPortfolioOverview()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition mb-4">
+        <i class="fas fa-sync-alt mr-2"></i>Load Overview
+    </button>
+    <div id="portfolio-overview" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedFramework = null;
+
+function selectFramework(frameworkName) {
+    selectedFramework = frameworkName;
+    document.getElementById('selected-framework-name').textContent = frameworkName;
+    document.getElementById('framework-details').classList.remove('hidden');
+    document.getElementById('assessment-results').classList.add('hidden');
+    document.getElementById('gap-analysis-results').classList.add('hidden');
+}
+
+async function runComplianceAssessment() {
+    if (!selectedFramework) {
+        alert('Please select a framework first');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/compliance/assess', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({framework: selectedFramework})
+        });
+
+        const data = await response.json();
+
+        // Update summary
+        document.getElementById('avg-compliance').textContent = data.avg_compliance.toFixed(1) + '%';
+        document.getElementById('compliant-apps').textContent =
+            data.applications.filter(a => a[`${selectedFramework}_Compliance_Level`] === 'Fully Compliant').length;
+        document.getElementById('non-compliant-apps').textContent =
+            data.applications.filter(a => a[`${selectedFramework}_Compliance_Level`] === 'Non-Compliant').length;
+        document.getElementById('critical-risk-apps').textContent =
+            data.applications.filter(a => a[`${selectedFramework}_Risk_Level`] === 'Critical').length;
+
+        // Populate table
+        const tbody = document.getElementById('compliance-tbody');
+        tbody.innerHTML = '';
+
+        data.applications.forEach(app => {
+            const scoreCol = `${selectedFramework}_Compliance_Score`;
+            const levelCol = `${selectedFramework}_Compliance_Level`;
+            const riskCol = `${selectedFramework}_Risk_Level`;
+            const gapCol = `${selectedFramework}_Gap_Count`;
+
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition';
+            row.innerHTML = `
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">${app['Application Name']}</td>
+                <td class="px-6 py-4 text-center">
+                    <span class="px-3 py-1 rounded-full text-sm font-semibold
+                        ${app[scoreCol] >= 80 ? 'bg-green-100 text-green-800' :
+                          app[scoreCol] >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'}">
+                        ${app[scoreCol].toFixed(1)}%
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-center text-sm">${app[levelCol]}</td>
+                <td class="px-6 py-4 text-center">
+                    <span class="px-2 py-1 rounded text-xs font-semibold
+                        ${app[riskCol] === 'Critical' ? 'bg-red-100 text-red-800' :
+                          app[riskCol] === 'High' ? 'bg-orange-100 text-orange-800' :
+                          app[riskCol] === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'}">
+                        ${app[riskCol]}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-center text-sm font-medium">${app[gapCol]}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        document.getElementById('assessment-results').classList.remove('hidden');
+        document.getElementById('gap-analysis-results').classList.add('hidden');
+
+    } catch (error) {
+        console.error('Assessment error:', error);
+        alert('Failed to run assessment. Please ensure data is loaded.');
+    }
+}
+
+async function generateGapAnalysis() {
+    if (!selectedFramework) {
+        alert('Please select a framework first');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/compliance/gap-analysis', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({framework: selectedFramework})
+        });
+
+        const data = await response.json();
+
+        // Update portfolio summary
+        document.getElementById('gap-avg-compliance').textContent =
+            data.portfolio_summary.avg_compliance_percentage.toFixed(1) + '%';
+        document.getElementById('gap-compliant-apps').textContent =
+            data.portfolio_summary.fully_compliant_apps;
+        document.getElementById('gap-critical-apps').textContent =
+            data.portfolio_summary.critical_risk_apps;
+
+        // Display critical gaps
+        const gapsContainer = document.getElementById('critical-gaps-container');
+        gapsContainer.innerHTML = '';
+
+        data.critical_gaps.slice(0, 5).forEach(gap => {
+            const gapCard = document.createElement('div');
+            gapCard.className = 'bg-red-50 border border-red-200 rounded-lg p-4';
+            gapCard.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h6 class="font-semibold text-gray-900">${gap.requirement_name}</h6>
+                    <span class="px-2 py-1 bg-red-600 text-white text-xs rounded">${gap.severity}</span>
+                </div>
+                <p class="text-sm text-gray-700 mb-2">${gap.category}</p>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Compliance Rate:</span>
+                    <span class="font-semibold ${gap.compliance_rate < 50 ? 'text-red-700' : 'text-orange-700'}">
+                        ${gap.compliance_rate.toFixed(1)}%
+                    </span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Affected Apps:</span>
+                    <span class="font-semibold">${gap.affected_applications.length}</span>
+                </div>
+            `;
+            gapsContainer.appendChild(gapCard);
+        });
+
+        // Display remediation priorities
+        const remContainer = document.getElementById('remediation-priorities-container');
+        remContainer.innerHTML = '';
+
+        data.remediation_priorities.forEach(priority => {
+            const priorityCard = document.createElement('div');
+            priorityCard.className = 'bg-blue-50 border border-blue-200 rounded-lg p-4';
+            priorityCard.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <span class="px-2 py-1 bg-blue-600 text-white text-xs rounded font-semibold mr-2">
+                            Priority ${priority.priority_rank}
+                        </span>
+                        <span class="font-semibold text-gray-900">${priority.requirement_name}</span>
+                    </div>
+                    <span class="text-sm text-gray-600">${priority.estimated_effort}</span>
+                </div>
+                <p class="text-sm text-gray-700 mb-2">${priority.recommended_action}</p>
+                <div class="text-xs text-gray-600">
+                    <span class="font-semibold">${priority.affected_apps_count}</span> applications affected
+                </div>
+            `;
+            remContainer.appendChild(priorityCard);
+        });
+
+        document.getElementById('gap-analysis-results').classList.remove('hidden');
+        document.getElementById('assessment-results').classList.add('hidden');
+
+    } catch (error) {
+        console.error('Gap analysis error:', error);
+        alert('Failed to generate gap analysis. Please ensure data is loaded.');
+    }
+}
+
+async function loadPortfolioOverview() {
+    try {
+        const response = await fetch('/api/compliance/portfolio');
+        const data = await response.json();
+
+        const container = document.getElementById('portfolio-overview');
+        container.innerHTML = '';
+
+        Object.entries(data.frameworks).forEach(([framework, stats]) => {
+            const card = document.createElement('div');
+            card.className = 'bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200';
+            card.innerHTML = `
+                <h4 class="font-bold text-gray-900 mb-3">${framework}</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Avg Compliance:</span>
+                        <span class="font-semibold">${stats.avg_compliance.toFixed(1)}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Compliant:</span>
+                        <span class="font-semibold text-green-700">${stats.compliant_apps}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Non-Compliant:</span>
+                        <span class="font-semibold text-red-700">${stats.non_compliant_apps}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Critical Risk:</span>
+                        <span class="font-semibold text-orange-700">${stats.critical_risk_apps}</span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        container.classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Portfolio overview error:', error);
+        alert('Failed to load portfolio overview. Please ensure data is loaded.');
+    }
+}
+</script>
+{% endblock %}
