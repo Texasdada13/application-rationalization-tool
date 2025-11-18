@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}AI Chat Assistant - Application Rationalization Tool{% endblock %}
+
+{% block page_title %}AI Chat Assistant{% endblock %}
+{% block page_subtitle %}Natural Language Portfolio Queries{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Example Query Buttons -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">
+            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+            Quick Queries
+        </h3>
+        <div class="flex flex-wrap gap-2">
+            <button onclick="sendQuery('Show me high-cost applications')"
+                    class="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium">
+                💰 High-Cost Apps
+            </button>
+            <button onclick="sendQuery('Which apps have poor technical health?')"
+                    class="px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-medium">
+                🔴 Poor Health
+            </button>
+            <button onclick="sendQuery('List retirement candidates')"
+                    class="px-4 py-2 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition text-sm font-medium">
+                🗑️ Retirement Candidates
+            </button>
+            <button onclick="sendQuery('Show investment opportunities')"
+                    class="px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition text-sm font-medium">
+                📈 Investment Opportunities
+            </button>
+            <button onclick="sendQuery('What is the total cost?')"
+                    class="px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition text-sm font-medium">
+                💵 Total Cost
+            </button>
+            <button onclick="sendQuery('How many applications do I have?')"
+                    class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition text-sm font-medium">
+                📊 App Count
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden" style="height: 600px; display: flex; flex-direction: column;">
+        <!-- Chat Messages Area -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+            <!-- Welcome Message -->
+            <div class="flex items-start gap-3">
+                <div class="bg-blue-600 rounded-full p-2 flex-shrink-0">
+                    <i class="fas fa-robot text-white"></i>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-4 max-w-2xl">
+                    <p class="text-gray-800">
+                        👋 Hello! I'm your AI portfolio assistant. I can help you query your application portfolio using natural language.
+                    </p>
+                    <p class="text-gray-600 text-sm mt-2">
+                        Try asking me about high-cost applications, poor health apps, retirement candidates, or investment opportunities!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="border-t bg-white p-4">
+            <div class="flex gap-3">
+                <input
+                    type="text"
+                    id="chat-input"
+                    placeholder="Ask about your portfolio... (e.g., 'Show me high-cost applications')"
+                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onkeypress="handleKeyPress(event)"
+                />
+                <button
+                    id="send-button"
+                    onclick="sendMessage()"
+                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold flex items-center gap-2">
+                    <i class="fas fa-paper-plane"></i>
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+// Chat functionality
+const chatMessages = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const sendButton = document.getElementById('send-button');
+
+function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addUserMessage(message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'flex items-start gap-3 justify-end';
+    messageDiv.innerHTML = `
+        <div class="bg-blue-600 rounded-lg shadow-sm p-4 max-w-2xl">
+            <p class="text-white">${escapeHtml(message)}</p>
+        </div>
+        <div class="bg-gray-600 rounded-full p-2 flex-shrink-0">
+            <i class="fas fa-user text-white"></i>
+        </div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function addBotMessage(response, data) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'flex items-start gap-3';
+
+    let content = `
+        <div class="bg-blue-600 rounded-full p-2 flex-shrink-0">
+            <i class="fas fa-robot text-white"></i>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4 max-w-4xl">
+            <p class="text-gray-800 whitespace-pre-line">${escapeHtml(response)}</p>
+    `;
+
+    // Add data table if available
+    if (data && data.length > 0) {
+        content += `
+            <div class="mt-4 overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-100 border-b">
+                        <tr>
+                            ${Object.keys(data[0]).map(key =>
+                                `<th class="px-3 py-2 text-left font-semibold text-gray-700">${escapeHtml(key)}</th>`
+                            ).join('')}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        ${data.map(row => `
+                            <tr class="hover:bg-gray-50">
+                                ${Object.values(row).map(value => {
+                                    // Format values
+                                    let displayValue = value;
+                                    if (typeof value === 'number' && Object.keys(row).some(k => k.toLowerCase().includes('cost'))) {
+                                        displayValue = '$' + value.toLocaleString();
+                                    } else if (typeof value === 'number') {
+                                        displayValue = value.toFixed(1);
+                                    }
+                                    return `<td class="px-3 py-2 text-gray-700">${escapeHtml(String(displayValue))}</td>`;
+                                }).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    content += '</div>';
+    messageDiv.innerHTML = content;
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function addLoadingMessage() {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'flex items-start gap-3';
+    messageDiv.id = 'loading-message';
+    messageDiv.innerHTML = `
+        <div class="bg-blue-600 rounded-full p-2 flex-shrink-0">
+            <i class="fas fa-robot text-white"></i>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <div class="flex items-center gap-2 text-gray-600">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Thinking...</span>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+    return messageDiv;
+}
+
+function removeLoadingMessage() {
+    const loading = document.getElementById('loading-message');
+    if (loading) {
+        loading.remove();
+    }
+}
+
+async function sendMessage() {
+    const message = chatInput.value.trim();
+
+    if (!message) return;
+
+    // Add user message to chat
+    addUserMessage(message);
+
+    // Clear input
+    chatInput.value = '';
+
+    // Disable send button and show loading
+    sendButton.disabled = true;
+    const loadingMsg = addLoadingMessage();
+
+    try {
+        const response = await fetch('/api/ai/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: message })
+        });
+
+        const result = await response.json();
+
+        removeLoadingMessage();
+
+        if (response.ok) {
+            addBotMessage(result.response, result.data || []);
+        } else {
+            addBotMessage('Sorry, I encountered an error: ' + (result.error || 'Unknown error'), []);
+        }
+    } catch (error) {
+        console.error('Chat error:', error);
+        removeLoadingMessage();
+        addBotMessage('Sorry, I encountered a network error. Please try again.', []);
+    } finally {
+        sendButton.disabled = false;
+        chatInput.focus();
+    }
+}
+
+function sendQuery(query) {
+    chatInput.value = query;
+    sendMessage();
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Focus input on load
+chatInput.focus();
+{% endblock %}
