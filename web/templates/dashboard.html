@@ -6,6 +6,74 @@
 {% block page_subtitle %}Application Portfolio Overview{% endblock %}
 
 {% block content %}
+<!-- AI Executive Summary Section -->
+<div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 mb-8 border border-blue-200">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">
+            🤖 AI Executive Summary
+        </h2>
+        <button id="generate-summary-btn"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2">
+            <i class="fas fa-magic"></i>
+            Generate Summary
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div id="summary-loading" class="hidden text-center py-8">
+        <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+        <p class="text-gray-600">Analyzing portfolio data...</p>
+    </div>
+
+    <!-- Summary Content -->
+    <div id="summary-content" class="hidden">
+        <!-- Overview Badge -->
+        <div id="summary-overview" class="bg-white rounded-lg p-4 mb-4 border-l-4 border-blue-500">
+            <p class="text-sm font-medium text-gray-700"></p>
+        </div>
+
+        <!-- Executive Narrative -->
+        <div class="bg-white rounded-lg p-6 mb-4 shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <i class="fas fa-file-alt text-indigo-600"></i>
+                Executive Narrative
+            </h3>
+            <div id="summary-narrative" class="text-gray-700 leading-relaxed whitespace-pre-line"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Key Insights -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fas fa-lightbulb text-yellow-500"></i>
+                    Key Insights
+                </h3>
+                <div id="summary-insights" class="space-y-3"></div>
+            </div>
+
+            <!-- Top Recommendations -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fas fa-tasks text-green-600"></i>
+                    Top Recommendations
+                </h3>
+                <div id="summary-recommendations" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="summary-error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+            <i class="fas fa-exclamation-circle text-red-600 text-xl mt-1"></i>
+            <div>
+                <h4 class="font-semibold text-red-800 mb-1">Error Generating Summary</h4>
+                <p id="summary-error-message" class="text-red-700 text-sm"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- KPI Cards Section -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <!-- Total Applications Card -->
@@ -177,6 +245,129 @@
 {% endblock %}
 
 {% block extra_js %}
+// AI Executive Summary functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generate-summary-btn');
+    const loadingDiv = document.getElementById('summary-loading');
+    const contentDiv = document.getElementById('summary-content');
+    const errorDiv = document.getElementById('summary-error');
+
+    if (generateBtn) {
+        generateBtn.addEventListener('click', async function() {
+            // Reset state
+            contentDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+            try {
+                const response = await fetch('/api/ai/summary');
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Failed to generate summary');
+                }
+
+                // Display overview
+                document.querySelector('#summary-overview p').textContent = data.overview;
+
+                // Display narrative
+                document.getElementById('summary-narrative').textContent = data.narrative;
+
+                // Display insights with color coding
+                const insightsDiv = document.getElementById('summary-insights');
+                insightsDiv.innerHTML = '';
+
+                if (data.insights && data.insights.length > 0) {
+                    // Show max 5 insights
+                    data.insights.slice(0, 5).forEach(insight => {
+                        const insightEl = document.createElement('div');
+
+                        let icon = '🔵';
+                        let colorClass = 'border-blue-500 bg-blue-50';
+
+                        if (insight.type === 'critical') {
+                            icon = '🔴';
+                            colorClass = 'border-red-500 bg-red-50';
+                        } else if (insight.type === 'warning') {
+                            icon = '🟡';
+                            colorClass = 'border-yellow-500 bg-yellow-50';
+                        } else if (insight.type === 'opportunity') {
+                            icon = '🟢';
+                            colorClass = 'border-green-500 bg-green-50';
+                        }
+
+                        insightEl.className = `p-3 rounded-lg border-l-4 ${colorClass}`;
+                        insightEl.innerHTML = `
+                            <div class="flex items-start gap-2">
+                                <span class="text-lg">${icon}</span>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-gray-800">${insight.category || 'Insight'}</p>
+                                    <p class="text-sm text-gray-700 mt-1">${insight.message}</p>
+                                </div>
+                            </div>
+                        `;
+                        insightsDiv.appendChild(insightEl);
+                    });
+                } else {
+                    insightsDiv.innerHTML = '<p class="text-gray-500 text-sm">No significant insights identified.</p>';
+                }
+
+                // Display recommendations
+                const recsDiv = document.getElementById('summary-recommendations');
+                recsDiv.innerHTML = '';
+
+                if (data.recommendations && data.recommendations.length > 0) {
+                    // Show top 3 recommendations
+                    data.recommendations.slice(0, 3).forEach((rec, index) => {
+                        const recEl = document.createElement('div');
+
+                        let priorityBadge = '';
+                        if (rec.priority === 'high') {
+                            priorityBadge = '<span class="px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded">HIGH</span>';
+                        } else if (rec.priority === 'medium') {
+                            priorityBadge = '<span class="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded">MEDIUM</span>';
+                        } else {
+                            priorityBadge = '<span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded">LOW</span>';
+                        }
+
+                        recEl.className = 'p-4 rounded-lg border border-gray-200 bg-gray-50';
+                        recEl.innerHTML = `
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <span class="font-semibold text-gray-800">${index + 1}.</span>
+                                ${priorityBadge}
+                            </div>
+                            <p class="text-sm text-gray-800 font-medium mb-2">${rec.action}</p>
+                            <div class="flex items-center gap-4 text-xs text-gray-600">
+                                <span><i class="far fa-clock mr-1"></i>${rec.timeline}</span>
+                                <span><i class="fas fa-bullseye mr-1"></i>${rec.category || 'General'}</span>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-2 italic">${rec.impact}</p>
+                        `;
+                        recsDiv.appendChild(recEl);
+                    });
+                } else {
+                    recsDiv.innerHTML = '<p class="text-gray-500 text-sm">No recommendations available.</p>';
+                }
+
+                // Show content
+                loadingDiv.classList.add('hidden');
+                contentDiv.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error generating AI summary:', error);
+                loadingDiv.classList.add('hidden');
+                errorDiv.classList.remove('hidden');
+                document.getElementById('summary-error-message').textContent = error.message;
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fas fa-magic"></i> Regenerate Summary';
+            }
+        });
+    }
+});
+
 // Render Plotly charts
 document.addEventListener('DOMContentLoaded', function() {
     // Score Distribution Chart

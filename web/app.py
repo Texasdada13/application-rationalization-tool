@@ -35,14 +35,16 @@ from src.database import Database
 from src.ml_engine import MLEngine
 from src.scheduler import SchedulerManager
 from src.compliance_engine import ComplianceEngine
+from src.ai_summary import ExecutiveSummaryGenerator
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize database, ML engine, compliance engine, and scheduler
+# Initialize database, ML engine, compliance engine, AI summary generator, and scheduler
 db = Database()
 ml_engine = MLEngine()
 compliance_engine = ComplianceEngine()
+ai_summary_generator = ExecutiveSummaryGenerator()
 
 # Configure upload folder
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
@@ -709,6 +711,29 @@ def get_score_changes():
 # ==========================
 # ML/AI ENDPOINTS
 # ==========================
+
+@app.route('/api/ai/summary', methods=['GET'])
+def get_ai_summary():
+    """Generate AI executive summary from portfolio data"""
+    global current_data
+
+    if current_data is None or current_data.empty:
+        return jsonify({'error': 'No data loaded'}), 404
+
+    try:
+        summary = ai_summary_generator.generate_full_summary(current_data)
+        return jsonify(summary)
+    except Exception as e:
+        logger.error(f"AI summary generation error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'overview': 'Error generating summary',
+            'narrative': f'An error occurred: {str(e)}',
+            'insights': [],
+            'recommendations': []
+        }), 500
+
 
 @app.route('/api/ml/clusters')
 def get_ml_clusters():
