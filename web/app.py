@@ -38,17 +38,19 @@ from src.compliance_engine import ComplianceEngine
 from src.ai_summary import ExecutiveSummaryGenerator
 from src.ai_chat import AIChatAssistant
 from src.predictive_modeling import PredictiveModeler
+from src.smart_recommendations import SmartRecommendationEngine
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize database, ML engine, compliance engine, AI summary generator, AI chat, predictive modeler, and scheduler
+# Initialize database, ML engine, compliance engine, AI summary generator, AI chat, predictive modeler, smart recommender, and scheduler
 db = Database()
 ml_engine = MLEngine()
 compliance_engine = ComplianceEngine()
 ai_summary_generator = ExecutiveSummaryGenerator()
 ai_chat = AIChatAssistant()
 predictive_modeler = PredictiveModeler()
+smart_recommender = SmartRecommendationEngine()
 
 # Configure upload folder
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
@@ -450,6 +452,12 @@ def chat_page():
     return render_template('chat.html')
 
 
+@app.route('/smart-recommendations')
+def smart_recommendations_page():
+    """Smart Recommendations page"""
+    return render_template('smart_recommendations.html')
+
+
 # ==========================
 # API ENDPOINTS
 # ==========================
@@ -786,6 +794,22 @@ def get_predictions():
         return jsonify(predictions)
     except Exception as e:
         logger.error(f"Predictions error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/smart-recommendations', methods=['GET'])
+def get_smart_recommendations():
+    """Generate context-aware smart recommendations"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        recommendations = smart_recommender.generate_smart_recommendations(current_data)
+        return jsonify(recommendations)
+    except Exception as e:
+        logger.error(f"Smart recommendations error: {e}")
         return jsonify({'error': str(e)}), 500
 
 

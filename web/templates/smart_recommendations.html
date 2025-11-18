@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Recommendations - Application Rationalization Tool{% endblock %}
+
+{% block page_title %}Smart Recommendations{% endblock %}
+{% block page_subtitle %}AI-Powered Context-Aware Portfolio Recommendations{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Retire Candidates</p>
+                <p id="retire-count" class="text-3xl font-bold text-gray-800 mt-2">-</p>
+            </div>
+            <i class="fas fa-times-circle text-3xl text-red-500"></i>
+        </div>
+    </div>
+
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Modernize Candidates</p>
+                <p id="modernize-count" class="text-3xl font-bold text-gray-800 mt-2">-</p>
+            </div>
+            <i class="fas fa-rocket text-3xl text-blue-500"></i>
+        </div>
+    </div>
+
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">High Priority</p>
+                <p id="high-priority-count" class="text-3xl font-bold text-gray-800 mt-2">-</p>
+            </div>
+            <i class="fas fa-exclamation-triangle text-3xl text-yellow-500"></i>
+        </div>
+    </div>
+
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 uppercase">Potential Savings</p>
+                <p id="potential-savings" class="text-3xl font-bold text-gray-800 mt-2">-</p>
+            </div>
+            <i class="fas fa-dollar-sign text-3xl text-green-500"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div id="loading-state" class="text-center py-12">
+    <i class="fas fa-spinner fa-spin text-5xl text-blue-600 mb-4"></i>
+    <p class="text-gray-600 text-lg">Generating smart recommendations...</p>
+</div>
+
+<!-- Main Content -->
+<div id="main-content" class="hidden">
+    <!-- Consolidation Opportunities -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                <i class="fas fa-compress-arrows-alt text-purple-600"></i>
+                Consolidation Opportunities
+            </h2>
+            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+                Top 5 Opportunities
+            </span>
+        </div>
+        <div id="consolidation-opportunities" class="space-y-4">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Individual Recommendations -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                <i class="fas fa-lightbulb text-yellow-500"></i>
+                Individual App Recommendations
+            </h2>
+            <div class="flex gap-2">
+                <button id="filter-all" class="filter-btn active px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm font-medium">
+                    All
+                </button>
+                <button id="filter-retire" class="filter-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium">
+                    Retire
+                </button>
+                <button id="filter-modernize" class="filter-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium">
+                    Modernize
+                </button>
+                <button id="filter-critical" class="filter-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium">
+                    Critical Only
+                </button>
+            </div>
+        </div>
+        <div id="individual-recommendations" class="grid grid-cols-1 gap-4">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Dependency Network -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+            <i class="fas fa-project-diagram text-indigo-600"></i>
+            Critical Dependencies
+        </h2>
+        <div id="dependency-network" class="space-y-3">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Error State -->
+<div id="error-state" class="hidden bg-red-50 border border-red-200 rounded-lg p-6">
+    <div class="flex items-start gap-3">
+        <i class="fas fa-exclamation-circle text-red-600 text-2xl mt-1"></i>
+        <div>
+            <h4 class="font-semibold text-red-800 mb-1 text-lg">Error Loading Recommendations</h4>
+            <p id="error-message" class="text-red-700"></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+let allRecommendations = [];
+let currentFilter = 'all';
+
+async function loadSmartRecommendations() {
+    const loadingState = document.getElementById('loading-state');
+    const mainContent = document.getElementById('main-content');
+    const errorState = document.getElementById('error-state');
+
+    try {
+        const response = await fetch('/api/smart-recommendations');
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to load recommendations');
+        }
+
+        // Store recommendations
+        allRecommendations = data.individual_recommendations || [];
+
+        // Update summary cards
+        const summary = data.summary || {};
+        document.getElementById('retire-count').textContent = summary.retire_candidates || 0;
+        document.getElementById('modernize-count').textContent = summary.modernize_candidates || 0;
+        document.getElementById('high-priority-count').textContent = summary.high_priority_count || 0;
+
+        const totalSavings = (summary.total_potential_savings || 0) + (summary.consolidation_savings || 0);
+        document.getElementById('potential-savings').textContent = '$' + (totalSavings / 1000000).toFixed(1) + 'M';
+
+        // Render consolidation opportunities
+        renderConsolidationOpportunities(data.consolidation_opportunities || []);
+
+        // Render individual recommendations
+        renderIndividualRecommendations(allRecommendations);
+
+        // Render dependency network
+        renderDependencyNetwork(allRecommendations);
+
+        // Hide loading, show content
+        loadingState.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Error loading smart recommendations:', error);
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        document.getElementById('error-message').textContent = error.message;
+    }
+}
+
+function renderConsolidationOpportunities(opportunities) {
+    const container = document.getElementById('consolidation-opportunities');
+    container.innerHTML = '';
+
+    if (opportunities.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-info-circle text-4xl mb-2"></i>
+                <p>No consolidation opportunities identified</p>
+            </div>
+        `;
+        return;
+    }
+
+    opportunities.forEach((opp, index) => {
+        const priorityClass = opp.priority === 'HIGH' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+
+        const oppCard = document.createElement('div');
+        oppCard.className = 'border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow';
+        oppCard.innerHTML = `
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl font-bold text-gray-400">#${index + 1}</span>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 text-lg">${opp.category}</h3>
+                        <p class="text-sm text-gray-600">${opp.app_count} applications</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold ${priorityClass}">${opp.priority}</span>
+            </div>
+            <div class="grid grid-cols-4 gap-4 mb-3">
+                <div class="bg-gray-50 p-3 rounded">
+                    <p class="text-xs text-gray-600">Total Cost</p>
+                    <p class="font-bold text-gray-800">$${(opp.total_cost / 1000).toFixed(0)}K</p>
+                </div>
+                <div class="bg-green-50 p-3 rounded">
+                    <p class="text-xs text-gray-600">Potential Savings</p>
+                    <p class="font-bold text-green-700">$${(opp.potential_savings / 1000).toFixed(0)}K</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded">
+                    <p class="text-xs text-gray-600">Avg Health</p>
+                    <p class="font-bold text-blue-700">${opp.avg_health.toFixed(1)}/10</p>
+                </div>
+                <div class="bg-purple-50 p-3 rounded">
+                    <p class="text-xs text-gray-600">Avg Value</p>
+                    <p class="font-bold text-purple-700">${opp.avg_value.toFixed(1)}/10</p>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <p class="text-xs text-gray-600 mb-2">Applications in this category:</p>
+                <div class="flex flex-wrap gap-2">
+                    ${opp.apps.map(app => `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">${app}</span>`).join('')}
+                </div>
+            </div>
+        `;
+        container.appendChild(oppCard);
+    });
+}
+
+function renderIndividualRecommendations(recommendations) {
+    const container = document.getElementById('individual-recommendations');
+    container.innerHTML = '';
+
+    // Filter recommendations
+    let filtered = recommendations;
+    if (currentFilter === 'retire') {
+        filtered = recommendations.filter(r => r.action === 'RETIRE');
+    } else if (currentFilter === 'modernize') {
+        filtered = recommendations.filter(r => r.action === 'MODERNIZE');
+    } else if (currentFilter === 'critical') {
+        filtered = recommendations.filter(r => r.priority === 'CRITICAL' || r.priority === 'HIGH');
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <p>No recommendations match the current filter</p>
+            </div>
+        `;
+        return;
+    }
+
+    filtered.forEach(rec => {
+        const card = createRecommendationCard(rec);
+        container.appendChild(card);
+    });
+}
+
+function createRecommendationCard(rec) {
+    const card = document.createElement('div');
+    card.className = 'border border-gray-200 rounded-lg p-5 hover:shadow-lg transition-all';
+
+    // Priority badge color
+    let priorityClass = 'bg-gray-100 text-gray-800';
+    if (rec.priority === 'CRITICAL') priorityClass = 'bg-red-100 text-red-800';
+    else if (rec.priority === 'HIGH') priorityClass = 'bg-orange-100 text-orange-800';
+    else if (rec.priority === 'MEDIUM') priorityClass = 'bg-yellow-100 text-yellow-800';
+
+    // Action badge color
+    let actionClass = 'bg-blue-100 text-blue-800';
+    if (rec.action === 'RETIRE') actionClass = 'bg-red-100 text-red-800';
+    else if (rec.action === 'MODERNIZE') actionClass = 'bg-purple-100 text-purple-800';
+
+    // Build HTML
+    let contentHTML = `
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <h3 class="font-bold text-gray-800 text-lg mb-1">${rec.app_name}</h3>
+                <div class="flex gap-2 items-center">
+                    <span class="px-2 py-1 rounded text-xs font-semibold ${actionClass}">${rec.action}</span>
+                    <span class="px-2 py-1 rounded text-xs font-semibold ${priorityClass}">${rec.priority} PRIORITY</span>
+                    <span class="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700">Confidence: ${rec.confidence}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="text-center p-2 bg-gray-50 rounded">
+                <p class="text-xs text-gray-600">Business Value</p>
+                <p class="font-bold text-gray-800">${rec.business_value.toFixed(1)}/10</p>
+            </div>
+            <div class="text-center p-2 bg-gray-50 rounded">
+                <p class="text-xs text-gray-600">Tech Health</p>
+                <p class="font-bold text-gray-800">${rec.technical_health.toFixed(1)}/10</p>
+            </div>
+            <div class="text-center p-2 bg-gray-50 rounded">
+                <p class="text-xs text-gray-600">Annual Cost</p>
+                <p class="font-bold text-gray-800">$${(rec.annual_cost / 1000).toFixed(0)}K</p>
+            </div>
+        </div>
+    `;
+
+    // Add retirement feasibility details
+    if (rec.retirement_feasibility) {
+        const feas = rec.retirement_feasibility;
+        const feasClass = feas.feasibility_rating === 'HIGH' ? 'text-green-700' : feas.feasibility_rating === 'MEDIUM' ? 'text-yellow-700' : 'text-red-700';
+
+        contentHTML += `
+            <div class="border-t border-gray-200 pt-3 mt-3">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="font-semibold text-gray-700">Retirement Feasibility</p>
+                    <span class="font-bold ${feasClass}">${feas.feasibility_score}/100 (${feas.feasibility_rating})</span>
+                </div>
+                ${feas.blockers && feas.blockers.length > 0 ? `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded p-2 mt-2">
+                        <p class="text-xs font-semibold text-yellow-800 mb-1">⚠️ Blockers:</p>
+                        <ul class="text-xs text-yellow-700 space-y-1">
+                            ${feas.blockers.map(b => `<li>• ${b}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Add modernization path details
+    if (rec.modernization_path) {
+        const mod = rec.modernization_path;
+        const riskClass = mod.risk_level === 'HIGH' ? 'text-red-700' : mod.risk_level === 'MEDIUM' ? 'text-yellow-700' : 'text-green-700';
+
+        contentHTML += `
+            <div class="border-t border-gray-200 pt-3 mt-3">
+                <p class="font-semibold text-gray-700 mb-2">Modernization Path</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-blue-50 border border-blue-200 rounded p-2">
+                        <p class="text-xs text-gray-600">Approach</p>
+                        <p class="font-bold text-blue-700">${mod.approach}</p>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-200 rounded p-2">
+                        <p class="text-xs text-gray-600">Timeline</p>
+                        <p class="font-bold text-purple-700">${mod.timeline}</p>
+                    </div>
+                </div>
+                <div class="mt-2 p-2 bg-gray-50 rounded">
+                    <p class="text-xs text-gray-700">${mod.reason}</p>
+                    <p class="text-xs mt-1"><span class="font-semibold">Estimated Cost:</span> $${(mod.estimated_cost / 1000).toFixed(0)}K | <span class="font-semibold">Risk:</span> <span class="${riskClass}">${mod.risk_level}</span></p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Add dependency info
+    if (rec.dependencies && rec.dependencies.has_dependencies) {
+        const deps = rec.dependencies;
+        contentHTML += `
+            <div class="border-t border-gray-200 pt-3 mt-3">
+                <div class="bg-orange-50 border border-orange-200 rounded p-2">
+                    <p class="text-xs font-semibold text-orange-800 mb-1">🔗 Dependencies:</p>
+                    <p class="text-xs text-orange-700">${deps.dependency_count} apps depend on this (Risk: ${deps.dependency_risk})</p>
+                    <div class="mt-1 flex flex-wrap gap-1">
+                        ${deps.dependent_apps.slice(0, 5).map(app => `<span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs">${app}</span>`).join('')}
+                        ${deps.dependent_apps.length > 5 ? `<span class="text-xs text-orange-700">+${deps.dependent_apps.length - 5} more</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    card.innerHTML = contentHTML;
+    return card;
+}
+
+function renderDependencyNetwork(recommendations) {
+    const container = document.getElementById('dependency-network');
+    container.innerHTML = '';
+
+    // Find apps with dependencies
+    const appsWithDeps = recommendations.filter(r => r.dependencies && r.dependencies.has_dependencies);
+
+    if (appsWithDeps.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-check-circle text-4xl text-green-500 mb-2"></i>
+                <p>No critical dependencies detected</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Sort by dependency count
+    appsWithDeps.sort((a, b) => b.dependencies.dependency_count - a.dependencies.dependency_count);
+
+    appsWithDeps.slice(0, 10).forEach(app => {
+        const deps = app.dependencies;
+        const riskClass = deps.dependency_risk === 'HIGH' ? 'border-red-500 bg-red-50' : 'border-orange-500 bg-orange-50';
+
+        const depCard = document.createElement('div');
+        depCard.className = `border-l-4 ${riskClass} p-4 rounded`;
+        depCard.innerHTML = `
+            <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-800">${app.app_name}</h4>
+                <span class="px-2 py-1 rounded text-xs font-semibold ${deps.dependency_risk === 'HIGH' ? 'bg-red-200 text-red-800' : 'bg-orange-200 text-orange-800'}">
+                    ${deps.dependency_risk} RISK
+                </span>
+            </div>
+            <p class="text-sm text-gray-700 mb-2">${deps.dependency_count} applications depend on this</p>
+            <div class="flex flex-wrap gap-1">
+                ${deps.dependent_apps.map(depApp => `<span class="px-2 py-1 bg-white text-gray-700 rounded text-xs border">${depApp}</span>`).join('')}
+            </div>
+        `;
+        container.appendChild(depCard);
+    });
+}
+
+// Filter button handlers
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            filterButtons.forEach(b => {
+                b.classList.remove('active', 'bg-gray-200');
+                b.classList.add('bg-gray-100');
+            });
+
+            // Add active class to clicked button
+            this.classList.add('active', 'bg-gray-200');
+            this.classList.remove('bg-gray-100');
+
+            // Set filter
+            if (this.id === 'filter-all') currentFilter = 'all';
+            else if (this.id === 'filter-retire') currentFilter = 'retire';
+            else if (this.id === 'filter-modernize') currentFilter = 'modernize';
+            else if (this.id === 'filter-critical') currentFilter = 'critical';
+
+            // Re-render
+            renderIndividualRecommendations(allRecommendations);
+        });
+    });
+
+    // Load recommendations on page load
+    loadSmartRecommendations();
+});
+{% endblock %}
