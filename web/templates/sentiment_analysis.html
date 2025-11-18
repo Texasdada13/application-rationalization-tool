@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}Sentiment Analysis - Application Rationalization Tool{% endblock %}
+
+{% block page_title %}Sentiment Analysis{% endblock %}
+{% block page_subtitle %}Stakeholder Survey Comment Analysis{% endblock %}
+
+{% block content %}
+<!-- Upload Section -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fas fa-upload text-blue-600"></i>
+        Upload Survey Data
+    </h2>
+    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+        <input type="file" id="survey-file-input" accept=".csv,.xlsx,.xls" class="hidden">
+        <label for="survey-file-input" class="cursor-pointer">
+            <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 mb-3"></i>
+            <p class="text-gray-700 font-medium">Click to upload survey CSV or Excel file</p>
+            <p class="text-sm text-gray-500 mt-2">File should contain a 'comments' column with stakeholder feedback</p>
+        </label>
+    </div>
+    <div id="upload-status" class="mt-4 hidden"></div>
+</div>
+
+<!-- Results Section (hidden initially) -->
+<div id="results-section" class="hidden">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+            <p class="text-sm font-medium text-gray-500 uppercase">Total Comments</p>
+            <p id="total-comments" class="text-3xl font-bold text-gray-800 mt-2">0</p>
+        </div>
+        <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+            <p class="text-sm font-medium text-gray-500 uppercase">Positive</p>
+            <p id="positive-count" class="text-3xl font-bold text-green-600 mt-2">0</p>
+            <p id="positive-pct" class="text-xs text-gray-500 mt-1">0%</p>
+        </div>
+        <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
+            <p class="text-sm font-medium text-gray-500 uppercase">Negative</p>
+            <p id="negative-count" class="text-3xl font-bold text-red-600 mt-2">0</p>
+            <p id="negative-pct" class="text-xs text-gray-500 mt-1">0%</p>
+        </div>
+        <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-gray-500">
+            <p class="text-sm font-medium text-gray-500 uppercase">Neutral</p>
+            <p id="neutral-count" class="text-3xl font-bold text-gray-600 mt-2">0</p>
+            <p id="neutral-pct" class="text-xs text-gray-500 mt-1">0%</p>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Sentiment Distribution -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-chart-pie text-purple-600"></i>
+                Sentiment Distribution
+            </h3>
+            <canvas id="sentiment-pie-chart" style="max-height: 300px;"></canvas>
+        </div>
+
+        <!-- Theme Analysis -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-chart-bar text-indigo-600"></i>
+                Top Themes
+            </h3>
+            <canvas id="theme-bar-chart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+
+    <!-- Theme-Sentiment Heatmap -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-th text-teal-600"></i>
+            Theme Sentiment Analysis
+        </h3>
+        <div id="theme-sentiment-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Top Comments -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Top Positive -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-smile text-green-600"></i>
+                Top Positive Comments
+            </h3>
+            <div id="top-positive-comments" class="space-y-3">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Top Negative -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-frown text-red-600"></i>
+                Top Negative Comments
+            </h3>
+            <div id="top-negative-comments" class="space-y-3">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- All Comments Table -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-comments text-blue-600"></i>
+                All Comments
+            </h3>
+            <div class="flex gap-2">
+                <button id="filter-all-btn" class="sentiment-filter-btn active px-4 py-2 rounded-lg bg-gray-200 text-sm font-medium">All</button>
+                <button id="filter-positive-btn" class="sentiment-filter-btn px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium">Positive</button>
+                <button id="filter-negative-btn" class="sentiment-filter-btn px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium">Negative</button>
+                <button id="filter-neutral-btn" class="sentiment-filter-btn px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium">Neutral</button>
+                <button id="export-btn" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                    <i class="fas fa-download mr-2"></i>Export Results
+                </button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="comments-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comment</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sentiment</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Confidence</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Themes</th>
+                    </tr>
+                </thead>
+                <tbody id="comments-tbody" class="bg-white divide-y divide-gray-200">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+let analysisData = null;
+let currentFilter = 'all';
+let sentimentPieChart = null;
+let themeBarChart = null;
+
+document.getElementById('survey-file-input').addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const statusDiv = document.getElementById('upload-status');
+    statusDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin text-blue-600 mr-2"></i>Uploading and analyzing...</div>';
+    statusDiv.classList.remove('hidden');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/api/sentiment-upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Upload failed');
+        }
+
+        analysisData = data.analysis;
+        displayResults(analysisData);
+
+        statusDiv.innerHTML = '<div class="bg-green-50 border border-green-200 rounded p-3 text-green-700"><i class="fas fa-check-circle mr-2"></i>Analysis complete!</div>';
+        setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+
+    } catch (error) {
+        statusDiv.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-3 text-red-700"><i class="fas fa-exclamation-circle mr-2"></i>Error: ${error.message}</div>`;
+    }
+});
+
+function displayResults(data) {
+    document.getElementById('results-section').classList.remove('hidden');
+
+    // Update summary cards
+    const summary = data.summary;
+    document.getElementById('total-comments').textContent = summary.total;
+    document.getElementById('positive-count').textContent = summary.positive;
+    document.getElementById('positive-pct').textContent = summary.positive_pct + '%';
+    document.getElementById('negative-count').textContent = summary.negative;
+    document.getElementById('negative-pct').textContent = summary.negative_pct + '%';
+    document.getElementById('neutral-count').textContent = summary.neutral;
+    document.getElementById('neutral-pct').textContent = summary.neutral_pct + '%';
+
+    // Render charts
+    renderSentimentPieChart(summary);
+    renderThemeBarChart(data.themes);
+    renderThemeSentimentGrid(data.themes);
+
+    // Render top comments
+    renderTopComments(data.top_positive, 'top-positive-comments', 'positive');
+    renderTopComments(data.top_negative, 'top-negative-comments', 'negative');
+
+    // Render all comments table
+    renderCommentsTable(data.all_comments);
+}
+
+function renderSentimentPieChart(summary) {
+    const ctx = document.getElementById('sentiment-pie-chart').getContext('2d');
+
+    if (sentimentPieChart) {
+        sentimentPieChart.destroy();
+    }
+
+    sentimentPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Positive', 'Negative', 'Neutral'],
+            datasets: [{
+                data: [summary.positive, summary.negative, summary.neutral],
+                backgroundColor: ['#10B981', '#EF4444', '#6B7280'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderThemeBarChart(themes) {
+    const ctx = document.getElementById('theme-bar-chart').getContext('2d');
+
+    if (themeBarChart) {
+        themeBarChart.destroy();
+    }
+
+    const themeNames = Object.keys(themes);
+    const themeCounts = Object.values(themes).map(t => t.count);
+    const themeColors = Object.values(themes).map(t => {
+        if (t.sentiment_label === 'POSITIVE') return '#10B981';
+        if (t.sentiment_label === 'NEGATIVE') return '#EF4444';
+        return '#6B7280';
+    });
+
+    themeBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: themeNames,
+            datasets: [{
+                label: 'Mentions',
+                data: themeCounts,
+                backgroundColor: themeColors,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderThemeSentimentGrid(themes) {
+    const container = document.getElementById('theme-sentiment-grid');
+    container.innerHTML = '';
+
+    Object.entries(themes).forEach(([theme, data]) => {
+        const sentimentClass = data.sentiment_label === 'POSITIVE' ? 'bg-green-100 border-green-500' :
+                              data.sentiment_label === 'NEGATIVE' ? 'bg-red-100 border-red-500' :
+                              'bg-gray-100 border-gray-500';
+
+        const card = document.createElement('div');
+        card.className = `border-l-4 ${sentimentClass} p-4 rounded shadow-sm`;
+        card.innerHTML = `
+            <p class="text-sm font-semibold text-gray-700 capitalize">${theme}</p>
+            <p class="text-2xl font-bold text-gray-800 mt-1">${data.count}</p>
+            <p class="text-xs text-gray-600 mt-1">${data.sentiment_label}</p>
+            <p class="text-xs text-gray-500">Score: ${data.avg_sentiment}</p>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderTopComments(comments, containerId, type) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    if (comments.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm">No comments found</p>';
+        return;
+    }
+
+    comments.forEach((comment, idx) => {
+        const bgClass = type === 'positive' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+        const scoreClass = type === 'positive' ? 'text-green-700' : 'text-red-700';
+
+        const card = document.createElement('div');
+        card.className = `border ${bgClass} rounded p-3`;
+        card.innerHTML = `
+            <div class="flex items-start justify-between mb-1">
+                <span class="text-xs font-semibold text-gray-600">#${idx + 1}</span>
+                <span class="text-xs font-bold ${scoreClass}">Score: ${comment.score}</span>
+            </div>
+            <p class="text-sm text-gray-800">${comment.comment}</p>
+            ${comment.themes.length > 0 ? `<div class="mt-2 flex flex-wrap gap-1">${comment.themes.map(t => `<span class="px-2 py-1 bg-white text-gray-700 rounded text-xs">${t}</span>`).join('')}</div>` : ''}
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderCommentsTable(comments) {
+    const tbody = document.getElementById('comments-tbody');
+    tbody.innerHTML = '';
+
+    const filtered = currentFilter === 'all' ? comments : comments.filter(c => c.sentiment.toLowerCase() === currentFilter);
+
+    filtered.forEach(comment => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+
+        const sentimentClass = comment.sentiment === 'POSITIVE' ? 'bg-green-100 text-green-800' :
+                               comment.sentiment === 'NEGATIVE' ? 'bg-red-100 text-red-800' :
+                               'bg-gray-100 text-gray-800';
+
+        row.innerHTML = `
+            <td class="px-6 py-4 text-sm text-gray-800">${comment.comment}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 py-1 rounded-full text-xs font-semibold ${sentimentClass}">${comment.sentiment}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${comment.score}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${(comment.confidence * 100).toFixed(0)}%</td>
+            <td class="px-6 py-4 text-sm">
+                <div class="flex flex-wrap gap-1">
+                    ${comment.themes.map(t => `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">${t}</span>`).join('')}
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Filter buttons
+document.querySelectorAll('.sentiment-filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.sentiment-filter-btn').forEach(b => {
+            b.classList.remove('active', 'bg-gray-200');
+            b.classList.add('bg-gray-100');
+        });
+        this.classList.add('active', 'bg-gray-200');
+        this.classList.remove('bg-gray-100');
+
+        if (this.id === 'filter-all-btn') currentFilter = 'all';
+        else if (this.id === 'filter-positive-btn') currentFilter = 'positive';
+        else if (this.id === 'filter-negative-btn') currentFilter = 'negative';
+        else if (this.id === 'filter-neutral-btn') currentFilter = 'neutral';
+
+        if (analysisData) {
+            renderCommentsTable(analysisData.all_comments);
+        }
+    });
+});
+
+// Export functionality
+document.getElementById('export-btn').addEventListener('click', function() {
+    if (!analysisData) {
+        alert('No data to export');
+        return;
+    }
+
+    const csv = convertToCSV(analysisData.all_comments);
+    downloadCSV(csv, 'sentiment_analysis_results.csv');
+});
+
+function convertToCSV(comments) {
+    const headers = ['Comment', 'Sentiment', 'Score', 'Confidence', 'Themes'];
+    const rows = comments.map(c => [
+        `"${c.full_comment.replace(/"/g, '""')}"`,
+        c.sentiment,
+        c.score,
+        c.confidence,
+        c.themes.join('; ')
+    ]);
+
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
+
+function downloadCSV(csv, filename) {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
+{% endblock %}

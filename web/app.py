@@ -39,11 +39,12 @@ from src.ai_summary import ExecutiveSummaryGenerator
 from src.ai_chat import AIChatAssistant
 from src.predictive_modeling import PredictiveModeler
 from src.smart_recommendations import SmartRecommendationEngine
+from src.sentiment_analyzer import SentimentAnalyzer
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize database, ML engine, compliance engine, AI summary generator, AI chat, predictive modeler, smart recommender, and scheduler
+# Initialize database, ML engine, compliance engine, AI summary generator, AI chat, predictive modeler, smart recommender, sentiment analyzer, and scheduler
 db = Database()
 ml_engine = MLEngine()
 compliance_engine = ComplianceEngine()
@@ -51,6 +52,7 @@ ai_summary_generator = ExecutiveSummaryGenerator()
 ai_chat = AIChatAssistant()
 predictive_modeler = PredictiveModeler()
 smart_recommender = SmartRecommendationEngine()
+sentiment_analyzer = SentimentAnalyzer()
 
 # Configure upload folder
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
@@ -458,6 +460,12 @@ def smart_recommendations_page():
     return render_template('smart_recommendations.html')
 
 
+@app.route('/sentiment')
+def sentiment_page():
+    """Sentiment Analysis page"""
+    return render_template('sentiment_analysis.html')
+
+
 # ==========================
 # API ENDPOINTS
 # ==========================
@@ -810,6 +818,61 @@ def get_smart_recommendations():
         return jsonify(recommendations)
     except Exception as e:
         logger.error(f"Smart recommendations error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/sentiment-analysis', methods=['POST'])
+def analyze_sentiment_api():
+    """Analyze sentiment from provided comments"""
+    try:
+        data = request.json
+        comments = data.get('comments', [])
+
+        if not comments:
+            return jsonify({'error': 'No comments provided'}), 400
+
+        analysis = sentiment_analyzer.analyze_survey_comments(comments)
+        return jsonify(analysis)
+    except Exception as e:
+        logger.error(f"Sentiment analysis error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/sentiment-upload', methods=['POST'])
+def upload_sentiment_data():
+    """Handle survey data upload for sentiment analysis"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        # Save file temporarily
+        filename = f"survey_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        # Read survey data
+        if filepath.endswith('.csv'):
+            df = pd.read_csv(filepath)
+        elif filepath.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(filepath)
+        else:
+            return jsonify({'error': 'Invalid file format. Please upload CSV or Excel file.'}), 400
+
+        # Analyze sentiment
+        analysis = sentiment_analyzer.analyze_survey_comments(df)
+
+        return jsonify({
+            'success': True,
+            'filename': file.filename,
+            'analysis': analysis
+        })
+
+    except Exception as e:
+        logger.error(f"Sentiment upload error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
