@@ -74,6 +74,85 @@
     </div>
 </div>
 
+<!-- Predictive Cost & Risk Modeling Section -->
+<div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-lg p-6 mb-8 border border-purple-200">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">
+            🔮 Predictive Cost & Risk Modeling
+        </h2>
+        <button id="refresh-predictions-btn"
+                class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2">
+            <i class="fas fa-sync-alt"></i>
+            Refresh Predictions
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div id="predictions-loading" class="hidden text-center py-8">
+        <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
+        <p class="text-gray-600">Analyzing future costs and risks...</p>
+    </div>
+
+    <!-- Predictions Content -->
+    <div id="predictions-content" class="hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Cost Forecast Chart -->
+            <div class="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-purple-600"></i>
+                    3-Year Cost Forecast
+                </h3>
+                <canvas id="cost-forecast-chart" class="w-full" style="height: 300px;"></canvas>
+            </div>
+
+            <!-- ROI Analysis Card -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-piggy-bank text-green-600"></i>
+                    ROI Analysis
+                </h3>
+                <div id="roi-analysis" class="space-y-4">
+                    <!-- ROI metrics will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- High-Risk Apps Table -->
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-exclamation-triangle text-red-600"></i>
+                High-Risk Applications (Next 12 Months)
+            </h3>
+            <div class="overflow-x-auto">
+                <table id="high-risk-table" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Application</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tech Health</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Annual Cost</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="high-risk-tbody" class="bg-white divide-y divide-gray-200">
+                        <!-- High-risk apps will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="predictions-error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+            <i class="fas fa-exclamation-circle text-red-600 text-xl mt-1"></i>
+            <div>
+                <h4 class="font-semibold text-red-800 mb-1">Error Generating Predictions</h4>
+                <p id="predictions-error-message" class="text-red-700 text-sm"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- KPI Cards Section -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <!-- Total Applications Card -->
@@ -245,6 +324,200 @@
 {% endblock %}
 
 {% block extra_js %}
+// Predictive Cost & Risk Modeling functionality
+let costForecastChart = null;
+
+async function loadPredictions() {
+    const loadingDiv = document.getElementById('predictions-loading');
+    const contentDiv = document.getElementById('predictions-content');
+    const errorDiv = document.getElementById('predictions-error');
+    const refreshBtn = document.getElementById('refresh-predictions-btn');
+
+    // Reset state
+    contentDiv.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+    loadingDiv.classList.remove('hidden');
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+    try {
+        const response = await fetch('/api/predictions');
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to generate predictions');
+        }
+
+        // 1. Render Cost Forecast Chart
+        const costForecast = data.cost_forecast || [];
+        if (costForecast.length > 0) {
+            const ctx = document.getElementById('cost-forecast-chart').getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (costForecastChart) {
+                costForecastChart.destroy();
+            }
+
+            const currentYear = new Date().getFullYear();
+            const labels = ['Current', ...costForecast.map(f => `Year ${f.year}`)];
+            const currentCost = costForecast.length > 0 ? costForecast[0].projected_cost / (1 + costForecast[0].growth_rate) : 0;
+            const costs = [currentCost, ...costForecast.map(f => f.projected_cost)];
+
+            costForecastChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Projected Portfolio Cost',
+                        data: costs,
+                        borderColor: '#9333EA',
+                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#9333EA',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Cost: $' + context.parsed.y.toLocaleString('en-US', {maximumFractionDigits: 0});
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + (value / 1000000).toFixed(1) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Render ROI Analysis
+        const roiAnalysis = data.roi_analysis || {};
+        const roiDiv = document.getElementById('roi-analysis');
+        roiDiv.innerHTML = '';
+
+        if (roiAnalysis.retire_count > 0) {
+            const roiHtml = `
+                <div class="space-y-3">
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <p class="text-xs text-gray-600 mb-1">Apps to Retire</p>
+                        <p class="text-2xl font-bold text-blue-700">${roiAnalysis.retire_count}</p>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                        <p class="text-xs text-gray-600 mb-1">Annual Savings</p>
+                        <p class="text-2xl font-bold text-green-700">$${(roiAnalysis.annual_savings / 1000000).toFixed(2)}M</p>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                        <p class="text-xs text-gray-600 mb-1">Migration Cost</p>
+                        <p class="text-2xl font-bold text-yellow-700">$${(roiAnalysis.migration_cost / 1000000).toFixed(2)}M</p>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                        <p class="text-xs text-gray-600 mb-1">Payback Period</p>
+                        <p class="text-2xl font-bold text-purple-700">${roiAnalysis.payback_months.toFixed(1)} mo</p>
+                    </div>
+                    <div class="${roiAnalysis.three_year_roi > 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} p-3 rounded-lg border">
+                        <p class="text-xs text-gray-600 mb-1">3-Year ROI</p>
+                        <p class="text-2xl font-bold ${roiAnalysis.three_year_roi > 0 ? 'text-green-700' : 'text-red-700'}">
+                            ${roiAnalysis.three_year_roi > 0 ? '+' : ''}$${(roiAnalysis.three_year_roi / 1000000).toFixed(2)}M
+                        </p>
+                    </div>
+                </div>
+            `;
+            roiDiv.innerHTML = roiHtml;
+        } else {
+            roiDiv.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-info-circle text-4xl text-gray-400 mb-2"></i>
+                    <p class="text-gray-600 text-sm">No retirement candidates identified</p>
+                </div>
+            `;
+        }
+
+        // 3. Render High-Risk Apps Table
+        const highRiskApps = data.high_risk_apps || [];
+        const tbody = document.getElementById('high-risk-tbody');
+        tbody.innerHTML = '';
+
+        if (highRiskApps.length > 0) {
+            highRiskApps.forEach(app => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+
+                // Risk score color coding
+                let riskClass = 'bg-yellow-100 text-yellow-800';
+                if (app.risk_score > 50) {
+                    riskClass = 'bg-red-100 text-red-800';
+                } else if (app.risk_score > 30) {
+                    riskClass = 'bg-orange-100 text-orange-800';
+                }
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${app.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <span class="px-2 py-1 text-xs font-semibold bg-gray-100 rounded">${app.technical_health.toFixed(1)}/10</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">$${app.annual_cost.toLocaleString('en-US', {maximumFractionDigits: 0})}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-3 py-1 rounded-full font-semibold ${riskClass}">${app.risk_score.toFixed(1)}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                        <i class="fas fa-check-circle text-4xl text-green-500 mb-2"></i>
+                        <p>No high-risk applications identified</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Show content
+        loadingDiv.classList.add('hidden');
+        contentDiv.classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Error loading predictions:', error);
+        loadingDiv.classList.add('hidden');
+        errorDiv.classList.remove('hidden');
+        document.getElementById('predictions-error-message').textContent = error.message;
+    } finally {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Predictions';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const refreshBtn = document.getElementById('refresh-predictions-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', loadPredictions);
+        // Auto-load predictions on page load
+        loadPredictions();
+    }
+});
+
 // AI Executive Summary functionality
 document.addEventListener('DOMContentLoaded', function() {
     const generateBtn = document.getElementById('generate-summary-btn');

@@ -37,16 +37,18 @@ from src.scheduler import SchedulerManager
 from src.compliance_engine import ComplianceEngine
 from src.ai_summary import ExecutiveSummaryGenerator
 from src.ai_chat import AIChatAssistant
+from src.predictive_modeling import PredictiveModeler
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize database, ML engine, compliance engine, AI summary generator, AI chat, and scheduler
+# Initialize database, ML engine, compliance engine, AI summary generator, AI chat, predictive modeler, and scheduler
 db = Database()
 ml_engine = MLEngine()
 compliance_engine = ComplianceEngine()
 ai_summary_generator = ExecutiveSummaryGenerator()
 ai_chat = AIChatAssistant()
+predictive_modeler = PredictiveModeler()
 
 # Configure upload folder
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
@@ -769,6 +771,22 @@ def chat_query():
             'response': f'An error occurred: {str(e)}',
             'data': []
         }), 500
+
+
+@app.route('/api/predictions', methods=['GET'])
+def get_predictions():
+    """Generate predictive cost and risk analysis"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        predictions = predictive_modeler.generate_predictions(current_data)
+        return jsonify(predictions)
+    except Exception as e:
+        logger.error(f"Predictions error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/ml/clusters')
