@@ -1,0 +1,6 @@
+Application Name,Owner,Business Value,Tech Health,Cost,Usage,Security,Strategic Fit,Redundancy,Composite Score,Action Recommendation,Comments
+Payroll System,John Smith,5,4,20000,High,5,Yes,No,,,
+Customer Portal,Sara Patel,3,3,12000,Medium,4,Yes,No,,,
+Analytics Dashboard,Mike Brown,4,2,15000,Low,3,No,Yes,,,
+Legacy HR App,Emily Clark,2,1,4000,Very Low,2,No,Yes,,,
+Ticketing Tool,Asha Lee,4,5,9000,High,4,Yes,No,,,
