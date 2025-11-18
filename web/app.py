@@ -36,15 +36,17 @@ from src.ml_engine import MLEngine
 from src.scheduler import SchedulerManager
 from src.compliance_engine import ComplianceEngine
 from src.ai_summary import ExecutiveSummaryGenerator
+from src.ai_chat import AIChatAssistant
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize database, ML engine, compliance engine, AI summary generator, and scheduler
+# Initialize database, ML engine, compliance engine, AI summary generator, AI chat, and scheduler
 db = Database()
 ml_engine = MLEngine()
 compliance_engine = ComplianceEngine()
 ai_summary_generator = ExecutiveSummaryGenerator()
+ai_chat = AIChatAssistant()
 
 # Configure upload folder
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
@@ -440,6 +442,12 @@ def scheduler_page():
     return render_template('scheduler.html', status=status, jobs=jobs, history=history)
 
 
+@app.route('/chat')
+def chat_page():
+    """AI Chat Assistant page"""
+    return render_template('chat.html')
+
+
 # ==========================
 # API ENDPOINTS
 # ==========================
@@ -732,6 +740,34 @@ def get_ai_summary():
             'narrative': f'An error occurred: {str(e)}',
             'insights': [],
             'recommendations': []
+        }), 500
+
+
+@app.route('/api/ai/chat', methods=['POST'])
+def chat_query():
+    """Process natural language chat query about portfolio"""
+    global current_data
+
+    try:
+        data = request.json
+        message = data.get('message', '')
+
+        if not message:
+            return jsonify({'error': 'No message provided'}), 400
+
+        if current_data is None or current_data.empty:
+            return jsonify({
+                'response': 'No portfolio data is currently loaded. Please upload data first.',
+                'data': []
+            }), 200
+
+        result = ai_chat.process_chat(message, current_data)
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Chat query error: {e}")
+        return jsonify({
+            'response': f'An error occurred: {str(e)}',
+            'data': []
         }), 500
 
 
