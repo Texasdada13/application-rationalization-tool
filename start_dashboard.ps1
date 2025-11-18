@@ -32,16 +32,16 @@ if (-Not (Test-Path $VenvPath)) {
 
 # Activate virtual environment
 Write-Host "Activating virtual environment..." -ForegroundColor Yellow
-& $VenvPath
-
-if ($LASTEXITCODE -ne 0) {
+try {
+    . $VenvPath
+    Write-Host "Virtual environment activated!" -ForegroundColor Green
+    Write-Host ""
+} catch {
     Write-Host "Error: Failed to activate virtual environment" -ForegroundColor Red
+    Write-Host "Error details: $_" -ForegroundColor Red
     pause
     exit 1
 }
-
-Write-Host "Virtual environment activated!" -ForegroundColor Green
-Write-Host ""
 
 # Wait 2 seconds then open browser in background
 Start-Job -ScriptBlock {
