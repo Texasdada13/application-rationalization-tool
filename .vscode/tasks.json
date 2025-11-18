@@ -11,6 +11,9 @@
             "linux": {
                 "command": "bash ${workspaceFolder}/start_dashboard.sh"
             },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
