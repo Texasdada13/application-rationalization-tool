@@ -43,7 +43,8 @@ class Database:
         # Ensure data directory exists
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
 
-        self.conn = sqlite3.connect(self.db_path)
+        # Use check_same_thread=False to allow access from multiple threads (Flask)
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row  # Enable column access by name
 
         self._create_tables()
