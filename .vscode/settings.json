@@ -1,0 +1,21 @@
+{
+    // Auto-run the dashboard when folder opens
+    "task.autoDetect": "on",
+
+    // Terminal settings
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+
+    // Python settings
+    "python.defaultInterpreterPath": "${workspaceFolder}/venv/Scripts/python.exe",
+
+    // File associations
+    "files.associations": {
+        "*.html": "html",
+        "*.css": "css",
+        "*.js": "javascript"
+    },
+
+    // Auto-save
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000
+}

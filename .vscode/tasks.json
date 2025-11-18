@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start Dashboard",
+            "type": "shell",
+            "command": "${workspaceFolder}/start_dashboard.ps1",
+            "windows": {
+                "command": "powershell.exe -ExecutionPolicy Bypass -File ${workspaceFolder}/start_dashboard.ps1"
+            },
+            "linux": {
+                "command": "bash ${workspaceFolder}/start_dashboard.sh"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": false
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        }
+    ]
+}
