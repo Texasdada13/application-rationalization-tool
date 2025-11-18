@@ -6,16 +6,36 @@ Write-Host "Application Rationalization Tool - Starting Dashboard" -ForegroundCo
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Get the script directory
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Get the script directory (use current directory if running from VS Code)
+if ($MyInvocation.MyCommand.Path) {
+    $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+} else {
+    $ScriptDir = Get-Location
+}
+
+Write-Host "Working directory: $ScriptDir" -ForegroundColor Gray
+Write-Host ""
+
+# Check if virtual environment exists
+$VenvPath = Join-Path $ScriptDir "venv\Scripts\Activate.ps1"
+if (-Not (Test-Path $VenvPath)) {
+    Write-Host "Error: Virtual environment not found!" -ForegroundColor Red
+    Write-Host "Expected location: $VenvPath" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Please create a virtual environment by running:" -ForegroundColor Yellow
+    Write-Host "  python -m venv venv" -ForegroundColor Yellow
+    Write-Host "  .\venv\Scripts\Activate.ps1" -ForegroundColor Yellow
+    Write-Host "  pip install -r requirements.txt" -ForegroundColor Yellow
+    pause
+    exit 1
+}
 
 # Activate virtual environment
 Write-Host "Activating virtual environment..." -ForegroundColor Yellow
-& "$ScriptDir\venv\Scripts\Activate.ps1"
+& $VenvPath
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error: Failed to activate virtual environment" -ForegroundColor Red
-    Write-Host "Please ensure the virtual environment exists at: $ScriptDir\venv" -ForegroundColor Red
     pause
     exit 1
 }
