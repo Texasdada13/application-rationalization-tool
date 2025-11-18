@@ -184,6 +184,12 @@ class ScoringEngine:
         Returns:
             List of applications with calculated scores
         """
+        # Convert DataFrame to list of dicts if needed, but remember if it was a DataFrame
+        import pandas as pd
+        was_dataframe = isinstance(applications, pd.DataFrame)
+        if was_dataframe:
+            applications = applications.to_dict('records')
+
         results = []
 
         for app in applications:
@@ -219,6 +225,9 @@ class ScoringEngine:
                 app_result['Retention Score'] = 0.0
                 results.append(app_result)
 
+        # Convert back to DataFrame if input was a DataFrame
+        if was_dataframe:
+            return pd.DataFrame(results)
         return results
 
     def get_score_breakdown(

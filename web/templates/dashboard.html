@@ -77,9 +77,10 @@
 <!-- Predictive Cost & Risk Modeling Section -->
 <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-lg p-6 mb-8 border border-purple-200">
     <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold text-gray-800">
+        <button id="toggle-predictions-btn" class="flex items-center gap-2 text-2xl font-bold text-gray-800 hover:text-purple-600 transition-colors">
+            <i id="predictions-toggle-icon" class="fas fa-chevron-right text-lg"></i>
             🔮 Predictive Cost & Risk Modeling
-        </h2>
+        </button>
         <button id="refresh-predictions-btn"
                 class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2">
             <i class="fas fa-sync-alt"></i>
@@ -87,14 +88,16 @@
         </button>
     </div>
 
-    <!-- Loading State -->
-    <div id="predictions-loading" class="hidden text-center py-8">
-        <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
-        <p class="text-gray-600">Analyzing future costs and risks...</p>
-    </div>
+    <!-- Collapsible Container (starts collapsed) -->
+    <div id="predictions-collapsible" class="space-y-4" style="display: none;">
+        <!-- Loading State -->
+        <div id="predictions-loading" class="hidden text-center py-8">
+            <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
+            <p class="text-gray-600">Analyzing future costs and risks...</p>
+        </div>
 
-    <!-- Predictions Content -->
-    <div id="predictions-content" class="hidden">
+        <!-- Predictions Content -->
+        <div id="predictions-content" class="hidden">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <!-- Cost Forecast Chart -->
             <div class="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm">
@@ -102,7 +105,7 @@
                     <i class="fas fa-chart-line text-purple-600"></i>
                     3-Year Cost Forecast
                 </h3>
-                <canvas id="cost-forecast-chart" class="w-full" style="height: 300px;"></canvas>
+                <canvas id="cost-forecast-chart" class="w-full" style="height: 200px;"></canvas>
             </div>
 
             <!-- ROI Analysis Card -->
@@ -121,9 +124,9 @@
         <div class="bg-white rounded-lg p-6 shadow-sm">
             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <i class="fas fa-exclamation-triangle text-red-600"></i>
-                High-Risk Applications (Next 12 Months)
+                Top 5 High-Risk Applications (Next 12 Months)
             </h3>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto max-h-80">
                 <table id="high-risk-table" class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -141,13 +144,14 @@
         </div>
     </div>
 
-    <!-- Error State -->
-    <div id="predictions-error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
-        <div class="flex items-start gap-3">
-            <i class="fas fa-exclamation-circle text-red-600 text-xl mt-1"></i>
-            <div>
-                <h4 class="font-semibold text-red-800 mb-1">Error Generating Predictions</h4>
-                <p id="predictions-error-message" class="text-red-700 text-sm"></p>
+        <!-- Error State -->
+        <div id="predictions-error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-exclamation-circle text-red-600 text-xl mt-1"></i>
+                <div>
+                    <h4 class="font-semibold text-red-800 mb-1">Error Generating Predictions</h4>
+                    <p id="predictions-error-message" class="text-red-700 text-sm"></p>
+                </div>
             </div>
         </div>
     </div>
@@ -327,6 +331,22 @@
 // Predictive Cost & Risk Modeling functionality
 let costForecastChart = null;
 
+// Toggle predictions section
+document.getElementById('toggle-predictions-btn').addEventListener('click', function() {
+    const collapsible = document.getElementById('predictions-collapsible');
+    const icon = document.getElementById('predictions-toggle-icon');
+
+    if (collapsible.style.display === 'none') {
+        collapsible.style.display = 'block';
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+    } else {
+        collapsible.style.display = 'none';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+    }
+});
+
 async function loadPredictions() {
     const loadingDiv = document.getElementById('predictions-loading');
     const contentDiv = document.getElementById('predictions-content');
@@ -453,8 +473,8 @@ async function loadPredictions() {
             `;
         }
 
-        // 3. Render High-Risk Apps Table
-        const highRiskApps = data.high_risk_apps || [];
+        // 3. Render High-Risk Apps Table (limit to top 5)
+        const highRiskApps = (data.high_risk_apps || []).slice(0, 5);
         const tbody = document.getElementById('high-risk-tbody');
         tbody.innerHTML = '';
 

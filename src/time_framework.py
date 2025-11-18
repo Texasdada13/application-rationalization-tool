@@ -409,6 +409,12 @@ class TIMEFramework:
             Applications must have already been scored (composite score calculated).
             Missing required fields will result in 'Tolerate' default categorization.
         """
+        # Convert DataFrame to list of dicts if needed, but remember if it was a DataFrame
+        import pandas as pd
+        was_dataframe = isinstance(applications, pd.DataFrame)
+        if was_dataframe:
+            applications = applications.to_dict('records')
+
         results = []
 
         for app in applications:
@@ -460,6 +466,9 @@ class TIMEFramework:
                 app_result['TIME Technical Quality Score'] = 5.0
                 results.append(app_result)
 
+        # Convert back to DataFrame if input was a DataFrame
+        if was_dataframe:
+            return pd.DataFrame(results)
         return results
 
     def get_category_summary(self) -> Dict:

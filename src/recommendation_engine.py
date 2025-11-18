@@ -235,6 +235,12 @@ class RecommendationEngine:
         Returns:
             List of applications with recommendations added
         """
+        # Convert DataFrame to list of dicts if needed, but remember if it was a DataFrame
+        import pandas as pd
+        was_dataframe = isinstance(applications, pd.DataFrame)
+        if was_dataframe:
+            applications = applications.to_dict('records')
+
         results = []
 
         for app in applications:
@@ -264,6 +270,9 @@ class RecommendationEngine:
                 app_result['Comments'] = "Unable to generate recommendation due to data issues."
                 results.append(app_result)
 
+        # Convert back to DataFrame if input was a DataFrame
+        if was_dataframe:
+            return pd.DataFrame(results)
         return results
 
     def get_portfolio_summary(self) -> Dict:
