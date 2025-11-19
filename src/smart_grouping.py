@@ -218,11 +218,11 @@ class SmartGroupingEngine:
         # 1. Domain purpose
         if domain in self.DOMAIN_PATTERNS:
             importance = self.DOMAIN_PATTERNS[domain]['strategic_importance']
-            explanation_parts.append(f"**Purpose**: {importance}")
+            explanation_parts.append(f"Purpose: {importance}")
 
         # 2. Portfolio composition
         explanation_parts.append(
-            f"**Portfolio**: {count} applications consuming ${total_cost:,.0f} annually "
+            f"Portfolio: {count} applications consuming ${total_cost:,.0f} annually "
             f"(${total_cost/count:,.0f} per app)"
         )
 
@@ -231,8 +231,8 @@ class SmartGroupingEngine:
         value_status = self._assess_value(avg_value)
 
         explanation_parts.append(
-            f"**Health Status**: {health_status} (avg: {avg_health}/10) | "
-            f"**Business Value**: {value_status} (avg: {avg_value}/10)"
+            f"Health Status: {health_status} (avg: {avg_health}/10) | "
+            f"Business Value: {value_status} (avg: {avg_value}/10)"
         )
 
         # 4. Actionable insights
@@ -254,13 +254,13 @@ class SmartGroupingEngine:
             insights.append(f"✅ Well-maintained domain with strong business value")
 
         if insights:
-            explanation_parts.append("**Insights**: " + " | ".join(insights))
+            explanation_parts.append("Insights: " + " | ".join(insights))
 
         # 5. Recommendation
         recommendation = self._generate_recommendation(
             avg_health, avg_value, retire_count, modernize_count, total_cost
         )
-        explanation_parts.append(f"**Recommendation**: {recommendation}")
+        explanation_parts.append(f"Recommendation: {recommendation}")
 
         return "\n\n".join(explanation_parts)
 
