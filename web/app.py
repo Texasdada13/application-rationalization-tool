@@ -44,6 +44,8 @@ from src.smart_grouping import SmartGroupingEngine
 from src.whatif_engine import WhatIfScenarioEngine
 from src.roadmap_engine import PrioritizationRoadmapEngine
 from src.data_validator import DataQualityValidator
+from src.cost_modeler import AdvancedCostModeler
+from src.scenario_comparator import ScenarioComparator
 
 app = Flask(__name__)
 CORS(app)
@@ -1257,6 +1259,120 @@ def get_cleaning_suggestions():
 
     except Exception as e:
         logger.error(f"Cleaning suggestions error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# ADVANCED COST MODELING API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/cost-modeling/tco', methods=['GET'])
+def get_tco_breakdown():
+    """Get TCO breakdown analysis"""
+    global current_data
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+        cost_modeler = AdvancedCostModeler(current_data)
+        tco_summary = cost_modeler.calculate_tco_breakdown()
+        return jsonify({'success': True, 'tco': tco_summary})
+    except Exception as e:
+        logger.error(f"TCO analysis error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/cost-modeling/departments', methods=['GET'])
+def get_department_costs():
+    """Get cost allocation by department"""
+    global current_data
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+        cost_modeler = AdvancedCostModeler(current_data)
+        allocation = cost_modeler.allocate_costs_by_department()
+        return jsonify({'success': True, 'allocation': allocation})
+    except Exception as e:
+        logger.error(f"Department allocation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/cost-modeling/hidden-costs', methods=['GET'])
+def get_hidden_costs():
+    """Identify hidden costs"""
+    global current_data
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+        cost_modeler = AdvancedCostModeler(current_data)
+        hidden = cost_modeler.identify_hidden_costs()
+        return jsonify({'success': True, 'hidden_costs': hidden})
+    except Exception as e:
+        logger.error(f"Hidden costs error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/cost-modeling/summary', methods=['GET'])
+def get_cost_optimization_summary():
+    """Get comprehensive cost optimization summary"""
+    global current_data
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+        cost_modeler = AdvancedCostModeler(current_data)
+        summary = cost_modeler.get_cost_optimization_summary()
+        return jsonify({'success': True, 'summary': summary})
+    except Exception as e:
+        logger.error(f"Cost summary error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# SCENARIO COMPARISON API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/scenarios/compare', methods=['POST'])
+def compare_scenarios():
+    """Compare multiple what-if scenarios"""
+    global current_data
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        data = request.json
+        scenarios_config = data.get('scenarios', {})
+
+        comparator = ScenarioComparator(current_data)
+
+        for name, config in scenarios_config.items():
+            comparator.add_scenario(name, config)
+
+        comparison = comparator.compare_all()
+        return jsonify({'success': True, 'comparison': comparison})
+    except Exception as e:
+        logger.error(f"Scenario comparison error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/scenarios/report', methods=['POST'])
+def get_scenario_report():
+    """Get comprehensive scenario comparison report"""
+    global current_data
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        data = request.json
+        scenarios_config = data.get('scenarios', {})
+
+        comparator = ScenarioComparator(current_data)
+
+        for name, config in scenarios_config.items():
+            comparator.add_scenario(name, config)
+
+        report = comparator.export_comparison_report()
+        return jsonify({'success': True, 'report': report})
+    except Exception as e:
+        logger.error(f"Scenario report error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
