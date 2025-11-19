@@ -46,6 +46,7 @@ from src.roadmap_engine import PrioritizationRoadmapEngine
 from src.data_validator import DataQualityValidator
 from src.cost_modeler import AdvancedCostModeler
 from src.scenario_comparator import ScenarioComparator
+from src.integration_mapper import IntegrationMapper
 
 app = Flask(__name__)
 CORS(app)
@@ -1373,6 +1374,47 @@ def get_scenario_report():
         return jsonify({'success': True, 'report': report})
     except Exception as e:
         logger.error(f"Scenario report error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# INTEGRATION & DEPENDENCY MAPPING API ENDPOINTS
+# ============================================================================
+
+@app.route('/dependencies')
+def dependencies_page():
+    """Render dependency mapper page"""
+    return render_template('dependencies.html')
+
+
+@app.route('/api/dependencies/report', methods=['GET'])
+def get_integration_report():
+    """Get comprehensive integration analysis"""
+    global current_data
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+        mapper = IntegrationMapper(current_data)
+        report = mapper.get_integration_report()
+        return jsonify({'success': True, 'report': report})
+    except Exception as e:
+        logger.error(f"Integration report error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/dependencies/blast-radius/<string:app_name>', methods=['GET'])
+def get_blast_radius(app_name: str):
+    """Calculate blast radius for specific app"""
+    global current_data
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+        mapper = IntegrationMapper(current_data)
+        mapper.extract_dependencies()
+        blast_radius = mapper.calculate_blast_radius(app_name)
+        return jsonify({'success': True, 'blast_radius': blast_radius})
+    except Exception as e:
+        logger.error(f"Blast radius error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
