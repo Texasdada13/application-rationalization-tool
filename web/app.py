@@ -40,6 +40,7 @@ from src.ai_chat import AIChatAssistant
 from src.predictive_modeling import PredictiveModeler
 from src.smart_recommendations import SmartRecommendationEngine
 from src.sentiment_analyzer import SentimentAnalyzer
+from src.smart_grouping import SmartGroupingEngine
 
 app = Flask(__name__)
 CORS(app)
@@ -466,6 +467,12 @@ def sentiment_page():
     return render_template('sentiment_analysis.html')
 
 
+@app.route('/smart-grouping')
+def smart_grouping_page():
+    """Smart Application Grouping page"""
+    return render_template('smart_grouping.html')
+
+
 # ==========================
 # API ENDPOINTS
 # ==========================
@@ -873,6 +880,59 @@ def upload_sentiment_data():
 
     except Exception as e:
         logger.error(f"Sentiment upload error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/smart-grouping', methods=['GET'])
+def get_smart_grouping():
+    """Generate smart application groupings with AI explanations"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Initialize smart grouping engine
+        grouping_engine = SmartGroupingEngine(current_data)
+
+        # Generate groupings
+        summary = grouping_engine.get_groupings_summary()
+
+        return jsonify({
+            'success': True,
+            'total_applications': len(current_data),
+            'total_domains': len(summary),
+            'groupings': summary
+        })
+
+    except Exception as e:
+        logger.error(f"Smart grouping error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/smart-grouping/<string:domain_name>', methods=['GET'])
+def get_domain_details_api(domain_name: str):
+    """Get detailed breakdown for a specific domain"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Initialize smart grouping engine
+        grouping_engine = SmartGroupingEngine(current_data)
+        grouping_engine.generate_groupings()
+
+        # Get domain details
+        details = grouping_engine.get_domain_details(domain_name)
+
+        if details is None:
+            return jsonify({'error': f'Domain "{domain_name}" not found'}), 404
+
+        return jsonify(details)
+
+    except Exception as e:
+        logger.error(f"Domain details error: {e}")
         return jsonify({'error': str(e)}), 500
 
 

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Application Grouping - Application Rationalization Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: white !important;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+        }
+
+        .page-header {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .page-header h1 {
+            color: #1e293b;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--secondary-color);
+            margin-bottom: 0;
+        }
+
+        .domain-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .domain-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .domain-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+
+        .domain-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .domain-icon {
+            font-size: 2rem;
+        }
+
+        .domain-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .domain-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-box {
+            background: var(--light-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .stat-value.cost {
+            color: var(--primary-color);
+        }
+
+        .stat-value.health {
+            color: var(--success-color);
+        }
+
+        .stat-value.value {
+            color: var(--warning-color);
+        }
+
+        .ai-explanation {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .ai-explanation h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-explanation p {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        .badge-importance {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-critical {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+
+        .badge-high {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-medium {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+
+        .app-list-toggle {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+
+        .app-list-toggle:hover {
+            background: var(--light-bg);
+            border-color: var(--primary-color);
+        }
+
+        .app-list-toggle i {
+            transition: transform 0.3s;
+        }
+
+        .app-list-toggle.expanded i {
+            transform: rotate(180deg);
+        }
+
+        .applications-table {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .applications-table.show {
+            display: block;
+        }
+
+        .applications-table table {
+            font-size: 0.9rem;
+        }
+
+        .applications-table th {
+            background-color: var(--light-bg);
+            color: var(--secondary-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--primary-color);
+        }
+
+        .error-alert {
+            background: #fef2f2;
+            border-left: 4px solid var(--danger-color);
+            padding: 1.25rem;
+            border-radius: 8px;
+            color: #991b1b;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .summary-card h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card p {
+            color: var(--secondary-color);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-th-large me-2"></i>
+                Application Rationalization Tool
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="fas fa-chart-line me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/portfolio"><i class="fas fa-table me-1"></i> Portfolio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/smart-grouping"><i class="fas fa-object-group me-1"></i> Smart Grouping</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/smart-recommendations"><i class="fas fa-lightbulb me-1"></i> Recommendations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/sentiment"><i class="fas fa-comments me-1"></i> Sentiment</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-object-group me-2"></i> Smart Application Grouping with AI Explanations</h1>
+            <p>Automatically categorize applications into business domains with contextual reasoning and actionable insights</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summary-section" class="summary-cards" style="display: none;">
+            <div class="summary-card">
+                <h3 id="total-apps">-</h3>
+                <p>Total Applications</p>
+            </div>
+            <div class="summary-card">
+                <h3 id="total-domains">-</h3>
+                <p>Business Domains</p>
+            </div>
+            <div class="summary-card">
+                <h3 id="avg-apps-per-domain">-</h3>
+                <p>Avg Apps per Domain</p>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading-spinner">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Analyzing application portfolio and generating AI explanations...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error-alert" style="display: none;">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Error:</strong> <span id="error-message"></span>
+        </div>
+
+        <!-- Domain Cards Container -->
+        <div id="domains-container"></div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Main Script -->
+    <script>
+        // Load smart groupings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSmartGrouping();
+        });
+
+        async function loadSmartGrouping() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const container = document.getElementById('domains-container');
+            const summarySection = document.getElementById('summary-section');
+
+            try {
+                // Show loading
+                loading.style.display = 'block';
+                error.style.display = 'none';
+                container.innerHTML = '';
+
+                // Fetch smart grouping data
+                const response = await fetch('/api/smart-grouping');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load smart grouping');
+                }
+
+                // Hide loading
+                loading.style.display = 'none';
+
+                // Update summary
+                document.getElementById('total-apps').textContent = data.total_applications;
+                document.getElementById('total-domains').textContent = data.total_domains;
+                document.getElementById('avg-apps-per-domain').textContent =
+                    (data.total_applications / data.total_domains).toFixed(1);
+                summarySection.style.display = 'grid';
+
+                // Render domain cards
+                data.groupings.forEach(domain => {
+                    renderDomainCard(domain, container);
+                });
+
+            } catch (err) {
+                console.error('Smart grouping error:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                document.getElementById('error-message').textContent = err.message;
+            }
+        }
+
+        function renderDomainCard(domain, container) {
+            const card = document.createElement('div');
+            card.className = 'domain-card';
+
+            // Determine importance badge class
+            let badgeClass = 'badge-medium';
+            if (domain.strategic_importance.toLowerCase().includes('critical')) {
+                badgeClass = 'badge-critical';
+            } else if (domain.strategic_importance.toLowerCase().includes('high')) {
+                badgeClass = 'badge-high';
+            }
+
+            card.innerHTML = `
+                <div class="domain-header" onclick="toggleAppList('${domain.domain.replace(/'/g, "\\'")}')">
+                    <div class="domain-title">
+                        <span class="domain-icon">${domain.icon}</span>
+                        <div>
+                            <h3 class="domain-name">${domain.domain}</h3>
+                            <span class="badge-importance ${badgeClass}">${domain.strategic_importance}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <div class="domain-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Applications</div>
+                        <div class="stat-value">${domain.count}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Annual Cost</div>
+                        <div class="stat-value cost">$${(domain.total_cost / 1000000).toFixed(1)}M</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg Health</div>
+                        <div class="stat-value health">${domain.avg_health}/10</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg Value</div>
+                        <div class="stat-value value">${domain.avg_value}/10</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Retire Candidates</div>
+                        <div class="stat-value" style="color: var(--danger-color);">${domain.retirement_candidates}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Modernize</div>
+                        <div class="stat-value" style="color: var(--warning-color);">${domain.modernization_candidates}</div>
+                    </div>
+                </div>
+
+                <div class="ai-explanation">
+                    <h6><i class="fas fa-robot me-2"></i>AI Analysis</h6>
+                    <p>${domain.ai_explanation}</p>
+                </div>
+
+                <div class="app-list-toggle" id="toggle-${domain.domain.replace(/\s+/g, '-')}">
+                    <i class="fas fa-chevron-down me-2"></i>
+                    View ${domain.count} Applications in this Domain
+                </div>
+
+                <div class="applications-table" id="apps-${domain.domain.replace(/\s+/g, '-')}">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Application Name</th>
+                                <th>Category</th>
+                                <th>Annual Cost</th>
+                                <th>Tech Health</th>
+                                <th>Business Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${domain.applications.map(app => `
+                                <tr>
+                                    <td><strong>${app.name}</strong></td>
+                                    <td>${app.category}</td>
+                                    <td>$${app.cost.toLocaleString()}</td>
+                                    <td>
+                                        <span class="badge" style="background-color: ${getHealthColor(app.health)}">
+                                            ${app.health}/10
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: ${getValueColor(app.value)}">
+                                            ${app.value}/10
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.appendChild(card);
+        }
+
+        function toggleAppList(domainName) {
+            const domainId = domainName.replace(/\s+/g, '-');
+            const appList = document.getElementById(`apps-${domainId}`);
+            const toggle = document.getElementById(`toggle-${domainId}`);
+
+            if (appList.classList.contains('show')) {
+                appList.classList.remove('show');
+                toggle.classList.remove('expanded');
+            } else {
+                appList.classList.add('show');
+                toggle.classList.add('expanded');
+            }
+        }
+
+        function getHealthColor(health) {
+            if (health >= 8) return '#10b981';
+            if (health >= 6) return '#84cc16';
+            if (health >= 4) return '#f59e0b';
+            return '#ef4444';
+        }
+
+        function getValueColor(value) {
+            if (value >= 8) return '#8b5cf6';
+            if (value >= 6) return '#3b82f6';
+            if (value >= 4) return '#f59e0b';
+            return '#ef4444';
+        }
+    </script>
+</body>
+</html>
