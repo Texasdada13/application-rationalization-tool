@@ -48,6 +48,7 @@ from src.cost_modeler import AdvancedCostModeler
 from src.scenario_comparator import ScenarioComparator
 from src.integration_mapper import IntegrationMapper
 from src.history_tracker import HistoryTracker
+from src.risk_assessor import RiskAssessmentFramework
 
 app = Flask(__name__)
 CORS(app)
@@ -1526,6 +1527,109 @@ def get_application_history(app_name):
         return jsonify({'success': True, 'history': history})
     except Exception as e:
         logger.error(f"Application history error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# RISK ASSESSMENT API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/risk/assess-portfolio', methods=['GET'])
+def assess_portfolio_risk():
+    """Assess risk for entire portfolio"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        assessor = RiskAssessmentFramework(current_data)
+        assessment = assessor.assess_portfolio()
+
+        return jsonify({'success': True, 'assessment': assessment})
+    except Exception as e:
+        logger.error(f"Portfolio risk assessment error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/risk/assess-app/<string:app_name>', methods=['GET'])
+def assess_application_risk(app_name):
+    """Assess risk for a specific application"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Find application
+        app_data = current_data[current_data['Application Name'] == app_name]
+        if app_data.empty:
+            return jsonify({'error': f'Application not found: {app_name}'}), 404
+
+        assessor = RiskAssessmentFramework(current_data)
+        assessment = assessor.calculate_composite_risk(app_data.iloc[0])
+
+        return jsonify({'success': True, 'assessment': assessment})
+    except Exception as e:
+        logger.error(f"Application risk assessment error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/risk/compliance/<string:framework>', methods=['GET'])
+def check_compliance(framework):
+    """Check compliance against specified framework"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        assessor = RiskAssessmentFramework(current_data)
+        compliance = assessor.check_compliance(framework.upper())
+
+        return jsonify({'success': True, 'compliance': compliance})
+    except Exception as e:
+        logger.error(f"Compliance check error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/risk/mitigation-plan/<string:app_name>', methods=['GET'])
+def get_mitigation_plan(app_name):
+    """Generate risk mitigation plan for application"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        assessor = RiskAssessmentFramework(current_data)
+        # Need to assess portfolio first to populate risk_assessments
+        assessor.assess_portfolio()
+
+        mitigation_plan = assessor.generate_mitigation_plan(app_name)
+
+        return jsonify({'success': True, 'mitigation_plan': mitigation_plan})
+    except Exception as e:
+        logger.error(f"Mitigation plan error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/risk/heatmap', methods=['GET'])
+def get_risk_heatmap():
+    """Get risk heatmap data for visualization"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        assessor = RiskAssessmentFramework(current_data)
+        assessor.assess_portfolio()
+        heatmap_data = assessor.get_risk_heatmap_data()
+
+        return jsonify({'success': True, 'heatmap_data': heatmap_data})
+    except Exception as e:
+        logger.error(f"Risk heatmap error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
