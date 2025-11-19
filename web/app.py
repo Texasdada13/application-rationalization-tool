@@ -47,6 +47,7 @@ from src.data_validator import DataQualityValidator
 from src.cost_modeler import AdvancedCostModeler
 from src.scenario_comparator import ScenarioComparator
 from src.integration_mapper import IntegrationMapper
+from src.history_tracker import HistoryTracker
 
 app = Flask(__name__)
 CORS(app)
@@ -1182,6 +1183,12 @@ def data_quality_page():
     return render_template('data_quality.html')
 
 
+@app.route('/history')
+def history_page():
+    """Render historical tracking dashboard page"""
+    return render_template('history.html')
+
+
 @app.route('/api/data-quality/validate', methods=['POST'])
 def validate_data_quality():
     """Validate uploaded data quality before processing"""
@@ -1415,6 +1422,110 @@ def get_blast_radius(app_name: str):
         return jsonify({'success': True, 'blast_radius': blast_radius})
     except Exception as e:
         logger.error(f"Blast radius error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# HISTORICAL TRACKING API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/history/save-snapshot', methods=['POST'])
+def save_portfolio_snapshot():
+    """Save current portfolio as snapshot"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        data = request.get_json() or {}
+        snapshot_name = data.get('snapshot_name')
+
+        tracker = HistoryTracker()
+        snapshot_id = tracker.save_snapshot(current_data, snapshot_name)
+
+        return jsonify({
+            'success': True,
+            'snapshot_id': snapshot_id,
+            'message': f'Snapshot saved successfully'
+        })
+    except Exception as e:
+        logger.error(f"Save snapshot error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/list-snapshots', methods=['GET'])
+def list_snapshots():
+    """List all available snapshots"""
+    try:
+        tracker = HistoryTracker()
+        snapshots = tracker.list_snapshots()
+        return jsonify({'success': True, 'snapshots': snapshots})
+    except Exception as e:
+        logger.error(f"List snapshots error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/compare', methods=['POST'])
+def compare_snapshots():
+    """Compare two snapshots"""
+    try:
+        data = request.get_json()
+        snapshot1_id = data.get('snapshot1_id')
+        snapshot2_id = data.get('snapshot2_id')
+
+        if not snapshot1_id or not snapshot2_id:
+            return jsonify({'error': 'Both snapshot IDs required'}), 400
+
+        tracker = HistoryTracker()
+        comparison = tracker.compare_snapshots(snapshot1_id, snapshot2_id)
+
+        return jsonify({'success': True, 'comparison': comparison})
+    except Exception as e:
+        logger.error(f"Compare snapshots error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/evolution', methods=['GET'])
+def get_portfolio_evolution():
+    """Get portfolio evolution timeline"""
+    try:
+        tracker = HistoryTracker()
+        evolution = tracker.get_portfolio_evolution()
+        return jsonify({'success': True, 'evolution': evolution})
+    except Exception as e:
+        logger.error(f"Portfolio evolution error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/roi-tracking', methods=['POST'])
+def track_roi_realization():
+    """Track ROI realization for decisions"""
+    try:
+        data = request.get_json()
+        decisions = data.get('decisions', [])
+
+        if not decisions:
+            return jsonify({'error': 'Decisions list required'}), 400
+
+        tracker = HistoryTracker()
+        roi_tracking = tracker.track_roi_realization(decisions)
+
+        return jsonify({'success': True, 'roi_tracking': roi_tracking})
+    except Exception as e:
+        logger.error(f"ROI tracking error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/app-history/<string:app_name>', methods=['GET'])
+def get_application_history(app_name):
+    """Get history for a specific application"""
+    try:
+        tracker = HistoryTracker()
+        history = tracker.get_application_history(app_name)
+        return jsonify({'success': True, 'history': history})
+    except Exception as e:
+        logger.error(f"Application history error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
