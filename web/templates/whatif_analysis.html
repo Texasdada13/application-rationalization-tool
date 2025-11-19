@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What-If Scenario Analysis - Application Rationalization Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: white !important;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+        }
+
+        .page-header {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .page-header h1 {
+            color: #1e293b;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--secondary-color);
+            margin-bottom: 0;
+        }
+
+        .scenario-builder {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .scenario-type-btn {
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .scenario-type-btn:hover {
+            border-color: var(--primary-color);
+            background: #eff6ff;
+            transform: translateY(-2px);
+        }
+
+        .scenario-type-btn.active {
+            border-color: var(--primary-color);
+            background: #dbeafe;
+        }
+
+        .scenario-type-btn i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .baseline-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .metric-value.positive {
+            color: var(--success-color);
+        }
+
+        .metric-value.negative {
+            color: var(--danger-color);
+        }
+
+        .comparison-view {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .comparison-view.show {
+            display: block;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .comparison-column {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .comparison-column h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .impact-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+
+        .impact-badge.positive {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .impact-badge.negative {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .impact-badge.neutral {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .recommended-scenarios {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .recommended-scenario-card {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .recommended-scenario-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-simulate {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-simulate:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .app-selector {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .app-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .app-checkbox:hover {
+            background: var(--light-bg);
+        }
+
+        .app-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-th-large me-2"></i>
+                Application Rationalization Tool
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="fas fa-chart-line me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/portfolio"><i class="fas fa-table me-1"></i> Portfolio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/smart-grouping"><i class="fas fa-object-group me-1"></i> Smart Grouping</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/what-if"><i class="fas fa-flask me-1"></i> What-If Analysis</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-flask me-2"></i> What-If Scenario Analysis</h1>
+            <p>Simulate different rationalization strategies and see instant impact on costs, risks, and portfolio health</p>
+        </div>
+
+        <!-- Baseline Metrics -->
+        <div id="baseline-section" class="baseline-metrics"></div>
+
+        <!-- Recommended Scenarios -->
+        <div id="recommended-scenarios-section" class="recommended-scenarios" style="display: none;">
+            <h3 class="mb-3"><i class="fas fa-star me-2"></i> Recommended Scenarios</h3>
+            <div id="recommended-scenarios-list"></div>
+        </div>
+
+        <!-- Scenario Builder -->
+        <div class="scenario-builder">
+            <h3 class="mb-4"><i class="fas fa-hammer me-2"></i> Build Custom Scenario</h3>
+
+            <!-- Scenario Type Selection -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="scenario-type-btn" onclick="selectScenarioType('retire')">
+                        <i class="fas fa-trash-alt text-danger"></i>
+                        <h5>Retire Apps</h5>
+                        <p class="text-muted mb-0">Remove applications</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="scenario-type-btn" onclick="selectScenarioType('modernize')">
+                        <i class="fas fa-rocket text-success"></i>
+                        <h5>Modernize</h5>
+                        <p class="text-muted mb-0">Upgrade tech health</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="scenario-type-btn" onclick="selectScenarioType('consolidate')">
+                        <i class="fas fa-compress-alt text-warning"></i>
+                        <h5>Consolidate</h5>
+                        <p class="text-muted mb-0">Merge redundant apps</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="scenario-type-btn" onclick="selectScenarioType('combined')">
+                        <i class="fas fa-layer-group text-primary"></i>
+                        <h5>Combined</h5>
+                        <p class="text-muted mb-0">Multiple actions</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario Configuration -->
+            <div id="scenario-config" style="display: none;">
+                <div id="retire-config" style="display: none;">
+                    <h5>Select Applications to Retire</h5>
+                    <div id="retire-app-selector" class="app-selector"></div>
+                    <button class="btn-simulate mt-3" onclick="runSimulation('retire')">
+                        <i class="fas fa-play me-2"></i> Simulate Retirement
+                    </button>
+                </div>
+
+                <div id="modernize-config" style="display: none;">
+                    <h5>Select Applications to Modernize</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Health Improvement</label>
+                        <input type="range" class="form-range" id="health-improvement" min="1" max="5" step="0.5" value="3">
+                        <span id="health-improvement-value">+3.0 points</span>
+                    </div>
+                    <div id="modernize-app-selector" class="app-selector"></div>
+                    <button class="btn-simulate mt-3" onclick="runSimulation('modernize')">
+                        <i class="fas fa-play me-2"></i> Simulate Modernization
+                    </button>
+                </div>
+
+                <div id="consolidate-config" style="display: none;">
+                    <h5>Group Applications for Consolidation</h5>
+                    <p class="text-muted">Select applications with similar functions to consolidate</p>
+                    <div id="consolidate-app-selector" class="app-selector"></div>
+                    <button class="btn-simulate mt-3" onclick="runSimulation('consolidate')">
+                        <i class="fas fa-play me-2"></i> Simulate Consolidation
+                    </button>
+                </div>
+
+                <div id="combined-config" style="display: none;">
+                    <p class="text-info"><i class="fas fa-info-circle me-2"></i> Use recommended scenarios above for combined analysis</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison View -->
+        <div id="comparison-view" class="comparison-view">
+            <div class="comparison-grid">
+                <div class="comparison-column">
+                    <h3><i class="fas fa-chart-line me-2"></i> Current State</h3>
+                    <div id="current-state-metrics"></div>
+                </div>
+                <div class="comparison-column">
+                    <h3><i class="fas fa-chart-area me-2"></i> Projected State</h3>
+                    <div id="projected-state-metrics"></div>
+                </div>
+            </div>
+
+            <!-- Impact Details -->
+            <div class="comparison-column">
+                <h3><i class="fas fa-bolt me-2"></i> Impact Analysis</h3>
+                <div id="impact-details"></div>
+
+                <!-- Charts -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <canvas id="cost-comparison-chart"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="health-comparison-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Main Script -->
+    <script>
+        let baseline = null;
+        let allApps = [];
+        let currentScenarioType = null;
+        let comparisonCharts = {};
+
+        // Load baseline and apps on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBaseline();
+            loadRecommendedScenarios();
+
+            // Health improvement slider
+            document.getElementById('health-improvement').addEventListener('input', function(e) {
+                document.getElementById('health-improvement-value').textContent = '+' + e.target.value + ' points';
+            });
+        });
+
+        async function loadBaseline() {
+            try {
+                const response = await fetch('/api/whatif/baseline');
+                const data = await response.json();
+
+                if (data.success) {
+                    baseline = data.baseline;
+                    renderBaselineMetrics(baseline);
+                }
+            } catch (error) {
+                console.error('Error loading baseline:', error);
+            }
+        }
+
+        async function loadRecommendedScenarios() {
+            try {
+                const response = await fetch('/api/whatif/recommendations');
+                const data = await response.json();
+
+                if (data.success) {
+                    renderRecommendedScenarios(data.recommendations);
+                }
+            } catch (error) {
+                console.error('Error loading recommendations:', error);
+            }
+        }
+
+        async function loadApplications() {
+            try {
+                const response = await fetch('/api/applications');
+                allApps = await response.json();
+            } catch (error) {
+                console.error('Error loading applications:', error);
+            }
+        }
+
+        function renderBaselineMetrics(baseline) {
+            const section = document.getElementById('baseline-section');
+            section.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Total Applications</div>
+                    <div class="metric-value">${baseline.total_apps}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Annual Cost</div>
+                    <div class="metric-value">$${(baseline.total_cost / 1000000).toFixed(2)}M</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Avg Health Score</div>
+                    <div class="metric-value">${baseline.avg_health.toFixed(1)}/10</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Avg Business Value</div>
+                    <div class="metric-value">${baseline.avg_value.toFixed(1)}/10</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Risk Score</div>
+                    <div class="metric-value">${baseline.risk_score}/100</div>
+                </div>
+            `;
+        }
+
+        function renderRecommendedScenarios(recommendations) {
+            const section = document.getElementById('recommended-scenarios-section');
+            const list = document.getElementById('recommended-scenarios-list');
+
+            if (recommendations.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            list.innerHTML = recommendations.map(rec => `
+                <div class="recommended-scenario-card" onclick='runRecommendedScenario(${JSON.stringify(rec)})'>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5>${rec.name}</h5>
+                            <p class="mb-2">${rec.description}</p>
+                            ${rec.estimated_savings ? `<strong class="text-success">Estimated Savings: $${(rec.estimated_savings / 1000000).toFixed(2)}M/year</strong>` : ''}
+                            ${rec.estimated_cost ? `<strong class="text-warning">Estimated Cost: $${(rec.estimated_cost / 1000000).toFixed(2)}M one-time</strong>` : ''}
+                        </div>
+                        <i class="fas fa-arrow-right text-primary" style="font-size: 1.5rem;"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function selectScenarioType(type) {
+            currentScenarioType = type;
+
+            // Update button states
+            document.querySelectorAll('.scenario-type-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Show config section
+            document.getElementById('scenario-config').style.display = 'block';
+
+            // Hide all configs
+            ['retire', 'modernize', 'consolidate', 'combined'].forEach(t => {
+                document.getElementById(`${t}-config`).style.display = 'none';
+            });
+
+            // Show selected config
+            document.getElementById(`${type}-config`).style.display = 'block';
+
+            // Load applications if not already loaded
+            if (allApps.length === 0) {
+                await loadApplications();
+            }
+
+            // Populate app selectors
+            if (type === 'retire') {
+                populateAppSelector('retire-app-selector', allApps);
+            } else if (type === 'modernize') {
+                populateAppSelector('modernize-app-selector', allApps);
+            } else if (type === 'consolidate') {
+                populateAppSelector('consolidate-app-selector', allApps);
+            }
+        }
+
+        function populateAppSelector(containerId, apps) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = apps.map(app => `
+                <label class="app-checkbox">
+                    <input type="checkbox" value="${app['Application Name']}" />
+                    <div>
+                        <div><strong>${app['Application Name']}</strong></div>
+                        <div class="text-muted small">
+                            Cost: $${app.Cost.toLocaleString()} | Health: ${app['Tech Health']}/10 | Value: ${app['Business Value']}/10
+                        </div>
+                    </div>
+                </label>
+            `).join('');
+        }
+
+        async function runSimulation(type) {
+            const selectedApps = getSelectedApps(`${type}-app-selector`);
+
+            if (selectedApps.length === 0) {
+                alert('Please select at least one application');
+                return;
+            }
+
+            let requestBody = { type };
+
+            if (type === 'retire') {
+                requestBody.apps = selectedApps;
+            } else if (type === 'modernize') {
+                requestBody.apps = selectedApps;
+                requestBody.health_improvement = parseFloat(document.getElementById('health-improvement').value);
+            } else if (type === 'consolidate') {
+                // For consolidation, group selected apps
+                requestBody.app_groups = [selectedApps];
+            }
+
+            try {
+                const response = await fetch('/api/whatif/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const result = await response.json();
+                displayComparisonResults(result);
+            } catch (error) {
+                console.error('Simulation error:', error);
+                alert('Error running simulation');
+            }
+        }
+
+        async function runRecommendedScenario(scenario) {
+            let requestBody;
+
+            if (scenario.type === 'combined') {
+                requestBody = {
+                    type: 'combined',
+                    scenarios: scenario.scenarios
+                };
+            } else if (scenario.type === 'retire') {
+                requestBody = {
+                    type: 'retire',
+                    apps: scenario.apps
+                };
+            } else if (scenario.type === 'modernize') {
+                requestBody = {
+                    type: 'modernize',
+                    apps: scenario.apps,
+                    health_improvement: 3
+                };
+            } else if (scenario.type === 'consolidate') {
+                requestBody = {
+                    type: 'consolidate',
+                    app_groups: scenario.app_groups
+                };
+            }
+
+            try {
+                const response = await fetch('/api/whatif/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const result = await response.json();
+                displayComparisonResults(result);
+            } catch (error) {
+                console.error('Simulation error:', error);
+                alert('Error running simulation');
+            }
+        }
+
+        function getSelectedApps(containerId) {
+            const container = document.getElementById(containerId);
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function displayComparisonResults(result) {
+            // Show comparison view
+            document.getElementById('comparison-view').classList.add('show');
+
+            // Render current state
+            const currentStateHtml = `
+                <div class="metric-card mb-3">
+                    <div class="metric-label">Applications</div>
+                    <div class="metric-value">${result.baseline.total_apps}</div>
+                </div>
+                <div class="metric-card mb-3">
+                    <div class="metric-label">Annual Cost</div>
+                    <div class="metric-value">$${(result.baseline.total_cost / 1000000).toFixed(2)}M</div>
+                </div>
+                <div class="metric-card mb-3">
+                    <div class="metric-label">Avg Health</div>
+                    <div class="metric-value">${result.baseline.avg_health.toFixed(1)}/10</div>
+                </div>
+                <div class="metric-card mb-3">
+                    <div class="metric-label">Risk Score</div>
+                    <div class="metric-value">${result.baseline.risk_score}/100</div>
+                </div>
+            `;
+            document.getElementById('current-state-metrics').innerHTML = currentStateHtml;
+
+            // Render projected state
+            const projectedStateHtml = `
+                <div class="metric-card mb-3">
+                    <div class="metric-label">Applications</div>
+                    <div class="metric-value">${result.new_state.total_apps}${getImpactBadge(result.impact.apps_change)}</div>
+                </div>
+                <div class="metric-card mb-3">
+                    <div class="metric-label">Annual Cost</div>
+                    <div class="metric-value">$${(result.new_state.total_cost / 1000000).toFixed(2)}M${getImpactBadge(result.impact.cost_change, true)}</div>
+                </div>
+                <div class="metric-card mb-3">
+                    <div class="metric-label">Avg Health</div>
+                    <div class="metric-value">${result.new_state.avg_health.toFixed(1)}/10${getImpactBadge(result.impact.health_change)}</div>
+                </div>
+                <div class="metric-card mb-3">
+                    <div class="metric-label">Risk Score</div>
+                    <div class="metric-value">${result.new_state.risk_score}/100${getImpactBadge(result.impact.risk_change, true)}</div>
+                </div>
+            `;
+            document.getElementById('projected-state-metrics').innerHTML = projectedStateHtml;
+
+            // Render impact details
+            renderImpactDetails(result);
+
+            // Render comparison charts
+            renderComparisonCharts(result);
+
+            // Scroll to results
+            document.getElementById('comparison-view').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function getImpactBadge(change, invertColors = false) {
+            if (change === 0) return '<span class="impact-badge neutral">No change</span>';
+
+            const isPositive = invertColors ? (change < 0) : (change > 0);
+            const badgeClass = isPositive ? 'positive' : 'negative';
+            const icon = isPositive ? '↑' : '↓';
+            const sign = change > 0 ? '+' : '';
+
+            return `<span class="impact-badge ${badgeClass}">${icon} ${sign}${change.toLocaleString()}</span>`;
+        }
+
+        function renderImpactDetails(result) {
+            let detailsHtml = '';
+
+            if (result.details.apps_retired) {
+                detailsHtml += `
+                    <div class="alert alert-success">
+                        <strong>Retirement:</strong> ${result.details.apps_retired} applications retired<br/>
+                        <strong>Annual Savings:</strong> $${(result.details.cost_savings / 1000000).toFixed(2)}M
+                    </div>
+                `;
+            }
+
+            if (result.details.apps_modernized) {
+                detailsHtml += `
+                    <div class="alert alert-info">
+                        <strong>Modernization:</strong> ${result.details.apps_modernized} applications upgraded<br/>
+                        <strong>Health Improvement:</strong> ${result.details.avg_original_health.toFixed(1)} → ${result.details.avg_new_health.toFixed(1)}<br/>
+                        <strong>One-time Cost:</strong> $${(result.details.one_time_cost / 1000000).toFixed(2)}M
+                    </div>
+                `;
+            }
+
+            if (result.details.apps_eliminated) {
+                detailsHtml += `
+                    <div class="alert alert-warning">
+                        <strong>Consolidation:</strong> ${result.details.apps_eliminated} applications consolidated<br/>
+                        <strong>Annual Savings:</strong> $${(result.details.annual_savings / 1000000).toFixed(2)}M<br/>
+                        <strong>One-time Cost:</strong> $${(result.details.one_time_cost / 1000000).toFixed(2)}M
+                    </div>
+                `;
+            }
+
+            if (result.details.actions_performed) {
+                detailsHtml += `
+                    <div class="alert alert-primary">
+                        <strong>Combined Scenario:</strong> ${result.details.actions_performed} actions performed<br/>
+                        <strong>Net Savings (Year 1):</strong> $${(result.details.net_first_year_impact / 1000000).toFixed(2)}M<br/>
+                        <strong>ROI:</strong> ${result.details.roi_percentage}%
+                    </div>
+                `;
+            }
+
+            document.getElementById('impact-details').innerHTML = detailsHtml;
+        }
+
+        function renderComparisonCharts(result) {
+            // Cost comparison chart
+            const costCtx = document.getElementById('cost-comparison-chart');
+            if (comparisonCharts.cost) comparisonCharts.cost.destroy();
+
+            comparisonCharts.cost = new Chart(costCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Current', 'Projected'],
+                    datasets: [{
+                        label: 'Annual Cost ($M)',
+                        data: [
+                            result.baseline.total_cost / 1000000,
+                            result.new_state.total_cost / 1000000
+                        ],
+                        backgroundColor: ['#64748b', '#10b981']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'Cost Comparison' }
+                    }
+                }
+            });
+
+            // Health comparison chart
+            const healthCtx = document.getElementById('health-comparison-chart');
+            if (comparisonCharts.health) comparisonCharts.health.destroy();
+
+            comparisonCharts.health = new Chart(healthCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Avg Health', 'Avg Value', 'Avg Security', 'Risk Score (inverted)'],
+                    datasets: [
+                        {
+                            label: 'Current',
+                            data: [
+                                result.baseline.avg_health,
+                                result.baseline.avg_value,
+                                result.baseline.avg_security,
+                                10 - (result.baseline.risk_score / 10)
+                            ],
+                            borderColor: '#64748b',
+                            backgroundColor: 'rgba(100, 116, 139, 0.2)'
+                        },
+                        {
+                            label: 'Projected',
+                            data: [
+                                result.new_state.avg_health,
+                                result.new_state.avg_value,
+                                result.new_state.avg_security,
+                                10 - (result.new_state.risk_score / 10)
+                            ],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'Portfolio Health Comparison' }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 10
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -41,6 +41,7 @@ from src.predictive_modeling import PredictiveModeler
 from src.smart_recommendations import SmartRecommendationEngine
 from src.sentiment_analyzer import SentimentAnalyzer
 from src.smart_grouping import SmartGroupingEngine
+from src.whatif_engine import WhatIfScenarioEngine
 
 app = Flask(__name__)
 CORS(app)
@@ -471,6 +472,12 @@ def sentiment_page():
 def smart_grouping_page():
     """Smart Application Grouping page"""
     return render_template('smart_grouping.html')
+
+
+@app.route('/what-if')
+def whatif_page():
+    """What-If Scenario Analysis page"""
+    return render_template('whatif_analysis.html')
 
 
 # ==========================
@@ -933,6 +940,97 @@ def get_domain_details_api(domain_name: str):
 
     except Exception as e:
         logger.error(f"Domain details error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/whatif/simulate', methods=['POST'])
+def simulate_whatif_scenario():
+    """Simulate a what-if scenario"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        data = request.json
+        scenario_type = data.get('type')
+
+        # Initialize What-If engine
+        whatif_engine = WhatIfScenarioEngine(current_data)
+
+        if scenario_type == 'retire':
+            apps = data.get('apps', [])
+            result = whatif_engine.simulate_retirement(apps)
+
+        elif scenario_type == 'modernize':
+            apps = data.get('apps', [])
+            health_improvement = data.get('health_improvement', 3.0)
+            result = whatif_engine.simulate_modernization(apps, health_improvement)
+
+        elif scenario_type == 'consolidate':
+            app_groups = data.get('app_groups', [])
+            cost_reduction = data.get('cost_reduction', 0.30)
+            result = whatif_engine.simulate_consolidation(app_groups, cost_reduction)
+
+        elif scenario_type == 'combined':
+            scenarios = data.get('scenarios', [])
+            result = whatif_engine.simulate_combined_scenario(scenarios)
+
+        else:
+            return jsonify({'error': f'Invalid scenario type: {scenario_type}'}), 400
+
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"What-If simulation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/whatif/recommendations', methods=['GET'])
+def get_whatif_recommendations():
+    """Get recommended what-if scenarios"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Initialize What-If engine
+        whatif_engine = WhatIfScenarioEngine(current_data)
+
+        # Get recommended scenarios
+        recommendations = whatif_engine.get_recommended_scenarios()
+
+        return jsonify({
+            'success': True,
+            'baseline': whatif_engine.baseline,
+            'recommendations': recommendations
+        })
+
+    except Exception as e:
+        logger.error(f"What-If recommendations error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/whatif/baseline', methods=['GET'])
+def get_whatif_baseline():
+    """Get current baseline metrics"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Initialize What-If engine
+        whatif_engine = WhatIfScenarioEngine(current_data)
+
+        return jsonify({
+            'success': True,
+            'baseline': whatif_engine.baseline
+        })
+
+    except Exception as e:
+        logger.error(f"What-If baseline error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
