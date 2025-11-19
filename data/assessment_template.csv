@@ -1,31 +1,212 @@
-Application Name,Owner,Business Value,Tech Health,Cost,Usage,Security,Strategic Fit,Redundancy,Composite Score,Action Recommendation,Comments
-Customer Portal,IT Department,9,7,50000,850,8,9,0,,,Active customer-facing application
-Legacy Billing System,Finance,7,3,120000,450,4,5,1,,,Scheduled for replacement in Q2
-HR Management Suite,Human Resources,8,8,35000,320,9,8,0,,,Modern cloud-based solution
-Email Marketing Platform,Marketing,6,6,25000,180,7,6,1,,,Overlaps with CRM capabilities
-Inventory Management,Operations,9,5,75000,920,6,7,0,,,Critical but aging infrastructure
-Analytics Dashboard,Business Intelligence,8,9,15000,560,8,9,0,,,Recently upgraded platform
-File Sharing Service,IT Department,5,7,18000,220,7,4,1,,,Multiple redundant solutions exist
-CRM System,Sales,10,8,95000,780,9,10,0,,,Strategic enterprise platform
-Legacy Timesheet App,HR/Finance,4,2,8000,150,3,2,1,,,Manual processes still required
-Mobile Expense Tracker,Finance,7,9,12000,410,8,7,0,,,Modern mobile-first solution
-Project Management Tool,PMO,8,7,42000,650,7,8,0,,,Widely adopted across teams
-Old Document Scanner,Operations,3,2,5000,45,4,2,1,,,Replacement available
-Data Warehouse,IT/Analytics,9,6,180000,890,7,9,0,,,Core infrastructure component
-Social Media Manager,Marketing,6,8,22000,340,7,5,1,,,Overlaps with marketing automation
-VPN Gateway,IT Security,8,5,28000,720,9,8,0,,,Critical security infrastructure
-Legacy Report Generator,Finance,5,3,15000,160,5,3,1,,,Being replaced by BI tools
-Customer Support Portal,Customer Service,9,8,38000,810,8,9,0,,,High customer satisfaction
-Backup Solution A,IT Operations,7,6,45000,680,8,6,1,,,One of three backup systems
-ERP System,Enterprise,10,7,250000,950,8,10,0,,,Mission-critical enterprise system
-Training Platform,HR/Learning,7,8,28000,420,7,7,0,,,Good adoption rates
-Old Intranet,Communications,4,3,12000,95,4,3,1,,,Being replaced by SharePoint
-API Gateway,IT Architecture,9,9,55000,870,9,9,0,,,Modern microservices gateway
-Compliance Tracker,Legal/Compliance,8,6,32000,380,9,8,0,,,Required for regulations
-Legacy FTP Server,IT Operations,3,2,6000,75,2,1,1,,,Security risk - immediate action
-Collaboration Suite,Company-wide,9,9,85000,920,9,9,0,,,High business value
-Marketing Automation,Marketing,8,7,48000,520,7,8,0,,,Good ROI demonstrated
-Old Procurement System,Procurement,5,3,35000,210,4,4,1,,,Replacement in progress
-Database Cluster,IT Infrastructure,10,8,145000,980,9,10,0,,,Core data infrastructure
-Testing Automation,QA/Development,7,8,22000,440,7,7,0,,,Improves development velocity
-Legacy Contractor Portal,HR/Procurement,4,2,9000,85,3,2,1,,,Low usage and tech debt
+Application Name,Owner,Category,Business Value,Tech Health,Cost,Usage,Security,Strategic Fit,Redundancy,Vendor,Last Updated,Dependencies,Composite Score,Action Recommendation,Comments
+Email Archive Platform,Transportation,Records Management,6,2,5282.86,170,3,3,1,Microsoft,15y 0m ago,"Records Management Email Archive, Benefits Administration",,,Legacy application with outdated technology | Significant technical debt and stability issues | Overlaps with 1 other system(s)
+Integrated Training,Finance,Human Resources,8,6,132617.59,343,6,7,0,Workday,5y 3m ago,"Human Resources HR Management Classic, Finance Budget Management Enterprise",,,Standard human resources application
+Facility Management (New),Transportation,Operations,4,7,63634.55,112,9,1,2,Custom Built,1y 3m ago,,,,Overlaps with 2 other system(s)
+Accounts Payable Tool Classic,Economic Development,Finance & Accounting,9,3,289857.62,350,5,4,2,SAP,16y 11m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Overlaps with 2 other system(s) | Mission-critical application
+Records Archive Tool,City Manager Office,Records Management,1,6,26128.8,486,7,2,0,Workday,4y 1m ago,,,,"Limited business value, consider retirement"
+Document Management Platform,Human Resources,Records Management,5,2,122972.43,155,5,2,2,Microsoft,12y 11m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues | Overlaps with 2 other system(s)
+Case Management System v2,Legal Department,Citizen Services,10,6,219624.33,179,9,9,1,Salesforce,1y 5m ago,Benefits Administration Platform,,,Overlaps with 1 other system(s) | Mission-critical application
+IT Identity Management,Police Department,IT & Infrastructure,6,7,76284.02,431,9,6,2,Open Source,8m ago,,,,Overlaps with 2 other system(s)
+Service Request System v1,Public Health,Citizen Services,6,3,39762.87,208,3,3,0,Infor,9y 1m ago,Service Request System,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Identity Management Platform Pro,Human Resources,IT & Infrastructure,7,4,8005.31,23,5,3,3,Custom Built,10y 9m ago,,,,Critical legacy system requiring modernization | Overlaps with 3 other system(s)
+Incident Reporting,Public Health,Public Safety,10,6,10273.22,22,8,8,2,Salesforce,1y 3m ago,Grant Management Platform,,,Overlaps with 2 other system(s) | Mission-critical application
+Public Portal Tool,Transportation,Citizen Services,9,6,13477.78,44,6,7,0,Salesforce,5y 2m ago,,,,Mission-critical application
+Incident Reporting System Pro,City Manager Office,Public Safety,9,4,137430.95,433,7,4,0,Infor,4y 2m ago,,,,Mission-critical application
+Public Safety Investigation Management v1,Fire Department,Public Safety,9,6,148512.46,484,7,10,0,Infor,2y 3m ago,,,,Mission-critical application
+Service Request Tool,Legal Department,Citizen Services,8,4,304616.58,485,7,5,0,Open Source,3y 0m ago,,,,Standard citizen services application
+Document Management Platform Enterprise,City Manager Office,Records Management,7,8,45292.49,92,7,8,0,SAP,1y 6m ago,,,,Modern platform with good maintainability
+Integrated Case Management v1,City Manager Office,Citizen Services,5,2,38278.07,108,6,4,0,Infor,18y 8m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Analytics Platform,Police Department,Compliance & Reporting,5,6,14172.18,385,5,7,3,ServiceNow,3y 9m ago,,,,Overlaps with 3 other system(s)
+Investigation Management System,Public Works,Public Safety,8,4,140506.63,190,3,2,0,Custom Built,11y 1m ago,,,,Critical legacy system requiring modernization
+Records Management Document Management,Public Works,Records Management,7,3,9568.22,221,4,2,3,Workday,8y 4m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Overlaps with 3 other system(s)
+Identity Management,Public Works,IT & Infrastructure,7,3,179845.93,120,3,2,2,Custom Built,6y 6m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Overlaps with 2 other system(s)
+Performance Management Tool Plus,Public Health,Human Resources,8,6,166650.34,949,7,5,0,Infor,3y 2m ago,"Accounts Payable Tool Classic, Asset Management System (Old)",,,Standard human resources application
+Document Management System Enterprise,Water & Utilities,Records Management,3,8,50382.86,61,8,4,0,Oracle,1y 4m ago,,,,"Modern platform with good maintainability | Limited business value, consider retirement"
+Asset Management System (Old),IT Department,Finance & Accounting,8,4,173931.33,62,6,6,1,Custom Built,4y 6m ago,,,,Overlaps with 1 other system(s)
+Asset Inventory Tool v1,Public Works,IT & Infrastructure,6,4,29520.05,457,6,6,2,Custom Built,3y 3m ago,,,,Overlaps with 2 other system(s)
+GIS Mapping Platform,Parks & Recreation,Operations,4,6,139759.57,309,7,1,0,SAP,5y 3m ago,,,,Standard operations application
+Fleet Management,Economic Development,Operations,6,4,70584.78,156,4,2,0,Workday,11y 9m ago,,,,Legacy application with outdated technology
+Training Platform Pro,Legal Department,Human Resources,4,5,99266.34,376,7,3,0,Microsoft,4y 8m ago,Budget Management Tool (New),,,Standard human resources application
+Document Management,Human Resources,Records Management,5,8,33450.54,57,10,5,0,Open Source,7m ago,,,,Modern platform with good maintainability
+Service Request,Human Resources,Citizen Services,6,5,104184.78,49,6,6,1,ServiceNow,3y 10m ago,,,,Overlaps with 1 other system(s)
+Backup System Platform,Legal Department,IT & Infrastructure,7,6,36074.7,194,10,10,0,Salesforce,1y 2m ago,"Finance Budget Management Enterprise, Integrated Case Management v1",,,Standard it & infrastructure application
+Human Resources HR Management Classic,Public Works,Human Resources,8,2,202272.33,200,6,2,0,Custom Built,11y 2m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Document Management Tool v1,Communications,Records Management,5,3,6651.42,393,4,2,0,Oracle,7y 2m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Email System Tool,Human Resources,IT & Infrastructure,7,3,208350.9,70,3,1,0,Microsoft,11y 3m ago,Employee Portal Tool,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Revenue Collection Platform v2,Parks & Recreation,Finance & Accounting,6,4,132591.32,46,7,6,2,Salesforce,5y 7m ago,"Integrated Procurement, Financial System (Old)",,,Overlaps with 2 other system(s)
+Finance Revenue Collection,Public Works,Finance & Accounting,8,10,68934.68,485,7,9,0,Open Source,1m ago,,,,Modern platform with good maintainability
+IT Asset Inventory Plus,Water & Utilities,IT & Infrastructure,5,5,79925.62,913,7,5,0,Oracle,5y 7m ago,,,,Standard it & infrastructure application
+Public Portal,Transportation,Citizen Services,4,10,14682.04,197,10,3,0,SAP,8m ago,,,,Modern platform with good maintainability
+VPN Tool,Police Department,IT & Infrastructure,6,6,79473.9,157,10,4,0,Infor,2y 2m ago,,,,Standard it & infrastructure application
+Integrated Audit Management,Water & Utilities,Compliance & Reporting,6,7,39641.11,21,10,5,0,Microsoft,4m ago,,,,Standard compliance & reporting application
+Budget Management (Old),Parks & Recreation,Finance & Accounting,7,5,101875.9,472,5,6,2,ServiceNow,5y 4m ago,,,,Overlaps with 2 other system(s)
+Email Archive,Fire Department,Records Management,1,10,61470.06,142,9,3,0,ServiceNow,2m ago,"Finance Revenue Collection, Case Management Platform",,,"Modern platform with good maintainability | Limited business value, consider retirement"
+Benefits Administration Platform,City Manager Office,Human Resources,6,4,115714.94,158,7,7,0,Infor,5y 8m ago,,,,Standard human resources application
+Service Request System,Transportation,Citizen Services,8,3,583506.46,715,6,1,1,Tyler Technologies,9y 10m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Overlaps with 1 other system(s)
+Budget Management,City Manager Office,Finance & Accounting,10,8,180309.05,153,9,8,0,Salesforce,2y 8m ago,,,,Modern platform with good maintainability | Mission-critical application
+Citizen Services Case Management Classic,Communications,Citizen Services,10,2,483896.06,12,6,1,0,ServiceNow,11y 2m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Mission-critical application
+Asset Inventory Platform,Transportation,IT & Infrastructure,6,2,58985.07,785,4,2,3,Workday,14y 7m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues | Overlaps with 3 other system(s)
+Performance Management (New),Human Resources,Human Resources,3,4,26519.31,648,7,4,0,Workday,5y 11m ago,,,,"Limited business value, consider retirement"
+VPN,Economic Development,IT & Infrastructure,10,4,198676.77,219,7,6,0,SAP,3y 5m ago,,,,Mission-critical application
+Financial System,Human Resources,Finance & Accounting,6,6,122051.62,162,7,4,0,Oracle,5y 10m ago,,,,Standard finance & accounting application
+Integrated Digital Signatures,Public Works,Records Management,5,6,79075.94,218,7,6,3,Open Source,2y 0m ago,,,,Overlaps with 3 other system(s)
+Human Resources Training,Water & Utilities,Human Resources,7,4,40317.22,353,5,2,0,Tyler Technologies,11y 4m ago,"Integrated Procurement, Finance Payroll v2",,,Critical legacy system requiring modernization
+GIS Mapping System,Public Health,Operations,7,4,117899.15,154,5,7,0,Tyler Technologies,4y 3m ago,,,,Standard operations application
+Citizen Services Case Management Pro,Public Works,Citizen Services,10,10,142800.94,149,8,7,0,ServiceNow,7m ago,,,,Modern platform with good maintainability | Mission-critical application
+Content Management Tool,Water & Utilities,Records Management,4,7,66557.71,704,8,2,0,Infor,2y 5m ago,,,,Standard records management application
+Integrated Case Management,Finance,Citizen Services,5,4,233625.07,300,4,4,0,Microsoft,10y 5m ago,,,,Legacy application with outdated technology
+Financial System (Old),Parks & Recreation,Finance & Accounting,8,5,122079.8,64,7,7,0,ServiceNow,3y 2m ago,,,,Standard finance & accounting application
+Citizen Services Service Request,Communications,Citizen Services,9,7,76550.71,35,8,10,0,Infor,7m ago,,,,Mission-critical application
+Employee Portal,City Manager Office,Human Resources,5,4,244514.78,261,6,2,0,ServiceNow,9y 8m ago,Accounts Payable Tool Classic,,,Legacy application with outdated technology
+Integrated 311 System,IT Department,Citizen Services,9,8,127161.79,85,9,9,0,Tyler Technologies,2y 7m ago,,,,Modern platform with good maintainability | Mission-critical application
+Public Safety Emergency Dispatch (Old),Parks & Recreation,Public Safety,10,6,100356.31,237,9,10,0,Workday,1y 6m ago,Integrated Backup System Pro,,,Mission-critical application
+IT Network Monitoring Classic,Communications,IT & Infrastructure,6,3,53747.62,482,5,3,3,Salesforce,9y 7m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues | Overlaps with 3 other system(s)
+Training,City Manager Office,Human Resources,5,6,89051.08,331,10,6,0,Tyler Technologies,2y 6m ago,,,,Standard human resources application
+Content Management Platform,Public Health,Records Management,5,5,86534.73,610,7,5,0,Custom Built,4y 4m ago,,,,Standard records management application
+Public Portal System,Economic Development,Citizen Services,5,10,26303.19,659,7,7,0,Tyler Technologies,5m ago,,,,Modern platform with good maintainability
+Data Warehouse Tool,Legal Department,Compliance & Reporting,6,2,112668.04,62,3,4,0,Salesforce,15y 10m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+GIS Mapping Tool Enterprise,Human Resources,Operations,3,8,33526.49,827,8,3,0,Infor,2y 1m ago,,,,"Modern platform with good maintainability | Limited business value, consider retirement"
+Integrated Compliance Tracking Pro,Planning & Development,Compliance & Reporting,1,2,224362.25,512,4,4,0,ServiceNow,7y 9m ago,,,,"Legacy application with outdated technology | Significant technical debt and stability issues | Limited business value, consider retirement"
+Operations Inventory Enterprise,Economic Development,Operations,5,8,5262.57,826,10,4,0,Infor,1y 1m ago,,,,Modern platform with good maintainability
+Investigation Management,Economic Development,Public Safety,10,7,167898.25,14,8,9,0,Infor,1y 10m ago,,,,Mission-critical application
+Asset Management System,Legal Department,Finance & Accounting,10,5,14744.31,116,5,5,0,Oracle,5y 6m ago,,,,Mission-critical application
+Budget Management System,Communications,Finance & Accounting,10,7,157813.8,346,10,7,0,Open Source,2y 4m ago,,,,Mission-critical application
+Backup System System,Public Health,IT & Infrastructure,10,6,114714.18,438,6,7,0,Salesforce,4y 5m ago,"Employee Portal Tool, Integrated 311 System",,,Mission-critical application
+Document Management Tool,City Manager Office,Records Management,7,3,3896.99,129,6,4,0,Workday,8y 8m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Asset Inventory System (Old),Economic Development,IT & Infrastructure,5,8,31798.06,437,10,7,0,Infor,11m ago,,,,Modern platform with good maintainability
+Case Management,Parks & Recreation,Citizen Services,4,8,61507.04,106,7,3,0,Open Source,2y 7m ago,Budget Management,,,Modern platform with good maintainability
+Integrated Work Order (New),Water & Utilities,Operations,4,4,52576.49,317,5,2,0,SAP,3y 3m ago,,,,Standard operations application
+Benefits Administration,Legal Department,Human Resources,9,6,81972.41,30,7,5,2,Salesforce,5y 1m ago,,,,Overlaps with 2 other system(s) | Mission-critical application
+Email System Platform Plus,Communications,IT & Infrastructure,6,5,102256.46,101,6,6,0,Infor,5y 10m ago,"Procurement Tool Pro, Human Resources Training",,,Standard it & infrastructure application
+Public Safety Investigation Management,Water & Utilities,Public Safety,10,3,255131.88,461,4,2,0,Infor,8y 2m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Mission-critical application
+Benefits Administration Classic,Finance,Human Resources,7,4,152194.98,132,3,2,1,Tyler Technologies,6y 0m ago,"Financial System (Old), Payroll",,,Critical legacy system requiring modernization | Overlaps with 1 other system(s)
+Citizen Services Permit System (New),Legal Department,Citizen Services,7,4,212648.37,191,5,4,2,Microsoft,6y 6m ago,Finance Grant Management,,,Critical legacy system requiring modernization | Overlaps with 2 other system(s)
+Email System System,Planning & Development,IT & Infrastructure,5,10,15606.56,209,9,6,0,Microsoft,2m ago,,,,Modern platform with good maintainability
+Backup System Plus,Public Health,IT & Infrastructure,4,6,89801.0,150,5,4,0,Oracle,4y 10m ago,,,,Standard it & infrastructure application
+Reporting Dashboard,Communications,Compliance & Reporting,9,8,100964.35,133,9,10,0,Tyler Technologies,1y 4m ago,,,,Modern platform with good maintainability | Mission-critical application
+Integrated Case Management (New),Fire Department,Citizen Services,6,4,53451.62,516,6,2,0,Microsoft,8y 0m ago,,,,Legacy application with outdated technology
+Integrated Facility Management,Finance,Operations,4,6,99635.0,371,9,1,0,ServiceNow,2y 11m ago,"Asset Inventory Platform, GIS Mapping System (Old)",,,Standard operations application
+Complaint Tracking (New),Communications,Citizen Services,7,6,99533.73,330,6,6,3,Workday,4y 2m ago,,,,Overlaps with 3 other system(s)
+Integrated Document Management,Economic Development,Records Management,4,7,54039.62,112,7,1,0,Salesforce,9m ago,,,,Standard records management application
+Integrated Time & Attendance,Legal Department,Human Resources,6,3,129200.3,155,3,1,0,Custom Built,6y 3m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Compliance Analytics Platform (Old),Parks & Recreation,Compliance & Reporting,2,8,57782.54,436,10,3,0,Workday,1y 3m ago,,,,"Modern platform with good maintainability | Limited business value, consider retirement"
+Incident Reporting System,Transportation,Public Safety,9,3,237176.44,375,4,1,3,Microsoft,6y 3m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Overlaps with 3 other system(s) | Mission-critical application
+Payroll,Human Resources,Finance & Accounting,10,2,234571.48,885,6,1,0,SAP,6y 7m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Mission-critical application
+Digital Signatures System Enterprise,Economic Development,Records Management,6,3,98182.91,38,4,2,0,ServiceNow,14y 4m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Finance Budget Management Enterprise,Public Health,Finance & Accounting,8,6,111880.34,848,9,8,0,Oracle,1y 2m ago,,,,Standard finance & accounting application
+Email System,Water & Utilities,IT & Infrastructure,5,2,13963.86,81,5,2,0,Custom Built,7y 4m ago,Citizen Services Case Management Pro,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Permit System Tool,Planning & Development,Citizen Services,9,7,3385.52,841,8,9,0,Salesforce,1y 7m ago,,,,Mission-critical application
+Integrated Case Management Pro,Finance,Citizen Services,8,8,39806.94,942,8,10,0,Microsoft,2y 11m ago,,,,Modern platform with good maintainability
+Case Management Platform,Water & Utilities,Citizen Services,10,6,168034.99,34,9,9,0,ServiceNow,2y 0m ago,,,,Mission-critical application
+IT Network Monitoring,Parks & Recreation,IT & Infrastructure,7,5,95821.92,548,7,5,2,ServiceNow,5y 5m ago,,,,Overlaps with 2 other system(s)
+Complaint Tracking System,Economic Development,Citizen Services,10,7,102647.1,761,7,7,0,SAP,1y 2m ago,,,,Mission-critical application
+Case Management Platform v1,Water & Utilities,Citizen Services,7,8,13337.61,332,10,9,0,ServiceNow,2y 4m ago,"Accounts Payable Tool Classic, Benefits Administration",,,Modern platform with good maintainability
+IT Identity Management Plus,Fire Department,IT & Infrastructure,6,2,123222.42,363,6,2,0,Open Source,8y 8m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Budget Management Tool Classic,Human Resources,Finance & Accounting,7,4,49855.3,460,7,4,0,Open Source,3y 7m ago,,,,Standard finance & accounting application
+Integrated License Management,Police Department,Citizen Services,8,5,302524.48,454,7,6,1,ServiceNow,5y 3m ago,,,,Overlaps with 1 other system(s)
+Integrated Evidence Tracking,Finance,Public Safety,8,1,13309.6,188,6,1,0,Microsoft,16y 7m ago,Asset Inventory,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Integrated Budget Management,Finance,Finance & Accounting,7,2,120463.11,519,6,3,0,Oracle,13y 2m ago,Finance Budget Management Enterprise,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Citizen Services Case Management,Fire Department,Citizen Services,7,4,92840.56,44,6,5,0,ServiceNow,3y 7m ago,,,,Standard citizen services application
+Analytics Platform System,Fire Department,Compliance & Reporting,3,6,147592.42,184,7,4,0,Oracle,3y 8m ago,Public Portal,,,"Limited business value, consider retirement"
+Finance Budget Management,Finance,Finance & Accounting,5,1,74244.77,598,5,4,0,Microsoft,13y 11m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Operations Inventory,Fire Department,Operations,8,7,86476.19,265,10,7,0,Microsoft,1y 9m ago,,,,Standard operations application
+Compliance Tracking Platform,Fire Department,Compliance & Reporting,2,10,76362.74,151,7,2,3,Oracle,11m ago,,,,"Modern platform with good maintainability | Overlaps with 3 other system(s) | Limited business value, consider retirement"
+Training Platform,Transportation,Human Resources,7,2,158404.34,427,3,1,0,Salesforce,8y 4m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Benefits Administration System,Economic Development,Human Resources,5,8,69646.15,524,7,4,0,Oracle,2m ago,,,,Modern platform with good maintainability
+Investigation Management Platform,Economic Development,Public Safety,6,2,67806.67,201,5,4,0,Oracle,9y 3m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Human Resources Benefits Administration,Legal Department,Human Resources,5,2,83330.14,589,3,2,3,Salesforce,6y 2m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues | Overlaps with 3 other system(s)
+Facility Management System Classic,Planning & Development,Operations,7,5,98525.28,129,6,7,0,Workday,5y 9m ago,,,,Standard operations application
+Help Desk,Legal Department,IT & Infrastructure,8,3,581156.01,165,4,4,0,ServiceNow,8y 11m ago,"Integrated Accounts Payable, Citizen Services Case Management Pro",,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Fleet Management System,Parks & Recreation,Operations,6,5,78436.21,330,5,7,2,ServiceNow,5y 1m ago,,,,Overlaps with 2 other system(s)
+Integrated Compliance Tracking,Human Resources,Compliance & Reporting,3,4,104636.35,128,6,3,0,Open Source,3y 3m ago,,,,"Limited business value, consider retirement"
+Integrated Budget Management Classic,Public Health,Finance & Accounting,7,7,14548.32,64,7,7,0,Tyler Technologies,1y 6m ago,,,,Standard finance & accounting application
+Asset Inventory Tool,IT Department,IT & Infrastructure,6,5,111554.52,151,7,4,0,Salesforce,5y 11m ago,"Integrated Case Management (New), Case Management Tool",,,Standard it & infrastructure application
+Integrated Email Archive Pro,Communications,Records Management,4,6,40717.69,173,6,1,0,Open Source,3y 0m ago,,,,Standard records management application
+IT VPN,Parks & Recreation,IT & Infrastructure,4,4,224963.07,44,5,1,2,ServiceNow,9y 1m ago,,,,Legacy application with outdated technology | Overlaps with 2 other system(s)
+Email Archive (New),Economic Development,Records Management,9,8,5173.91,44,7,10,0,Microsoft,1y 7m ago,,,,Modern platform with good maintainability | Mission-critical application
+Benefits Administration System v1,Water & Utilities,Human Resources,8,8,157573.82,359,7,7,0,Microsoft,1y 9m ago,"Finance Budget Management, Integrated Grant Management",,,Modern platform with good maintainability
+Digital Signatures Platform,Finance,Records Management,3,4,110028.53,73,5,4,0,Custom Built,5y 3m ago,,,,"Limited business value, consider retirement"
+Budget Management Tool (New),Planning & Development,Finance & Accounting,4,2,227015.11,16,3,3,0,SAP,10y 3m ago,"Grant Management, Procurement Tool Pro",,,Legacy application with outdated technology | Significant technical debt and stability issues
+Benefits Administration System Pro,Planning & Development,Human Resources,8,4,138660.75,272,7,7,0,Open Source,5y 5m ago,,,,Standard human resources application
+Emergency Dispatch Platform,Transportation,Public Safety,6,8,74033.62,200,10,7,0,Infor,1y 7m ago,,,,Modern platform with good maintainability
+Integrated Email Archive Enterprise,City Manager Office,Records Management,5,5,113309.47,422,6,7,0,Open Source,4y 7m ago,,,,Standard records management application
+Performance Management Tool v1,Fire Department,Human Resources,8,7,43888.59,35,10,7,0,Oracle,4m ago,,,,Standard human resources application
+Human Resources Time & Attendance,Legal Department,Human Resources,7,5,88959.68,426,5,6,0,Salesforce,5y 3m ago,Procurement Tool Pro,,,Standard human resources application
+Reporting Dashboard System,Human Resources,Compliance & Reporting,4,1,135475.45,403,3,3,1,Open Source,19y 8m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues | Overlaps with 1 other system(s)
+Records Management Email Archive,Legal Department,Records Management,3,10,44340.16,629,9,3,0,Salesforce,3m ago,,,,"Modern platform with good maintainability | Limited business value, consider retirement"
+Public Portal Platform,IT Department,Citizen Services,7,5,75095.38,43,7,7,2,Tyler Technologies,4y 6m ago,"Integrated Revenue Collection, Integrated Budget Management",,,Overlaps with 2 other system(s)
+Integrated Fleet Management,Finance,Operations,5,6,40936.45,155,7,5,0,Open Source,1y 11m ago,,,,Standard operations application
+Integrated Revenue Collection,Parks & Recreation,Finance & Accounting,7,6,40313.23,6,8,10,0,Workday,2y 10m ago,"Finance Revenue Collection, Integrated Budget Management Classic",,,Standard finance & accounting application
+311 System Tool,Transportation,Citizen Services,7,2,49479.55,735,5,1,0,SAP,8y 5m ago,"Integrated 311 System, Human Resources Recruitment",,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Investigation Management Tool,Economic Development,Public Safety,9,6,271579.74,131,6,4,2,SAP,4y 8m ago,Work Order,,,Overlaps with 2 other system(s) | Mission-critical application
+Asset Inventory,IT Department,IT & Infrastructure,7,6,8342.1,188,10,10,0,Infor,2y 8m ago,Revenue Collection Platform v2,,,Standard it & infrastructure application
+Integrated Grant Management,Public Health,Finance & Accounting,10,10,83325.09,118,8,8,0,Workday,4m ago,,,,Modern platform with good maintainability | Mission-critical application
+Grant Management Platform,Transportation,Finance & Accounting,8,4,107354.83,35,6,5,0,Open Source,5y 7m ago,Budget Management (Old),,,Standard finance & accounting application
+Email Archive Tool,IT Department,Records Management,7,10,17607.1,265,10,8,0,ServiceNow,7m ago,,,,Modern platform with good maintainability
+Facility Management System,Transportation,Operations,8,7,36374.27,269,8,10,3,Custom Built,4m ago,,,,Overlaps with 3 other system(s)
+Fleet Management Plus,Public Health,Operations,7,3,148974.63,412,6,2,0,Salesforce,7y 8m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Accounts Payable Tool,Fire Department,Finance & Accounting,10,8,73188.04,394,10,10,0,Oracle,3m ago,Grant Management,,,Modern platform with good maintainability | Mission-critical application
+Procurement Tool Pro,Public Works,Finance & Accounting,7,2,24880.04,369,4,3,0,Custom Built,16y 11m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Finance Payroll v2,Public Works,Finance & Accounting,4,9,2506.52,130,10,1,2,Workday,10m ago,,,,Modern platform with good maintainability | Overlaps with 2 other system(s)
+Integrated Accounts Payable,Police Department,Finance & Accounting,9,3,457947.51,43,4,3,2,Microsoft,14y 10m ago,Grant Management Platform,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Overlaps with 2 other system(s) | Mission-critical application
+Integrated Email System,Police Department,IT & Infrastructure,4,2,10120.63,248,4,1,0,Workday,9y 4m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Integrated Inventory,Legal Department,Operations,2,10,29009.44,341,7,3,1,ServiceNow,2m ago,Complaint Tracking System,,,"Modern platform with good maintainability | Overlaps with 1 other system(s) | Limited business value, consider retirement"
+Content Management Platform Pro,IT Department,Records Management,7,6,7749.88,257,9,8,0,Salesforce,1y 2m ago,,,,Standard records management application
+Employee Portal Tool,Finance,Human Resources,7,5,128827.43,125,7,4,0,ServiceNow,4y 9m ago,"Procurement, Benefits Administration Classic",,,Standard human resources application
+Integrated Network Monitoring Pro,Human Resources,IT & Infrastructure,7,7,93820.58,190,10,7,0,Salesforce,1y 3m ago,"Integrated Email Archive Pro, Budget Management Platform",,,Standard it & infrastructure application
+Data Warehouse v1,Finance,Compliance & Reporting,5,6,130278.84,196,5,4,0,ServiceNow,5y 6m ago,"Budget Management Platform, Document Management Platform",,,Standard compliance & reporting application
+Integrated Backup System Pro,Finance,IT & Infrastructure,8,3,101656.01,445,4,3,0,Custom Built,15y 2m ago,"Accounts Payable Tool Classic, Integrated Email Archive Enterprise",,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Inventory Tool,Police Department,Operations,6,6,83887.46,894,9,4,0,Workday,2y 8m ago,,,,Standard operations application
+Compliance Tracking Tool,Public Works,Compliance & Reporting,2,5,25477.49,355,7,3,0,Microsoft,3y 8m ago,,,,"Limited business value, consider retirement"
+Revenue Collection,Planning & Development,Finance & Accounting,6,6,63963.88,195,6,5,0,Salesforce,5y 11m ago,,,,Standard finance & accounting application
+IT Asset Inventory,Fire Department,IT & Infrastructure,3,9,26598.99,277,8,4,3,SAP,5m ago,Case Management Tool,,,"Modern platform with good maintainability | Overlaps with 3 other system(s) | Limited business value, consider retirement"
+Citizen Services Public Portal (New),Police Department,Citizen Services,8,4,155570.41,225,4,4,0,Open Source,11y 10m ago,,,,Critical legacy system requiring modernization
+Analytics Platform System Classic,Human Resources,Compliance & Reporting,7,6,43965.25,115,8,7,3,Salesforce,1y 1m ago,,,,Overlaps with 3 other system(s)
+Email Archive System,Public Works,Records Management,7,3,8259.79,472,6,4,0,Workday,12y 8m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Work Order System,Parks & Recreation,Operations,3,6,45754.29,313,6,1,1,Oracle,3y 7m ago,Integrated Grant Management,,,"Overlaps with 1 other system(s) | Limited business value, consider retirement"
+GIS Mapping System (Old),Legal Department,Operations,5,8,74110.36,863,10,7,0,Custom Built,9m ago,,,,Modern platform with good maintainability
+Audit Management Platform,Legal Department,Compliance & Reporting,5,7,60014.61,79,9,6,0,Salesforce,3m ago,,,,Standard compliance & reporting application
+Help Desk System,Human Resources,IT & Infrastructure,6,8,66351.98,629,10,5,0,Custom Built,9m ago,,,,Modern platform with good maintainability
+Performance Management Platform,Water & Utilities,Human Resources,6,4,147361.44,356,3,1,3,ServiceNow,8y 8m ago,Budget Management Platform Plus,,,Legacy application with outdated technology | Overlaps with 3 other system(s)
+Training System,Fire Department,Human Resources,6,5,82391.97,92,7,6,1,ServiceNow,4y 10m ago,,,,Overlaps with 1 other system(s)
+Grant Management,Police Department,Finance & Accounting,8,7,64421.39,47,7,10,0,ServiceNow,2y 0m ago,,,,Standard finance & accounting application
+Integrated Complaint Tracking v1,Planning & Development,Citizen Services,10,7,2610.56,100,9,8,0,Oracle,2y 8m ago,,,,Mission-critical application
+Integrated Project Management v2,Police Department,Operations,6,6,103053.18,136,5,7,0,Microsoft,4y 6m ago,,,,Standard operations application
+Human Resources HR Management,Communications,Human Resources,7,6,13695.42,425,6,4,1,Salesforce,5y 8m ago,,,,Overlaps with 1 other system(s)
+Content Management,Parks & Recreation,Records Management,4,4,94767.53,329,6,1,0,Salesforce,3y 0m ago,,,,Standard records management application
+Public Safety Emergency Dispatch,Public Works,Public Safety,10,5,200321.68,25,6,6,0,Open Source,4y 8m ago,,,,Mission-critical application
+Digital Signatures,IT Department,Records Management,1,8,70416.7,84,8,2,0,SAP,1y 10m ago,,,,"Modern platform with good maintainability | Limited business value, consider retirement"
+Human Resources Recruitment,IT Department,Human Resources,10,5,264339.23,897,6,7,2,Custom Built,5y 9m ago,,,,Overlaps with 2 other system(s) | Mission-critical application
+Compliance Compliance Tracking,Communications,Compliance & Reporting,4,9,10936.28,274,9,2,0,Custom Built,2m ago,,,,Modern platform with good maintainability
+Budget Management Platform,Fire Department,Finance & Accounting,4,7,30571.52,172,9,2,0,Custom Built,8m ago,,,,Standard finance & accounting application
+Integrated Backup System,Legal Department,IT & Infrastructure,6,2,8747.78,36,3,4,0,Custom Built,11y 11m ago,"Integrated Case Management Pro, Citizen Services Case Management",,,Legacy application with outdated technology | Significant technical debt and stability issues
+Human Resources Benefits Administration Enterprise,Legal Department,Human Resources,8,4,113542.29,181,5,5,1,SAP,4y 5m ago,,,,Overlaps with 1 other system(s)
+Integrated Procurement,Human Resources,Finance & Accounting,8,5,349249.04,43,7,4,0,Oracle,4y 2m ago,Payroll,,,Standard finance & accounting application
+Human Resources Training (Old),Finance,Human Resources,5,2,74380.7,122,3,3,0,Open Source,7y 2m ago,,,,Legacy application with outdated technology | Significant technical debt and stability issues
+Revenue Collection Classic,Legal Department,Finance & Accounting,10,3,437647.57,31,4,2,0,SAP,12y 4m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Mission-critical application
+Compliance Data Warehouse,City Manager Office,Compliance & Reporting,5,5,133227.52,426,5,4,0,SAP,4y 0m ago,"Human Resources Time & Attendance, Incident Reporting System Pro",,,Standard compliance & reporting application
+Backup System Tool,Legal Department,IT & Infrastructure,9,6,82049.39,39,5,4,0,Microsoft,5y 3m ago,,,,Mission-critical application
+Asset Inventory System,Public Works,IT & Infrastructure,8,1,477933.67,47,4,2,3,Open Source,18y 10m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Overlaps with 3 other system(s)
+Work Order Tool,City Manager Office,Operations,4,8,3222.47,12,9,1,0,Workday,2y 2m ago,,,,Modern platform with good maintainability
+Integrated GIS Mapping v2,Public Health,Operations,3,2,155507.0,51,6,1,0,Open Source,17y 5m ago,,,,"Legacy application with outdated technology | Significant technical debt and stability issues | Limited business value, consider retirement"
+Analytics Platform Tool,Transportation,Compliance & Reporting,2,2,121265.01,898,6,1,0,Custom Built,18y 0m ago,"Asset Inventory, Document Management Tool v1",,,"Legacy application with outdated technology | Significant technical debt and stability issues | Limited business value, consider retirement"
+Integrated Investigation Management,Economic Development,Public Safety,7,2,114445.69,45,5,3,0,Microsoft,18y 2m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Fleet Management Platform,Legal Department,Operations,5,5,7661.57,883,7,5,0,Infor,4y 2m ago,,,,Standard operations application
+Investigation Management Platform Enterprise,Police Department,Public Safety,10,4,122306.42,464,3,1,0,Infor,7y 8m ago,Integrated Revenue Collection,,,Critical legacy system requiring modernization | Mission-critical application
+Budget Management Platform Plus,Communications,Finance & Accounting,10,4,306466.38,37,5,4,0,Custom Built,3y 11m ago,,,,Mission-critical application
+Incident Reporting Tool,Human Resources,Public Safety,4,2,3599.04,72,3,2,0,Oracle,13y 8m ago,"Integrated Complaint Tracking v1, Revenue Collection Platform v2",,,Legacy application with outdated technology | Significant technical debt and stability issues
+Complaint Tracking Platform,City Manager Office,Citizen Services,10,5,153446.12,112,7,5,0,Microsoft,5y 4m ago,,,,Mission-critical application
+Document Management System,IT Department,Records Management,8,8,7637.52,131,8,9,0,ServiceNow,2y 9m ago,,,,Modern platform with good maintainability
+Integrated Work Order,Economic Development,Operations,3,2,128965.29,936,6,1,0,Open Source,10y 3m ago,,,,"Legacy application with outdated technology | Significant technical debt and stability issues | Limited business value, consider retirement"
+Integrated Payroll,Police Department,Finance & Accounting,7,2,21471.53,142,6,2,0,Salesforce,18y 9m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Project Management,Public Works,Operations,7,2,79619.09,198,6,1,0,Workday,11y 9m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues
+Backup System,Finance,IT & Infrastructure,9,4,287121.85,129,3,4,0,SAP,10y 2m ago,,,,Critical legacy system requiring modernization | Mission-critical application
+Complaint Tracking Tool Plus,IT Department,Citizen Services,10,2,245342.91,122,3,1,3,Infor,9y 0m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Overlaps with 3 other system(s) | Mission-critical application
+Case Management Tool,Planning & Development,Citizen Services,7,6,2427.01,11,10,8,0,Salesforce,2y 8m ago,,,,Standard citizen services application
+311 System Platform,Public Works,Citizen Services,8,6,214726.06,244,10,9,3,Open Source,1y 5m ago,,,,Overlaps with 3 other system(s)
+Evidence Tracking Platform v1,Planning & Development,Public Safety,6,7,51437.94,395,7,6,3,Infor,1y 9m ago,,,,Overlaps with 3 other system(s)
+Identity Management System,Planning & Development,IT & Infrastructure,6,5,143925.42,186,5,6,2,Microsoft,3y 7m ago,"Revenue Collection Classic, Grant Management Platform",,,Overlaps with 2 other system(s)
+Work Order,Parks & Recreation,Operations,4,5,87281.96,275,5,3,0,Custom Built,4y 6m ago,"Benefits Administration, Backup System Platform",,,Standard operations application
+Facility Management Tool,Legal Department,Operations,3,6,65638.0,197,7,3,0,Workday,3y 2m ago,"Integrated Grant Management, Document Management Tool v1",,,"Limited business value, consider retirement"
+Finance Grant Management,Public Works,Finance & Accounting,7,5,112092.15,40,6,4,1,Infor,4y 11m ago,,,,Overlaps with 1 other system(s)
+Procurement,Finance,Finance & Accounting,9,3,7750.58,595,6,1,0,Open Source,6y 0m ago,,,,Critical legacy system requiring modernization | Significant technical debt and stability issues | Mission-critical application
