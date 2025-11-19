@@ -49,6 +49,7 @@ from src.scenario_comparator import ScenarioComparator
 from src.integration_mapper import IntegrationMapper
 from src.history_tracker import HistoryTracker
 from src.risk_assessor import RiskAssessmentFramework
+from src.report_generator import AdvancedReportGenerator
 
 app = Flask(__name__)
 CORS(app)
@@ -1624,6 +1625,127 @@ def get_risk_heatmap():
         return jsonify({'success': True, 'heatmap_data': heatmap_data})
     except Exception as e:
         logger.error(f"Risk heatmap error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# ADVANCED REPORTING API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/reports/available', methods=['GET'])
+def get_available_reports():
+    """Get list of available report types"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        generator = AdvancedReportGenerator(current_data)
+        reports = generator.get_available_reports()
+
+        return jsonify({'success': True, 'reports': reports})
+    except Exception as e:
+        logger.error(f"Get available reports error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/reports/generate/<string:report_type>', methods=['GET'])
+def generate_report(report_type):
+    """Generate report of specified type"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        generator = AdvancedReportGenerator(current_data)
+        report = generator.generate_report(report_type)
+
+        return jsonify({'success': True, 'report': report})
+    except Exception as e:
+        logger.error(f"Generate report error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/reports/export/<string:report_type>/<string:format>', methods=['GET'])
+def export_report(report_type, format):
+    """Export report in specified format (json, excel, csv)"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        generator = AdvancedReportGenerator(current_data)
+        report_data = generator.generate_report(report_type)
+
+        if 'error' in report_data:
+            return jsonify(report_data), 400
+
+        # Export based on format
+        if format == 'json':
+            json_output = generator.export_to_json(report_data)
+            return json_output, 200, {
+                'Content-Type': 'application/json',
+                'Content-Disposition': f'attachment; filename={report_type}_report.json'
+            }
+
+        elif format == 'excel':
+            excel_output = generator.export_to_excel(report_data)
+            return excel_output.getvalue(), 200, {
+                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition': f'attachment; filename={report_type}_report.xlsx'
+            }
+
+        elif format == 'csv':
+            csv_output = generator.export_to_csv(report_data)
+            return csv_output, 200, {
+                'Content-Type': 'text/csv',
+                'Content-Disposition': f'attachment; filename={report_type}_report.csv'
+            }
+
+        else:
+            return jsonify({'error': f'Unsupported format: {format}'}), 400
+
+    except Exception as e:
+        logger.error(f"Export report error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/reports/executive-summary', methods=['GET'])
+def get_executive_summary():
+    """Get executive summary report (quick access)"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        generator = AdvancedReportGenerator(current_data)
+        report = generator.generate_executive_summary_report()
+
+        return jsonify({'success': True, 'report': report})
+    except Exception as e:
+        logger.error(f"Executive summary error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/reports/portfolio-overview', methods=['GET'])
+def get_portfolio_overview_report():
+    """Get portfolio overview section only"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        generator = AdvancedReportGenerator(current_data)
+        overview = generator.generate_portfolio_overview()
+
+        return jsonify({'success': True, 'overview': overview})
+    except Exception as e:
+        logger.error(f"Portfolio overview error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
