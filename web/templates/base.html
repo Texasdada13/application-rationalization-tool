@@ -31,7 +31,7 @@
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen overflow-hidden">
-        <aside class="w-64 bg-white shadow-lg flex flex-col h-screen">
+        <aside class="w-64 bg-white shadow-lg flex flex-col h-full min-h-0">
             <div class="p-6 border-b flex-shrink-0">
                 <h1 class="text-xl font-bold text-gray-800">
                     <i class="fas fa-chart-line text-blue-600"></i>
@@ -39,7 +39,7 @@
                 </h1>
                 <p class="text-xs text-gray-500 mt-1">Executive Dashboard</p>
             </div>
-            <nav class="p-4 flex-1 overflow-y-auto pb-20">
+            <nav class="p-4 flex-1 overflow-y-auto min-h-0">
                 <a href="{{ url_for('dashboard') }}" class="nav-link flex items-center px-4 py-3 mb-2 rounded-lg text-gray-700 {% if request.endpoint == 'dashboard' %}active{% endif %}">
                     <i class="fas fa-chart-pie w-6"></i>
                     <span class="ml-3 font-medium">Dashboard</span>
