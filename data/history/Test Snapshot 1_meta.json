@@ -1,0 +1,9 @@
+{
+  "snapshot_id": "Test Snapshot 1",
+  "timestamp": "2025-11-19T11:16:36.131011",
+  "total_apps": 211,
+  "total_cost": 22563270.28,
+  "avg_health": 5.18957345971564,
+  "avg_value": 6.459715639810427,
+  "metadata": {}
+}

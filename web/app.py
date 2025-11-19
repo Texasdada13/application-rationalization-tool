@@ -1184,12 +1184,6 @@ def data_quality_page():
     return render_template('data_quality.html')
 
 
-@app.route('/history')
-def history_page():
-    """Render historical tracking dashboard page"""
-    return render_template('history.html')
-
-
 @app.route('/api/data-quality/validate', methods=['POST'])
 def validate_data_quality():
     """Validate uploaded data quality before processing"""
@@ -1519,8 +1513,8 @@ def track_roi_realization():
 
 
 @app.route('/api/history/app-history/<string:app_name>', methods=['GET'])
-def get_application_history(app_name):
-    """Get history for a specific application"""
+def get_app_snapshot_history(app_name):
+    """Get snapshot history for a specific application"""
     try:
         tracker = HistoryTracker()
         history = tracker.get_application_history(app_name)
