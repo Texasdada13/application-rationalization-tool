@@ -51,6 +51,7 @@ from src.history_tracker import HistoryTracker
 from src.risk_assessor import RiskAssessmentFramework
 from src.report_generator import AdvancedReportGenerator
 from src.benchmark_engine import BenchmarkEngine
+from src.nl_query_engine import NaturalLanguageQueryEngine
 
 app = Flask(__name__)
 CORS(app)
@@ -1861,6 +1862,52 @@ def get_best_practices():
         return jsonify({'success': True, 'best_practices': practices})
     except Exception as e:
         logger.error(f"Best practices error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# NATURAL LANGUAGE QUERY API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/nl-query/ask', methods=['POST'])
+def process_natural_language_query():
+    """Process a natural language query"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        data = request.get_json()
+        query = data.get('query', '').strip()
+
+        if not query:
+            return jsonify({'error': 'Query is required'}), 400
+
+        engine = NaturalLanguageQueryEngine(current_data)
+        result = engine.process_query(query)
+
+        return jsonify({'success': True, 'result': result})
+    except Exception as e:
+        logger.error(f"NL query error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/nl-query/examples', methods=['GET'])
+def get_example_queries():
+    """Get list of example queries"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        engine = NaturalLanguageQueryEngine(current_data)
+        examples = engine.get_example_queries()
+
+        return jsonify({'success': True, 'examples': examples})
+    except Exception as e:
+        logger.error(f"Get examples error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
