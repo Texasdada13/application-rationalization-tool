@@ -42,6 +42,7 @@ from src.smart_recommendations import SmartRecommendationEngine
 from src.sentiment_analyzer import SentimentAnalyzer
 from src.smart_grouping import SmartGroupingEngine
 from src.whatif_engine import WhatIfScenarioEngine
+from src.roadmap_engine import PrioritizationRoadmapEngine
 
 app = Flask(__name__)
 CORS(app)
@@ -1031,6 +1032,139 @@ def get_whatif_baseline():
 
     except Exception as e:
         logger.error(f"What-If baseline error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# AUTOMATED PRIORITIZATION ROADMAP API ENDPOINTS
+# ============================================================================
+
+@app.route('/roadmap')
+def roadmap_page():
+    """Render prioritization roadmap page"""
+    return render_template('roadmap.html')
+
+
+@app.route('/api/roadmap/generate', methods=['GET'])
+def generate_roadmap():
+    """Generate complete prioritization roadmap"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Initialize roadmap engine
+        roadmap_engine = PrioritizationRoadmapEngine(current_data)
+
+        # Generate executive summary (includes timeline)
+        summary = roadmap_engine.generate_executive_summary()
+
+        return jsonify({
+            'success': True,
+            'roadmap': summary
+        })
+
+    except Exception as e:
+        logger.error(f"Roadmap generation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/roadmap/timeline', methods=['GET'])
+def get_roadmap_timeline():
+    """Get detailed timeline with phases and actions"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Initialize roadmap engine
+        roadmap_engine = PrioritizationRoadmapEngine(current_data)
+
+        # Generate timeline
+        timeline = roadmap_engine.generate_timeline()
+
+        return jsonify({
+            'success': True,
+            'timeline': timeline
+        })
+
+    except Exception as e:
+        logger.error(f"Timeline generation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/roadmap/effort-impact', methods=['GET'])
+def get_effort_impact_matrix():
+    """Get effort vs impact matrix data"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Initialize roadmap engine
+        roadmap_engine = PrioritizationRoadmapEngine(current_data)
+
+        # Generate matrix data
+        matrix_data = roadmap_engine.get_effort_impact_matrix()
+
+        return jsonify({
+            'success': True,
+            'matrix': matrix_data
+        })
+
+    except Exception as e:
+        logger.error(f"Matrix generation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/roadmap/dependencies', methods=['GET'])
+def get_dependency_warnings():
+    """Get dependency warnings and conflicts"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Initialize roadmap engine
+        roadmap_engine = PrioritizationRoadmapEngine(current_data)
+
+        # Get warnings
+        warnings = roadmap_engine.get_dependency_warnings()
+
+        return jsonify({
+            'success': True,
+            'warnings': warnings,
+            'count': len(warnings)
+        })
+
+    except Exception as e:
+        logger.error(f"Dependency check error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/roadmap/export', methods=['GET'])
+def export_roadmap():
+    """Export complete roadmap as JSON"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Initialize roadmap engine
+        roadmap_engine = PrioritizationRoadmapEngine(current_data)
+
+        # Export complete roadmap
+        roadmap_json = roadmap_engine.export_roadmap_json()
+
+        return roadmap_json, 200, {'Content-Type': 'application/json'}
+
+    except Exception as e:
+        logger.error(f"Roadmap export error: {e}")
         return jsonify({'error': str(e)}), 500
 
 

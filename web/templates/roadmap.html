@@ -1,0 +1,647 @@
+{% extends "base.html" %}
+
+{% block title %}Automated Prioritization Roadmap{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-6 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🗺️ Automated Prioritization Roadmap</h1>
+        <p class="text-gray-600">AI-generated multi-phase roadmap with timeline and effort vs impact analysis</p>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p class="mt-4 text-gray-600">Generating roadmap...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-circle text-red-500"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700" id="error-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="content" class="hidden">
+
+        <!-- Executive Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">Total Actions</p>
+                        <p class="text-3xl font-bold text-gray-900" id="total-actions">-</p>
+                    </div>
+                    <div class="bg-indigo-100 rounded-full p-3">
+                        <i class="fas fa-tasks text-indigo-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">Total Savings</p>
+                        <p class="text-3xl font-bold text-green-600" id="total-savings">-</p>
+                    </div>
+                    <div class="bg-green-100 rounded-full p-3">
+                        <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">Quick Wins</p>
+                        <p class="text-3xl font-bold text-purple-600" id="quick-wins">-</p>
+                        <p class="text-xs text-gray-500 mt-1" id="quick-wins-savings">-</p>
+                    </div>
+                    <div class="bg-purple-100 rounded-full p-3">
+                        <i class="fas fa-bolt text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">Timeline</p>
+                        <p class="text-3xl font-bold text-blue-600" id="timeline-months">-</p>
+                        <p class="text-xs text-gray-500 mt-1" id="phases-count">-</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-full p-3">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Breakdown -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Action Breakdown</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="action-breakdown">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Dependency Warnings -->
+        <div id="dependency-warnings-container" class="hidden bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-8">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>
+                </div>
+                <div class="ml-3 flex-1">
+                    <h3 class="text-sm font-semibold text-yellow-800 mb-2">Dependency Warnings</h3>
+                    <div id="dependency-warnings-list" class="space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effort vs Impact Matrix -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-chart-scatter text-indigo-600 mr-2"></i>
+                Effort vs Impact Matrix
+            </h2>
+            <p class="text-sm text-gray-600 mb-4">Applications plotted by implementation effort and business impact</p>
+
+            <!-- Matrix Chart -->
+            <div style="height: 500px; position: relative;">
+                <canvas id="effortImpactChart"></canvas>
+            </div>
+
+            <!-- Quadrant Legend -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 bg-green-500 rounded"></div>
+                    <span class="text-sm text-gray-700">Quick Wins (High Impact, Low Effort)</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 bg-blue-500 rounded"></div>
+                    <span class="text-sm text-gray-700">Strategic Priorities (High Impact, High Effort)</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                    <span class="text-sm text-gray-700">Low Priority (Low Impact, Low Effort)</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 bg-red-400 rounded"></div>
+                    <span class="text-sm text-gray-700">Reconsider (Low Impact, High Effort)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline and Phases -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-road text-indigo-600 mr-2"></i>
+                    Implementation Roadmap
+                </h2>
+                <button onclick="exportRoadmap()" class="btn-secondary text-sm">
+                    <i class="fas fa-download mr-2"></i>
+                    Export Roadmap
+                </button>
+            </div>
+
+            <!-- Timeline Phases -->
+            <div id="timeline-phases" class="space-y-6">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .phase-card {
+        border-left-width: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .phase-card:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .action-badge.retire {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .action-badge.modernize {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+
+    .action-badge.consolidate {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .milestone-item {
+        position: relative;
+        padding-left: 2rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .milestone-item:before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0.5rem;
+        bottom: -0.5rem;
+        width: 2px;
+        background: linear-gradient(to bottom, #6366f1, transparent);
+    }
+
+    .milestone-item:last-child:before {
+        display: none;
+    }
+
+    .milestone-dot {
+        position: absolute;
+        left: 0;
+        top: 0.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        background-color: #6366f1;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #6366f1;
+    }
+
+    .action-row {
+        transition: background-color 0.2s ease;
+    }
+
+    .action-row:hover {
+        background-color: #f9fafb;
+    }
+</style>
+
+<script>
+let roadmapData = null;
+let effortImpactChart = null;
+
+// Load roadmap data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadRoadmap();
+});
+
+async function loadRoadmap() {
+    try {
+        // Fetch roadmap data
+        const response = await fetch('/api/roadmap/generate');
+        const data = await response.json();
+
+        if (!data.success) {
+            showError(data.error || 'Failed to generate roadmap');
+            return;
+        }
+
+        roadmapData = data.roadmap;
+
+        // Fetch effort vs impact matrix
+        const matrixResponse = await fetch('/api/roadmap/effort-impact');
+        const matrixData = await matrixResponse.json();
+
+        if (matrixData.success) {
+            roadmapData.matrix = matrixData.matrix;
+        }
+
+        // Fetch dependency warnings
+        const depsResponse = await fetch('/api/roadmap/dependencies');
+        const depsData = await depsResponse.json();
+
+        if (depsData.success && depsData.count > 0) {
+            roadmapData.warnings = depsData.warnings;
+        }
+
+        // Render everything
+        renderExecutiveSummary();
+        renderActionBreakdown();
+        renderDependencyWarnings();
+        renderEffortImpactMatrix();
+        renderTimeline();
+
+        // Show content
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('content').classList.remove('hidden');
+
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+function renderExecutiveSummary() {
+    document.getElementById('total-actions').textContent = roadmapData.total_actions;
+    document.getElementById('total-savings').textContent = '$' + (roadmapData.total_savings / 1000).toFixed(0) + 'k';
+    document.getElementById('quick-wins').textContent = roadmapData.quick_wins_count;
+    document.getElementById('quick-wins-savings').textContent = '$' + (roadmapData.quick_wins_savings / 1000).toFixed(0) + 'k savings';
+    document.getElementById('timeline-months').textContent = Math.round(roadmapData.duration_months) + ' mo';
+    document.getElementById('phases-count').textContent = roadmapData.phases + ' phases';
+}
+
+function renderActionBreakdown() {
+    const container = document.getElementById('action-breakdown');
+    const breakdown = roadmapData.action_breakdown;
+
+    const actionTypes = [
+        { key: 'retire', label: 'Retirements', icon: 'fa-trash-alt', color: 'red' },
+        { key: 'modernize', label: 'Modernizations', icon: 'fa-rocket', color: 'blue' },
+        { key: 'consolidate', label: 'Consolidations', icon: 'fa-compress-arrows-alt', color: 'yellow' }
+    ];
+
+    actionTypes.forEach(type => {
+        const count = breakdown[type.key] || 0;
+
+        container.innerHTML += `
+            <div class="flex items-center space-x-3 p-4 bg-${type.color}-50 rounded-lg">
+                <div class="flex-shrink-0">
+                    <i class="fas ${type.icon} text-${type.color}-600 text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-${type.color}-700">${count}</p>
+                    <p class="text-sm text-${type.color}-600">${type.label}</p>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function renderDependencyWarnings() {
+    if (!roadmapData.warnings || roadmapData.warnings.length === 0) {
+        return;
+    }
+
+    const container = document.getElementById('dependency-warnings-container');
+    const list = document.getElementById('dependency-warnings-list');
+
+    roadmapData.warnings.forEach(warning => {
+        const severityColor = warning.severity === 'high' ? 'red' : 'yellow';
+
+        list.innerHTML += `
+            <div class="flex items-start space-x-2 text-sm text-${severityColor}-700">
+                <i class="fas fa-link text-${severityColor}-500 mt-0.5"></i>
+                <div>
+                    <span class="font-semibold">${warning.app_name}</span>
+                    <span class="action-badge ${warning.action_type}">${warning.action_type}</span>
+                    blocked by <span class="font-semibold">${warning.blocked_by}</span>
+                    <p class="text-xs text-${severityColor}-600 mt-1">${warning.recommendation}</p>
+                </div>
+            </div>
+        `;
+    });
+
+    container.classList.remove('hidden');
+}
+
+function renderEffortImpactMatrix() {
+    const ctx = document.getElementById('effortImpactChart').getContext('2d');
+    const matrix = roadmapData.matrix || [];
+
+    // Group by quadrant
+    const quadrants = {
+        'Quick Wins': { data: [], color: 'rgb(34, 197, 94)' },
+        'Strategic Priorities': { data: [], color: 'rgb(59, 130, 246)' },
+        'Low Priority': { data: [], color: 'rgb(156, 163, 175)' },
+        'Reconsider': { data: [], color: 'rgb(248, 113, 113)' }
+    };
+
+    matrix.forEach(item => {
+        const quadrant = quadrants[item.quadrant] || quadrants['Low Priority'];
+        quadrant.data.push({
+            x: item.effort,
+            y: item.impact,
+            label: item.app_name,
+            type: item.action_type,
+            savings: item.estimated_savings
+        });
+    });
+
+    // Create datasets
+    const datasets = Object.entries(quadrants).map(([name, config]) => ({
+        label: name,
+        data: config.data,
+        backgroundColor: config.color,
+        borderColor: config.color,
+        borderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8
+    }));
+
+    effortImpactChart = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const point = context.raw;
+                            return [
+                                `App: ${point.label}`,
+                                `Action: ${point.type}`,
+                                `Impact: ${point.y.toFixed(1)}`,
+                                `Effort: ${point.x.toFixed(1)}`,
+                                `Savings: $${(point.savings / 1000).toFixed(0)}k`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Implementation Effort →',
+                        font: { size: 14, weight: 'bold' }
+                    },
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        drawBorder: false,
+                        color: function(context) {
+                            return context.tick.value === 50 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+                        },
+                        lineWidth: function(context) {
+                            return context.tick.value === 50 ? 2 : 1;
+                        }
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: '↑ Business Impact',
+                        font: { size: 14, weight: 'bold' }
+                    },
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        drawBorder: false,
+                        color: function(context) {
+                            return context.tick.value === 60 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+                        },
+                        lineWidth: function(context) {
+                            return context.tick.value === 60 ? 2 : 1;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderTimeline() {
+    const container = document.getElementById('timeline-phases');
+    const timeline = roadmapData.timeline || [];
+
+    const phaseColors = {
+        'quick_wins': { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-700' },
+        'short_term': { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700' },
+        'medium_term': { border: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-700' },
+        'long_term': { border: 'border-orange-500', bg: 'bg-orange-50', text: 'text-orange-700' }
+    };
+
+    timeline.forEach(phase => {
+        const colors = phaseColors[phase.phase] || phaseColors['quick_wins'];
+
+        let phaseHTML = `
+            <div class="phase-card ${colors.border} ${colors.bg} rounded-lg p-6">
+                <!-- Phase Header -->
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-2">
+                            <span class="text-3xl">${phase.icon}</span>
+                            <div>
+                                <h3 class="text-xl font-bold ${colors.text}">${phase.name}</h3>
+                                <p class="text-sm text-gray-600">${phase.description}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-6 mt-3 text-sm text-gray-600">
+                            <div>
+                                <i class="far fa-calendar mr-2"></i>
+                                ${formatDate(phase.start_date)} → ${formatDate(phase.end_date)}
+                            </div>
+                            <div>
+                                <i class="far fa-clock mr-2"></i>
+                                ${phase.duration_weeks} weeks
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <div class="text-3xl font-bold ${colors.text}">${phase.total_actions}</div>
+                        <div class="text-xs text-gray-600">Actions</div>
+                        <div class="text-lg font-semibold text-green-600 mt-2">$${(phase.total_savings / 1000).toFixed(0)}k</div>
+                        <div class="text-xs text-gray-600">Savings</div>
+                    </div>
+                </div>
+
+                <!-- Milestones -->
+                <div class="mb-4">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                        <i class="fas fa-flag-checkered mr-2"></i>
+                        Milestones
+                    </h4>
+                    <div class="space-y-0">
+        `;
+
+        phase.milestones.forEach(milestone => {
+            phaseHTML += `
+                <div class="milestone-item">
+                    <div class="milestone-dot"></div>
+                    <div>
+                        <div class="font-semibold text-gray-800 text-sm">${milestone.name}</div>
+                        <div class="text-xs text-gray-600">${milestone.description}</div>
+                        <div class="text-xs text-green-600 mt-1">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            ${milestone.success_metric}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        phaseHTML += `
+                    </div>
+                </div>
+
+                <!-- Actions Toggle -->
+                <button
+                    onclick="togglePhaseActions('${phase.phase}')"
+                    class="w-full text-left flex items-center justify-between px-4 py-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                    <span class="text-sm font-semibold text-gray-700">
+                        <i class="fas fa-list mr-2"></i>
+                        View ${phase.total_actions} Actions
+                    </span>
+                    <i class="fas fa-chevron-down text-gray-400 transition-transform" id="toggle-icon-${phase.phase}"></i>
+                </button>
+
+                <!-- Actions Table (Initially Hidden) -->
+                <div id="actions-${phase.phase}" class="hidden mt-4">
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Application</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Impact</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Effort</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Savings</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+        `;
+
+        phase.actions.forEach(action => {
+            phaseHTML += `
+                <tr class="action-row">
+                    <td class="px-4 py-3 text-sm text-gray-900">${action.app_name}</td>
+                    <td class="px-4 py-3">
+                        <span class="action-badge ${action.action_type}">${action.action_type}</span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="text-sm font-semibold ${action.impact >= 70 ? 'text-green-600' : 'text-gray-700'}">
+                            ${action.impact.toFixed(1)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="text-sm font-semibold ${action.effort <= 30 ? 'text-green-600' : 'text-gray-700'}">
+                            ${action.effort.toFixed(1)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right text-sm text-gray-900">
+                        $${(action.estimated_savings / 1000).toFixed(0)}k
+                    </td>
+                </tr>
+            `;
+        });
+
+        phaseHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML += phaseHTML;
+    });
+}
+
+function togglePhaseActions(phase) {
+    const actionsDiv = document.getElementById(`actions-${phase}`);
+    const icon = document.getElementById(`toggle-icon-${phase}`);
+
+    if (actionsDiv.classList.contains('hidden')) {
+        actionsDiv.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        actionsDiv.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+async function exportRoadmap() {
+    try {
+        const response = await fetch('/api/roadmap/export');
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `roadmap_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+    } catch (error) {
+        alert('Failed to export roadmap: ' + error.message);
+    }
+}
+
+function showError(message) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('error').classList.remove('hidden');
+    document.getElementById('error-message').textContent = message;
+}
+</script>
+{% endblock %}
