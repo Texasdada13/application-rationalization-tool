@@ -105,7 +105,9 @@
                     <i class="fas fa-chart-line text-purple-600"></i>
                     3-Year Cost Forecast
                 </h3>
-                <canvas id="cost-forecast-chart" class="w-full" style="height: 200px;"></canvas>
+                <div style="height: 200px; max-height: 200px; position: relative;">
+                    <canvas id="cost-forecast-chart" class="w-full" style="height: 100%;"></canvas>
+                </div>
             </div>
 
             <!-- ROI Analysis Card -->
@@ -506,6 +508,13 @@ document.getElementById('toggle-predictions-btn').addEventListener('click', func
         collapsible.style.display = 'block';
         icon.classList.remove('fa-chevron-right');
         icon.classList.add('fa-chevron-down');
+
+        // Resize chart after opening to prevent growing
+        if (costForecastChart) {
+            setTimeout(() => {
+                costForecastChart.resize();
+            }, 100);
+        }
     } else {
         collapsible.style.display = 'none';
         icon.classList.remove('fa-chevron-down');

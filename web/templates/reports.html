@@ -102,9 +102,42 @@
                 <span>Professional layout</span>
             </div>
         </div>
-        <button onclick="showComingSoon('PDF Report')" class="block w-full px-4 py-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition text-center font-medium">
-            <i class="fas fa-clock mr-2"></i>Coming Soon
-        </button>
+        <a href="/api/reports/export/executive_summary/pdf" download class="block w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-center font-medium">
+            <i class="fas fa-download mr-2"></i>Download PDF
+        </a>
+    </div>
+
+    <!-- PowerPoint Export Card -->
+    <div class="stat-card bg-white rounded-xl shadow-md p-6 border-t-4 border-orange-500">
+        <div class="flex items-center mb-4">
+            <div class="bg-orange-100 rounded-lg p-3 mr-4">
+                <i class="fas fa-file-powerpoint text-3xl text-orange-600"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">PowerPoint</h3>
+                <p class="text-sm text-gray-500">Presentation deck</p>
+            </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+            Auto-generate a PowerPoint presentation with executive slides, charts, and recommendations.
+        </p>
+        <div class="space-y-2 text-xs text-gray-500 mb-4">
+            <div class="flex items-center">
+                <i class="fas fa-check text-orange-600 mr-2"></i>
+                <span>7 professional slides</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-check text-orange-600 mr-2"></i>
+                <span>Embedded charts and data</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-check text-orange-600 mr-2"></i>
+                <span>Board-ready presentation</span>
+            </div>
+        </div>
+        <a href="/api/reports/export/executive_summary/powerpoint" download class="block w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-center font-medium">
+            <i class="fas fa-download mr-2"></i>Download PowerPoint
+        </a>
     </div>
 
     <!-- Power BI Card -->

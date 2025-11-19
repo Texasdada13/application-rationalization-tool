@@ -1672,7 +1672,7 @@ def generate_report(report_type):
 
 @app.route('/api/reports/export/<string:report_type>/<string:format>', methods=['GET'])
 def export_report(report_type, format):
-    """Export report in specified format (json, excel, csv)"""
+    """Export report in specified format (json, excel, csv, pdf, powerpoint)"""
     global current_data
 
     try:
@@ -1707,11 +1707,100 @@ def export_report(report_type, format):
                 'Content-Disposition': f'attachment; filename={report_type}_report.csv'
             }
 
+        elif format == 'pdf':
+            pdf_output = generator.export_to_pdf(report_data)
+            return pdf_output.getvalue(), 200, {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': f'attachment; filename={report_type}_report.pdf'
+            }
+
+        elif format == 'powerpoint' or format == 'pptx':
+            pptx_output = generator.export_to_powerpoint(report_data)
+            return pptx_output.getvalue(), 200, {
+                'Content-Type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'Content-Disposition': f'attachment; filename={report_type}_report.pptx'
+            }
+
         else:
             return jsonify({'error': f'Unsupported format: {format}'}), 400
 
+    except ImportError as e:
+        logger.error(f"Export report import error: {e}")
+        return jsonify({'error': str(e), 'hint': 'Install required library: pip install reportlab python-pptx'}), 500
     except Exception as e:
         logger.error(f"Export report error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/reports/email', methods=['POST'])
+def email_report():
+    """Email a report to specified recipients"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Get request data
+        data = request.get_json()
+
+        report_type = data.get('report_type', 'executive_summary')
+        recipients = data.get('recipients', [])
+        format = data.get('format', 'pdf')
+        subject = data.get('subject')
+
+        # SMTP configuration
+        smtp_config = {
+            'smtp_host': data.get('smtp_host', 'localhost'),
+            'smtp_port': data.get('smtp_port', 587),
+            'use_tls': data.get('use_tls', True),
+            'username': data.get('smtp_username'),
+            'password': data.get('smtp_password'),
+            'from_email': data.get('from_email', 'noreply@company.com')
+        }
+
+        if not recipients:
+            return jsonify({'error': 'No recipients specified'}), 400
+
+        # Generate report
+        generator = AdvancedReportGenerator(current_data)
+        report_data = generator.generate_report(report_type)
+
+        if 'error' in report_data:
+            return jsonify(report_data), 400
+
+        # Send email
+        result = generator.send_email_report(
+            report_data=report_data,
+            recipients=recipients,
+            smtp_config=smtp_config,
+            format=format,
+            subject=subject
+        )
+
+        return jsonify(result), 200 if result.get('success') else 500
+
+    except Exception as e:
+        logger.error(f"Email report error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/reports/capabilities', methods=['GET'])
+def get_export_capabilities():
+    """Get available export formats and their status"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        generator = AdvancedReportGenerator(current_data)
+        capabilities = generator.get_export_capabilities()
+
+        return jsonify({'success': True, 'capabilities': capabilities})
+
+    except Exception as e:
+        logger.error(f"Get capabilities error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
