@@ -43,6 +43,7 @@ from src.sentiment_analyzer import SentimentAnalyzer
 from src.smart_grouping import SmartGroupingEngine
 from src.whatif_engine import WhatIfScenarioEngine
 from src.roadmap_engine import PrioritizationRoadmapEngine
+from src.data_validator import DataQualityValidator
 
 app = Flask(__name__)
 CORS(app)
@@ -1165,6 +1166,97 @@ def export_roadmap():
 
     except Exception as e:
         logger.error(f"Roadmap export error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# DATA QUALITY VALIDATION API ENDPOINTS
+# ============================================================================
+
+@app.route('/data-quality')
+def data_quality_page():
+    """Render data quality dashboard page"""
+    return render_template('data_quality.html')
+
+
+@app.route('/api/data-quality/validate', methods=['POST'])
+def validate_data_quality():
+    """Validate uploaded data quality before processing"""
+    try:
+        # Check if file was uploaded
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        # Read the file
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(file)
+        elif file.filename.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(file)
+        else:
+            return jsonify({'error': 'Invalid file format. Please upload CSV or Excel file'}), 400
+
+        # Validate data quality
+        validator = DataQualityValidator(df)
+        report = validator.validate_all()
+
+        return jsonify({
+            'success': True,
+            'report': report
+        })
+
+    except Exception as e:
+        logger.error(f"Data quality validation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/data-quality/current', methods=['GET'])
+def validate_current_data():
+    """Validate currently loaded data quality"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Validate data quality
+        validator = DataQualityValidator(current_data)
+        report = validator.validate_all()
+
+        return jsonify({
+            'success': True,
+            'report': report
+        })
+
+    except Exception as e:
+        logger.error(f"Data quality validation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/data-quality/suggestions', methods=['GET'])
+def get_cleaning_suggestions():
+    """Get data cleaning suggestions for current data"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        # Get cleaning suggestions
+        validator = DataQualityValidator(current_data)
+        validator.validate_all()  # Run validation first
+        suggestions = validator.get_clean_data_suggestions()
+
+        return jsonify({
+            'success': True,
+            'suggestions': suggestions
+        })
+
+    except Exception as e:
+        logger.error(f"Cleaning suggestions error: {e}")
         return jsonify({'error': str(e)}), 500
 
 

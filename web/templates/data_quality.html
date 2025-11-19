@@ -1,0 +1,500 @@
+{% extends "base.html" %}
+
+{% block title %}Data Quality Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-6 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">📊 Data Quality Dashboard</h1>
+        <p class="text-gray-600">Validate data quality, detect issues, and get recommendations for improvement</p>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-upload text-indigo-600 mr-2"></i>
+            Validate New Data
+        </h2>
+        <p class="text-sm text-gray-600 mb-4">Upload a CSV or Excel file to check data quality before processing</p>
+
+        <div class="flex items-center space-x-4">
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="hidden">
+            <label for="fileInput" class="btn-primary cursor-pointer">
+                <i class="fas fa-file-upload mr-2"></i>
+                Choose File
+            </label>
+            <span id="fileName" class="text-sm text-gray-600">No file selected</span>
+            <button onclick="validateUploadedFile()" id="validateBtn" class="btn-secondary" disabled>
+                <i class="fas fa-check-circle mr-2"></i>
+                Validate File
+            </button>
+        </div>
+    </div>
+
+    <!-- Or Check Current Data -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-blue-800">Already have data loaded?</p>
+                <p class="text-sm text-blue-700">Check the quality of your currently loaded application portfolio</p>
+            </div>
+            <button onclick="validateCurrentData()" class="btn-primary">
+                <i class="fas fa-clipboard-check mr-2"></i>
+                Validate Current Data
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="hidden text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p class="mt-4 text-gray-600">Analyzing data quality...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-circle text-red-500"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700" id="error-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Container -->
+    <div id="results" class="hidden">
+
+        <!-- Quality Score Card -->
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-8 mb-8 text-white">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold mb-2">Data Quality Score</h2>
+                    <p id="summary" class="text-indigo-100 text-sm"></p>
+                </div>
+                <div class="text-center">
+                    <div class="relative w-32 h-32">
+                        <svg class="transform -rotate-90 w-32 h-32">
+                            <circle cx="64" cy="64" r="56" stroke="rgba(255,255,255,0.2)" stroke-width="8" fill="none" />
+                            <circle id="scoreCircle" cx="64" cy="64" r="56" stroke="white" stroke-width="8" fill="none"
+                                    stroke-dasharray="352" stroke-dashoffset="352" class="transition-all duration-1000" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="scoreValue" class="text-4xl font-bold">-</span>
+                            <span class="text-sm">/ 100</span>
+                        </div>
+                    </div>
+                    <p id="confidenceLevel" class="mt-2 text-sm font-semibold">-</p>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-indigo-400">
+                <div class="text-center">
+                    <div class="text-3xl font-bold" id="totalRecords">-</div>
+                    <div class="text-indigo-100 text-sm">Total Records</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold" id="issueCount">-</div>
+                    <div class="text-indigo-100 text-sm">Critical Issues</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold" id="warningCount">-</div>
+                    <div class="text-indigo-100 text-sm">Warnings</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div id="recommendations-container" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                Recommendations
+            </h2>
+            <div id="recommendations-list" class="space-y-3">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Issues & Warnings Tabs -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <button onclick="switchTab('issues')" id="tab-issues"
+                            class="tab-button active py-4 px-6 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Critical Issues (<span id="issues-count">0</span>)
+                    </button>
+                    <button onclick="switchTab('warnings')" id="tab-warnings"
+                            class="tab-button py-4 px-6 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        Warnings (<span id="warnings-count">0</span>)
+                    </button>
+                    <button onclick="switchTab('stats')" id="tab-stats"
+                            class="tab-button py-4 px-6 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="fas fa-chart-bar mr-2"></i>
+                        Statistics
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Issues Tab -->
+                <div id="content-issues" class="tab-content">
+                    <div id="issues-list" class="space-y-4">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Warnings Tab -->
+                <div id="content-warnings" class="tab-content hidden">
+                    <div id="warnings-list" class="space-y-4">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Stats Tab -->
+                <div id="content-stats" class="tab-content hidden">
+                    <div id="stats-content">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .tab-button.active {
+        border-color: #4f46e5;
+        color: #4f46e5;
+    }
+
+    .issue-card {
+        border-left-width: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .issue-card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .severity-critical {
+        border-left-color: #dc2626;
+        background-color: #fef2f2;
+    }
+
+    .severity-high {
+        border-left-color: #ea580c;
+        background-color: #fff7ed;
+    }
+
+    .severity-medium {
+        border-left-color: #f59e0b;
+        background-color: #fffbeb;
+    }
+
+    .severity-low {
+        border-left-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+
+    .recommendation-card {
+        border-left-width: 4px;
+    }
+
+    .priority-critical {
+        border-left-color: #dc2626;
+    }
+
+    .priority-high {
+        border-left-color: #ea580c;
+    }
+
+    .priority-medium {
+        border-left-color: #f59e0b;
+    }
+
+    .priority-low {
+        border-left-color: #3b82f6;
+    }
+</style>
+
+<script>
+let reportData = null;
+
+// File input handling
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('validateBtn').disabled = false;
+    } else {
+        document.getElementById('fileName').textContent = 'No file selected';
+        document.getElementById('validateBtn').disabled = true;
+    }
+});
+
+async function validateUploadedFile() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('Please select a file first');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    showLoading();
+
+    try {
+        const response = await fetch('/api/data-quality/validate', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            showError(data.error || 'Validation failed');
+            return;
+        }
+
+        reportData = data.report;
+        renderReport();
+
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function validateCurrentData() {
+    showLoading();
+
+    try {
+        const response = await fetch('/api/data-quality/current');
+        const data = await response.json();
+
+        if (!data.success) {
+            showError(data.error || 'No data loaded');
+            return;
+        }
+
+        reportData = data.report;
+        renderReport();
+
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+function showLoading() {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('error').classList.add('hidden');
+    document.getElementById('results').classList.add('hidden');
+}
+
+function showError(message) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('error').classList.remove('hidden');
+    document.getElementById('error-message').textContent = message;
+}
+
+function renderReport() {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('results').classList.remove('hidden');
+
+    // Render quality score
+    renderQualityScore();
+
+    // Render recommendations
+    renderRecommendations();
+
+    // Render issues and warnings
+    renderIssues();
+    renderWarnings();
+    renderStatistics();
+}
+
+function renderQualityScore() {
+    const score = reportData.quality_score;
+    const confidence = reportData.confidence_level;
+    const summary = reportData.summary;
+
+    // Animate score circle
+    const circumference = 2 * Math.PI * 56;
+    const offset = circumference - (score / 100) * circumference;
+    document.getElementById('scoreCircle').style.strokeDashoffset = offset;
+
+    document.getElementById('scoreValue').textContent = score;
+    document.getElementById('confidenceLevel').textContent = confidence + ' Confidence';
+    document.getElementById('summary').textContent = summary;
+
+    document.getElementById('totalRecords').textContent = reportData.total_records;
+    document.getElementById('issueCount').textContent = Object.keys(reportData.issues).length;
+    document.getElementById('warningCount').textContent = Object.keys(reportData.warnings).length;
+
+    document.getElementById('issues-count').textContent = Object.keys(reportData.issues).length;
+    document.getElementById('warnings-count').textContent = Object.keys(reportData.warnings).length;
+}
+
+function renderRecommendations() {
+    const recommendations = reportData.recommendations;
+
+    if (!recommendations || recommendations.length === 0) {
+        return;
+    }
+
+    const container = document.getElementById('recommendations-container');
+    const list = document.getElementById('recommendations-list');
+
+    container.classList.remove('hidden');
+    list.innerHTML = '';
+
+    recommendations.forEach(rec => {
+        const priorityColors = {
+            'critical': 'red',
+            'high': 'orange',
+            'medium': 'yellow',
+            'low': 'blue'
+        };
+
+        const color = priorityColors[rec.priority] || 'gray';
+
+        list.innerHTML += `
+            <div class="recommendation-card priority-${rec.priority} border rounded-lg p-4 bg-${color}-50">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${color}-100 text-${color}-800 uppercase">
+                            ${rec.priority}
+                        </span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-sm font-semibold text-gray-900">${rec.title}</h3>
+                        <p class="text-sm text-gray-700 mt-1">${rec.description}</p>
+                        <p class="text-xs text-gray-600 mt-2">
+                            <i class="fas fa-arrow-right mr-1"></i>
+                            ${rec.action}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function renderIssues() {
+    const list = document.getElementById('issues-list');
+    const issues = reportData.issues;
+
+    if (Object.keys(issues).length === 0) {
+        list.innerHTML = '<p class="text-gray-600 text-center py-8">No critical issues detected</p>';
+        return;
+    }
+
+    list.innerHTML = '';
+
+    Object.entries(issues).forEach(([key, issue]) => {
+        list.innerHTML += createIssueCard(key, issue);
+    });
+}
+
+function renderWarnings() {
+    const list = document.getElementById('warnings-list');
+    const warnings = reportData.warnings;
+
+    if (Object.keys(warnings).length === 0) {
+        list.innerHTML = '<p class="text-gray-600 text-center py-8">No warnings</p>';
+        return;
+    }
+
+    list.innerHTML = '';
+
+    Object.entries(warnings).forEach(([key, warning]) => {
+        list.innerHTML += createIssueCard(key, warning);
+    });
+}
+
+function createIssueCard(key, issue) {
+    const detailsJSON = JSON.stringify(issue.details || {}, null, 2);
+
+    return `
+        <div class="issue-card severity-${issue.severity} border rounded-lg p-4">
+            <div class="flex items-start justify-between mb-2">
+                <h3 class="text-sm font-semibold text-gray-900 capitalize">${key.replace(/_/g, ' ')}</h3>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    ${issue.severity}
+                </span>
+            </div>
+            <p class="text-sm text-gray-700">${issue.message}</p>
+            ${issue.count ? `<p class="text-xs text-gray-600 mt-2">Affected items: ${issue.count}</p>` : ''}
+            ${issue.details ? `
+                <details class="mt-3">
+                    <summary class="text-xs text-indigo-600 cursor-pointer hover:text-indigo-800">View Details</summary>
+                    <pre class="text-xs bg-gray-50 p-2 rounded mt-2 overflow-x-auto">${detailsJSON}</pre>
+                </details>
+            ` : ''}
+        </div>
+    `;
+}
+
+function renderStatistics() {
+    const stats = reportData.statistics;
+    const statsContent = document.getElementById('stats-content');
+
+    if (!stats || Object.keys(stats).length === 0) {
+        statsContent.innerHTML = '<p class="text-gray-600 text-center py-8">No statistics available</p>';
+        return;
+    }
+
+    statsContent.innerHTML = '';
+
+    Object.entries(stats).forEach(([category, data]) => {
+        const statsHTML = `
+            <div class="mb-6">
+                <h3 class="text-sm font-semibold text-gray-900 mb-3 capitalize">${category.replace(/_/g, ' ')}</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    ${Object.entries(data).map(([key, value]) => `
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-xs text-gray-600">${key.replace(/_/g, ' ')}</div>
+                            <div class="text-lg font-semibold text-gray-900">
+                                ${typeof value === 'number' ? (key.includes('cost') ? '$' + value.toLocaleString() : value.toLocaleString()) : value}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        statsContent.innerHTML += statsHTML;
+    });
+}
+
+function switchTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-gray-500');
+        btn.classList.remove('text-indigo-600', 'border-indigo-600');
+        btn.classList.add('border-transparent');
+    });
+
+    const activeTab = document.getElementById(`tab-${tabName}`);
+    activeTab.classList.add('active', 'text-indigo-600', 'border-indigo-600');
+    activeTab.classList.remove('text-gray-500', 'border-transparent');
+
+    // Update content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+
+    document.getElementById(`content-${tabName}`).classList.remove('hidden');
+}
+</script>
+{% endblock %}
