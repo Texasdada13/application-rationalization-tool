@@ -50,6 +50,7 @@ from src.integration_mapper import IntegrationMapper
 from src.history_tracker import HistoryTracker
 from src.risk_assessor import RiskAssessmentFramework
 from src.report_generator import AdvancedReportGenerator
+from src.benchmark_engine import BenchmarkEngine
 
 app = Flask(__name__)
 CORS(app)
@@ -1746,6 +1747,120 @@ def get_portfolio_overview_report():
         return jsonify({'success': True, 'overview': overview})
     except Exception as e:
         logger.error(f"Portfolio overview error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# BENCHMARK ENGINE API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/benchmark/report', methods=['GET'])
+def get_benchmark_report():
+    """Get comprehensive benchmark report"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        engine = BenchmarkEngine(current_data)
+        report = engine.generate_benchmark_report()
+
+        return jsonify({'success': True, 'benchmark': report})
+    except Exception as e:
+        logger.error(f"Benchmark report error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/benchmark/health', methods=['GET'])
+def benchmark_health():
+    """Benchmark health distribution"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        engine = BenchmarkEngine(current_data)
+        benchmark = engine.benchmark_health_distribution()
+
+        return jsonify({'success': True, 'health_benchmark': benchmark})
+    except Exception as e:
+        logger.error(f"Health benchmark error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/benchmark/cost-efficiency', methods=['GET'])
+def benchmark_cost_efficiency():
+    """Benchmark cost efficiency"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        engine = BenchmarkEngine(current_data)
+        benchmark = engine.benchmark_cost_efficiency()
+
+        return jsonify({'success': True, 'cost_benchmark': benchmark})
+    except Exception as e:
+        logger.error(f"Cost efficiency benchmark error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/benchmark/maturity', methods=['GET'])
+def benchmark_maturity():
+    """Assess portfolio maturity"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        engine = BenchmarkEngine(current_data)
+        maturity = engine.benchmark_portfolio_maturity()
+
+        return jsonify({'success': True, 'maturity': maturity})
+    except Exception as e:
+        logger.error(f"Maturity assessment error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/benchmark/gaps', methods=['GET'])
+def get_peer_gaps():
+    """Identify gaps compared to peer benchmarks"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        engine = BenchmarkEngine(current_data)
+        gaps = engine.identify_peer_gaps()
+
+        return jsonify({'success': True, 'gaps': gaps})
+    except Exception as e:
+        logger.error(f"Peer gaps error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/benchmark/best-practices', methods=['GET'])
+def get_best_practices():
+    """Get best practices recommendations"""
+    global current_data
+
+    try:
+        if current_data is None or current_data.empty:
+            return jsonify({'error': 'No data loaded'}), 400
+
+        category = request.args.get('category', None)
+
+        engine = BenchmarkEngine(current_data)
+        practices = engine.get_best_practices(category)
+
+        return jsonify({'success': True, 'best_practices': practices})
+    except Exception as e:
+        logger.error(f"Best practices error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
