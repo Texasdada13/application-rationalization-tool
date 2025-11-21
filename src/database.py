@@ -138,8 +138,274 @@ class Database:
             ON score_changes(application_name)
         """)
 
+        # ================================================================
+        # Stakeholder Assessment Tables
+        # ================================================================
+
+        # Stakeholders Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stakeholders (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                role TEXT NOT NULL,
+                department TEXT NOT NULL,
+                stakeholder_type TEXT NOT NULL,
+                influence_level TEXT NOT NULL,
+                phone TEXT,
+                applications TEXT,
+                notes TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Interview Sessions Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS interview_sessions (
+                id TEXT PRIMARY KEY,
+                stakeholder_id TEXT NOT NULL,
+                interviewer TEXT NOT NULL,
+                application_ids TEXT NOT NULL,
+                status TEXT NOT NULL,
+                scheduled_date TEXT NOT NULL,
+                template_id TEXT DEFAULT 'default',
+                start_time TEXT,
+                end_time TEXT,
+                overall_score REAL DEFAULT 0,
+                category_scores TEXT,
+                summary TEXT,
+                action_items TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (stakeholder_id) REFERENCES stakeholders(id)
+            )
+        """)
+
+        # Interview Responses Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS interview_responses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                interview_id TEXT NOT NULL,
+                question_id TEXT NOT NULL,
+                value TEXT,
+                score REAL DEFAULT 0,
+                notes TEXT,
+                verbatim_quote TEXT,
+                flagged BOOLEAN DEFAULT 0,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (interview_id) REFERENCES interview_sessions(id),
+                UNIQUE(interview_id, question_id)
+            )
+        """)
+
+        # Create indexes for stakeholder assessment
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_interviews_stakeholder
+            ON interview_sessions(stakeholder_id)
+        """)
+
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_interviews_status
+            ON interview_sessions(status)
+        """)
+
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_responses_interview
+            ON interview_responses(interview_id)
+        """)
+
         self.conn.commit()
         logger.info("Database tables created successfully")
+
+    # ========================================================================
+    # Stakeholder Assessment Database Methods
+    # ========================================================================
+
+    def save_stakeholder(self, stakeholder_data: Dict[str, Any]) -> str:
+        """Save a stakeholder to the database"""
+        cursor = self.conn.cursor()
+        import json
+
+        cursor.execute("""
+            INSERT OR REPLACE INTO stakeholders
+            (id, name, email, role, department, stakeholder_type, influence_level,
+             phone, applications, notes, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            stakeholder_data['id'],
+            stakeholder_data['name'],
+            stakeholder_data['email'],
+            stakeholder_data['role'],
+            stakeholder_data['department'],
+            stakeholder_data['stakeholder_type'],
+            stakeholder_data['influence_level'],
+            stakeholder_data.get('phone', ''),
+            json.dumps(stakeholder_data.get('applications', [])),
+            stakeholder_data.get('notes', ''),
+            stakeholder_data.get('created_at', datetime.now().isoformat())
+        ))
+        self.conn.commit()
+        return stakeholder_data['id']
+
+    def get_stakeholder(self, stakeholder_id: str) -> Optional[Dict[str, Any]]:
+        """Get a stakeholder by ID"""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM stakeholders WHERE id = ?", (stakeholder_id,))
+        row = cursor.fetchone()
+        if row:
+            import json
+            data = dict(row)
+            data['applications'] = json.loads(data.get('applications', '[]'))
+            return data
+        return None
+
+    def get_all_stakeholders(self) -> List[Dict[str, Any]]:
+        """Get all stakeholders"""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM stakeholders ORDER BY name")
+        import json
+        results = []
+        for row in cursor.fetchall():
+            data = dict(row)
+            data['applications'] = json.loads(data.get('applications', '[]'))
+            results.append(data)
+        return results
+
+    def delete_stakeholder(self, stakeholder_id: str) -> bool:
+        """Delete a stakeholder"""
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM stakeholders WHERE id = ?", (stakeholder_id,))
+        self.conn.commit()
+        return cursor.rowcount > 0
+
+    def save_interview(self, interview_data: Dict[str, Any]) -> str:
+        """Save an interview session to the database"""
+        cursor = self.conn.cursor()
+        import json
+
+        cursor.execute("""
+            INSERT OR REPLACE INTO interview_sessions
+            (id, stakeholder_id, interviewer, application_ids, status, scheduled_date,
+             template_id, start_time, end_time, overall_score, category_scores,
+             summary, action_items, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            interview_data['id'],
+            interview_data['stakeholder_id'],
+            interview_data['interviewer'],
+            json.dumps(interview_data['application_ids']),
+            interview_data['status'],
+            interview_data['scheduled_date'],
+            interview_data.get('template_id', 'default'),
+            interview_data.get('start_time'),
+            interview_data.get('end_time'),
+            interview_data.get('overall_score', 0),
+            json.dumps(interview_data.get('category_scores', {})),
+            interview_data.get('summary', ''),
+            json.dumps(interview_data.get('action_items', [])),
+            interview_data.get('created_at', datetime.now().isoformat()),
+            interview_data.get('updated_at', datetime.now().isoformat())
+        ))
+        self.conn.commit()
+        return interview_data['id']
+
+    def get_interview(self, interview_id: str) -> Optional[Dict[str, Any]]:
+        """Get an interview by ID"""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM interview_sessions WHERE id = ?", (interview_id,))
+        row = cursor.fetchone()
+        if row:
+            import json
+            data = dict(row)
+            data['application_ids'] = json.loads(data.get('application_ids', '[]'))
+            data['category_scores'] = json.loads(data.get('category_scores', '{}'))
+            data['action_items'] = json.loads(data.get('action_items', '[]'))
+            return data
+        return None
+
+    def get_all_interviews(self, status: str = None) -> List[Dict[str, Any]]:
+        """Get all interviews, optionally filtered by status"""
+        cursor = self.conn.cursor()
+        import json
+
+        if status:
+            cursor.execute(
+                "SELECT * FROM interview_sessions WHERE status = ? ORDER BY scheduled_date DESC",
+                (status,)
+            )
+        else:
+            cursor.execute("SELECT * FROM interview_sessions ORDER BY scheduled_date DESC")
+
+        results = []
+        for row in cursor.fetchall():
+            data = dict(row)
+            data['application_ids'] = json.loads(data.get('application_ids', '[]'))
+            data['category_scores'] = json.loads(data.get('category_scores', '{}'))
+            data['action_items'] = json.loads(data.get('action_items', '[]'))
+            results.append(data)
+        return results
+
+    def delete_interview(self, interview_id: str) -> bool:
+        """Delete an interview and its responses"""
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM interview_responses WHERE interview_id = ?", (interview_id,))
+        cursor.execute("DELETE FROM interview_sessions WHERE id = ?", (interview_id,))
+        self.conn.commit()
+        return cursor.rowcount > 0
+
+    def save_interview_response(self, interview_id: str, response_data: Dict[str, Any]) -> bool:
+        """Save or update an interview response"""
+        cursor = self.conn.cursor()
+        import json
+
+        # Convert value to JSON string if it's not a simple type
+        value = response_data['value']
+        if not isinstance(value, (str, int, float, bool, type(None))):
+            value = json.dumps(value)
+
+        cursor.execute("""
+            INSERT OR REPLACE INTO interview_responses
+            (interview_id, question_id, value, score, notes, verbatim_quote, flagged, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            interview_id,
+            response_data['question_id'],
+            value,
+            response_data.get('score', 0),
+            response_data.get('notes', ''),
+            response_data.get('verbatim_quote', ''),
+            response_data.get('flagged', False),
+            response_data.get('timestamp', datetime.now().isoformat())
+        ))
+        self.conn.commit()
+        return True
+
+    def get_interview_responses(self, interview_id: str) -> List[Dict[str, Any]]:
+        """Get all responses for an interview"""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT * FROM interview_responses WHERE interview_id = ? ORDER BY question_id",
+            (interview_id,)
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def get_interviews_for_application(self, application_id: str) -> List[Dict[str, Any]]:
+        """Get all interviews for a specific application"""
+        cursor = self.conn.cursor()
+        import json
+
+        cursor.execute("SELECT * FROM interview_sessions ORDER BY scheduled_date DESC")
+
+        results = []
+        for row in cursor.fetchall():
+            data = dict(row)
+            app_ids = json.loads(data.get('application_ids', '[]'))
+            if application_id in app_ids:
+                data['application_ids'] = app_ids
+                data['category_scores'] = json.loads(data.get('category_scores', '{}'))
+                data['action_items'] = json.loads(data.get('action_items', '[]'))
+                results.append(data)
+        return results
 
     def save_assessment(
         self,
