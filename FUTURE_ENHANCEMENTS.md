@@ -1045,6 +1045,163 @@ scheduler_manager.watch_directory(
 
 ---
 
+## 18. Benchmark Data & Industry Comparisons
+**Priority**: 🟡 Medium
+**Effort**: High (~15k tokens, 1-2 weeks)
+**Impact**: Medium (context & insights)
+**Status**: ❌ 0% Complete
+
+### Current Gap:
+No context for performance evaluation - cannot compare portfolio metrics to industry standards or peer organizations.
+
+### Features Needed:
+
+- [ ] **Industry Benchmark Data**
+  - Gartner benchmark integration
+  - IDC statistics
+  - Forrester research data
+  - Industry-specific metrics
+  - Technology spending ratios
+  - Application density benchmarks
+
+- [ ] **Peer Comparison**
+  - Similar organization size comparison
+  - Industry/sector benchmarks
+  - Geographic region comparisons
+  - Portfolio size normalization
+  - Cost per employee metrics
+  - Apps per revenue dollar
+
+- [ ] **Best Practice Recommendations**
+  - Industry-leading ratios
+  - Target metrics by category
+  - Recommended action thresholds
+  - Time-to-value benchmarks
+  - Modernization velocity targets
+
+- [ ] **Maturity Model Assessment**
+  - Portfolio management maturity
+  - Technical debt maturity
+  - Cloud adoption maturity
+  - DevOps maturity
+  - Security posture maturity
+  - Data management maturity
+
+- [ ] **Gap Analysis vs Industry Leaders**
+  - Comparative scorecards
+  - Improvement roadmaps
+  - Priority recommendations
+  - Investment guidance
+  - Risk contextualization
+
+### Data Sources to Consider:
+- Public benchmark reports (Gartner, IDC)
+- User-contributed anonymized data
+- Industry consortium data
+- Government statistics
+- Academic research
+
+### Challenges:
+- Benchmark data licensing costs
+- Data normalization across industries
+- Keeping data current
+- Privacy of contributed data
+
+---
+
+## 19. Mobile-Responsive & Offline Support
+**Priority**: 🟢 Low
+**Effort**: Very High (~40k tokens, 3-4 weeks)
+**Impact**: Medium (accessibility)
+**Status**: ❌ 0% Complete
+
+### Current Gap:
+Web-only interface with no mobile optimization. Requires internet connection - no offline capability for field assessments or travel.
+
+### Features Needed:
+
+- [ ] **Progressive Web App (PWA) Conversion**
+  - Service worker implementation
+  - App manifest
+  - Install prompts
+  - Push notifications
+  - Background sync
+  - Cache strategies
+
+- [ ] **Mobile-Optimized Dashboards**
+  - Responsive grid layouts
+  - Touch-friendly controls
+  - Collapsible sections
+  - Swipe navigation
+  - Mobile-first charts
+  - Simplified views for small screens
+
+- [ ] **Offline Mode with Local Storage**
+  - IndexedDB for data storage
+  - Sync queue for changes
+  - Conflict resolution
+  - Offline indicators
+  - Data freshness tracking
+  - Selective sync options
+
+- [ ] **Touch-Friendly Interfaces**
+  - Larger tap targets
+  - Gesture support (swipe, pinch)
+  - Pull-to-refresh
+  - Floating action buttons
+  - Bottom navigation
+  - Context menus
+
+- [ ] **Native Mobile App (Optional)**
+  - React Native implementation
+  - iOS and Android support
+  - Native performance
+  - Device features (camera for docs)
+  - Biometric authentication
+  - App store distribution
+
+### Technical Considerations:
+- Tailwind CSS already provides responsive utilities
+- Service workers for caching
+- IndexedDB for offline storage
+- Background sync API
+- WebSocket reconnection handling
+
+### Use Cases:
+- Executive briefings on mobile
+- Field assessments without internet
+- Quick lookups during meetings
+- Travel/remote access
+- Real-time notifications
+
+### Implementation Phases:
+
+**Phase 1: Responsive Design (1 week)**
+- Mobile-first CSS adjustments
+- Touch-friendly navigation
+- Collapsible sidebars
+- Responsive tables and charts
+
+**Phase 2: PWA Features (2 weeks)**
+- Service worker setup
+- Offline caching
+- Install capability
+- Basic offline viewing
+
+**Phase 3: Full Offline Support (1 week)**
+- IndexedDB implementation
+- Sync queue
+- Conflict resolution
+- Offline editing
+
+**Phase 4: Native App (Optional, 2-3 weeks)**
+- React Native scaffolding
+- Core feature port
+- Native integrations
+- App store submission
+
+---
+
 ## Quick Reference: Priority Matrix
 
 ### Immediate (Next Release)

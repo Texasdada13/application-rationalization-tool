@@ -277,6 +277,43 @@
     </div>
 </div>
 
+<!-- Department Executive Scorecards Section -->
+<div class="bg-gradient-to-r from-cyan-50 to-sky-50 rounded-xl shadow-lg p-6 mb-8 border border-cyan-200">
+    <div class="flex items-center justify-between mb-4">
+        <button id="toggle-dept-scorecards-btn" class="flex items-center gap-2 text-2xl font-bold text-gray-800 hover:text-cyan-600 transition-colors">
+            <i id="dept-scorecards-toggle-icon" class="fas fa-chevron-right text-lg"></i>
+            Department Executive Scorecards
+        </button>
+        <span class="text-sm text-gray-600 bg-white px-3 py-1 rounded-full">By Business Unit</span>
+    </div>
+
+    <!-- Collapsible Container -->
+    <div id="dept-scorecards-collapsible" class="space-y-6" style="display: none;">
+        <!-- Department Scorecards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="department-scorecards-container">
+            <!-- Scorecards will be dynamically generated -->
+        </div>
+
+        <!-- Department Comparison Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-cyan-600"></i>
+                    Department Cost Comparison
+                </h3>
+                <div id="dept-cost-comparison-chart" class="w-full" style="height: 300px;"></div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-heartbeat text-pink-600"></i>
+                    Department Health Scores
+                </h3>
+                <div id="dept-health-comparison-chart" class="w-full" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Charts Section -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Score Distribution Chart -->
@@ -325,6 +362,200 @@
             TIME Framework Distribution
         </h3>
         <div id="time-framework" class="w-full" style="height: 400px;"></div>
+    </div>
+</div>
+
+<!-- Interactive BI Analytics Section (Switchable Charts) -->
+<div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl shadow-lg p-6 mb-8 border border-emerald-200">
+    <div class="flex items-center justify-between mb-4">
+        <button id="toggle-switchable-btn" class="flex items-center gap-2 text-2xl font-bold text-gray-800 hover:text-emerald-600 transition-colors">
+            <i id="switchable-toggle-icon" class="fas fa-chevron-right text-lg"></i>
+            Interactive BI Analytics
+        </button>
+        <span class="text-sm text-gray-600 bg-white px-3 py-1 rounded-full">Switchable Visualizations</span>
+    </div>
+
+    <!-- Collapsible Container (starts collapsed) -->
+    <div id="switchable-collapsible" class="space-y-6" style="display: none;">
+
+        <!-- Row 1: Cost Breakdown & TIME Distribution -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Switchable Cost Breakdown -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-coins text-emerald-600"></i>
+                        Cost Breakdown by Category
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchCostChart('bar')" id="cost-btn-bar" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Bar</button>
+                        <button onclick="switchCostChart('pie')" id="cost-btn-pie" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Pie</button>
+                        <button onclick="switchCostChart('treemap')" id="cost-btn-treemap" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Treemap</button>
+                    </div>
+                </div>
+                <div id="switchable-cost-chart" class="w-full" style="height: 350px;"></div>
+            </div>
+
+            <!-- Switchable TIME Distribution -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-clock text-blue-600"></i>
+                        TIME Framework Analysis
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchTimeChart('pie')" id="time-btn-pie" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Pie</button>
+                        <button onclick="switchTimeChart('sunburst')" id="time-btn-sunburst" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Sunburst</button>
+                        <button onclick="switchTimeChart('donut')" id="time-btn-donut" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Donut</button>
+                    </div>
+                </div>
+                <div id="switchable-time-chart" class="w-full" style="height: 350px;"></div>
+            </div>
+        </div>
+
+        <!-- Row 2: Risk vs Value & Health Trends -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Switchable Risk vs Value Scatter -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-crosshairs text-purple-600"></i>
+                        Risk vs Business Value
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchRiskChart('scatter')" id="risk-btn-scatter" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Scatter</button>
+                        <button onclick="switchRiskChart('bubble')" id="risk-btn-bubble" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Bubble</button>
+                        <button onclick="switchRiskChart('heatmap')" id="risk-btn-heatmap" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Heatmap</button>
+                    </div>
+                </div>
+                <div id="switchable-risk-chart" class="w-full" style="height: 350px;"></div>
+            </div>
+
+            <!-- Switchable Health Trends -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-heartbeat text-pink-600"></i>
+                        Portfolio Health Trends
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchHealthChart('line')" id="health-btn-line" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Line</button>
+                        <button onclick="switchHealthChart('area')" id="health-btn-area" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Area</button>
+                        <button onclick="switchHealthChart('bar')" id="health-btn-bar" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Bar</button>
+                    </div>
+                </div>
+                <div id="switchable-health-chart" class="w-full" style="height: 350px;"></div>
+            </div>
+        </div>
+
+        <!-- Row 3: Department Breakdown -->
+        <div class="grid grid-cols-1 gap-6">
+            <!-- Switchable Department Breakdown -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-sitemap text-orange-600"></i>
+                        Department Application Portfolio
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchDeptChart('treemap')" id="dept-btn-treemap" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Treemap</button>
+                        <button onclick="switchDeptChart('sunburst')" id="dept-btn-sunburst" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Sunburst</button>
+                        <button onclick="switchDeptChart('bar')" id="dept-btn-bar" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Bar</button>
+                    </div>
+                </div>
+                <div id="switchable-dept-chart" class="w-full" style="height: 400px;"></div>
+            </div>
+        </div>
+
+        <!-- Row 4: Cost Savings Realization & Portfolio Evolution -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Cost Savings Realization Tracker -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-piggy-bank text-green-600"></i>
+                        Cost Savings Realization
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchSavingsChart('waterfall')" id="savings-btn-waterfall" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Waterfall</button>
+                        <button onclick="switchSavingsChart('line')" id="savings-btn-line" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Timeline</button>
+                        <button onclick="switchSavingsChart('gauge')" id="savings-btn-gauge" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Gauge</button>
+                    </div>
+                </div>
+                <div id="switchable-savings-chart" class="w-full" style="height: 350px;"></div>
+            </div>
+
+            <!-- Portfolio Evolution -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-indigo-600"></i>
+                        Portfolio Evolution
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchEvolutionChart('area')" id="evolution-btn-area" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Stacked</button>
+                        <button onclick="switchEvolutionChart('bar')" id="evolution-btn-bar" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Bar</button>
+                        <button onclick="switchEvolutionChart('line')" id="evolution-btn-line" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Line</button>
+                    </div>
+                </div>
+                <div id="switchable-evolution-chart" class="w-full" style="height: 350px;"></div>
+            </div>
+        </div>
+
+        <!-- Row 5: Age vs Cost & Strategic Alignment -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Application Age vs Cost -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-hourglass-half text-amber-600"></i>
+                        Application Age vs Cost
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchAgeCostChart('scatter')" id="agecost-btn-scatter" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Scatter</button>
+                        <button onclick="switchAgeCostChart('bubble')" id="agecost-btn-bubble" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Bubble</button>
+                        <button onclick="switchAgeCostChart('bar')" id="agecost-btn-bar" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Bar</button>
+                    </div>
+                </div>
+                <div id="switchable-agecost-chart" class="w-full" style="height: 350px;"></div>
+            </div>
+
+            <!-- Strategic Alignment -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-bullseye text-red-600"></i>
+                        Strategic Alignment
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchStrategicChart('radar')" id="strategic-btn-radar" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Radar</button>
+                        <button onclick="switchStrategicChart('bar')" id="strategic-btn-bar" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Bar</button>
+                        <button onclick="switchStrategicChart('heatmap')" id="strategic-btn-heatmap" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Matrix</button>
+                    </div>
+                </div>
+                <div id="switchable-strategic-chart" class="w-full" style="height: 350px;"></div>
+            </div>
+        </div>
+
+        <!-- Row 6: Compliance Heatmap -->
+        <div class="grid grid-cols-1 gap-6">
+            <!-- Compliance Heatmap Matrix -->
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-shield-alt text-blue-600"></i>
+                        Compliance Framework Matrix
+                    </h3>
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchComplianceChart('heatmap')" id="compliance-btn-heatmap" class="chart-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Heatmap</button>
+                        <button onclick="switchComplianceChart('bar')" id="compliance-btn-bar" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Bar</button>
+                        <button onclick="switchComplianceChart('radar')" id="compliance-btn-radar" class="chart-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Radar</button>
+                    </div>
+                </div>
+                <div id="switchable-compliance-chart" class="w-full" style="height: 400px;"></div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -498,6 +729,1035 @@
 {% block extra_js %}
 // Predictive Cost & Risk Modeling functionality
 let costForecastChart = null;
+
+// Add CSS for chart switch buttons
+const style = document.createElement('style');
+style.textContent = `
+    .chart-switch-btn {
+        background-color: transparent;
+        color: #6B7280;
+        border: none;
+        cursor: pointer;
+    }
+    .chart-switch-btn:hover {
+        background-color: #E5E7EB;
+        color: #374151;
+    }
+    .chart-switch-btn.active {
+        background-color: #10B981;
+        color: white;
+    }
+`;
+document.head.appendChild(style);
+
+// Switchable BI Analytics Data
+const switchableChartData = {
+    cost: {
+        labels: ['ERP Systems', 'CRM Platforms', 'Analytics Tools', 'Security Software', 'Collaboration', 'Infrastructure', 'Custom Apps', 'Other'],
+        values: [5200000, 3800000, 2900000, 2100000, 1800000, 3200000, 2400000, 1200000],
+        colors: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#6B7280']
+    },
+    time: {
+        labels: ['Tolerate', 'Invest', 'Migrate', 'Eliminate'],
+        values: [72, 45, 42, 52],
+        colors: ['#6B7280', '#10B981', '#3B82F6', '#EF4444']
+    },
+    risk: {
+        // Generate realistic scatter data for 211 apps
+        apps: Array.from({length: 211}, (_, i) => ({
+            name: `App ${i + 1}`,
+            risk: Math.random() * 100,
+            value: Math.random() * 100,
+            cost: 50000 + Math.random() * 500000
+        }))
+    },
+    health: {
+        months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        scores: [58, 57, 59, 58, 60, 61, 62, 63, 64, 63, 65, 66],
+        incidents: [18, 16, 19, 15, 14, 12, 11, 10, 9, 8, 7, 6]
+    },
+    departments: {
+        labels: ['IT Department', 'Finance', 'Police Department', 'Public Works', 'Human Resources', 'Fire Department', 'Planning & Dev', 'Parks & Rec', 'Water & Utilities', 'Legal'],
+        values: [4200000, 3100000, 2800000, 2400000, 1900000, 1600000, 1400000, 1100000, 980000, 720000],
+        apps: [35, 28, 24, 20, 18, 15, 12, 10, 8, 6]
+    }
+};
+
+// Toggle Switchable Analytics section
+document.getElementById('toggle-switchable-btn').addEventListener('click', function() {
+    const collapsible = document.getElementById('switchable-collapsible');
+    const icon = document.getElementById('switchable-toggle-icon');
+
+    if (collapsible.style.display === 'none') {
+        collapsible.style.display = 'block';
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+
+        // Initialize charts when section opens
+        setTimeout(() => {
+            initializeSwitchableCharts();
+        }, 100);
+    } else {
+        collapsible.style.display = 'none';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+    }
+});
+
+let switchableChartsInitialized = false;
+
+function initializeSwitchableCharts() {
+    if (switchableChartsInitialized) return;
+    switchableChartsInitialized = true;
+
+    // Initialize all charts with default types
+    switchCostChart('bar');
+    switchTimeChart('pie');
+    switchRiskChart('scatter');
+    switchHealthChart('line');
+    switchDeptChart('treemap');
+    switchSavingsChart('waterfall');
+    switchEvolutionChart('area');
+    switchAgeCostChart('scatter');
+    switchStrategicChart('radar');
+    switchComplianceChart('heatmap');
+}
+
+// Additional data for new charts
+const savingsData = {
+    quarters: ['Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026', 'Q2 2026'],
+    planned: [0, 450000, 1200000, 2100000, 3200000, 4200000],
+    actual: [0, 520000, 1350000, 2400000, 0, 0],
+    categories: ['Retirements', 'Consolidation', 'Renegotiation', 'License Optimization', 'Cloud Migration'],
+    categoryValues: [2100000, 1300000, 800000, 400000, 600000]
+};
+
+const evolutionData = {
+    years: ['2021', '2022', '2023', '2024', '2025'],
+    maintained: [180, 165, 150, 140, 130],
+    modernized: [15, 25, 35, 45, 55],
+    retired: [5, 20, 35, 52, 75],
+    newApps: [10, 8, 12, 8, 6]
+};
+
+const ageCostData = {
+    apps: Array.from({length: 100}, (_, i) => ({
+        name: `App ${i + 1}`,
+        age: Math.random() * 15,
+        cost: 20000 + Math.random() * 480000,
+        health: Math.floor(40 + Math.random() * 50)
+    }))
+};
+
+const strategicData = {
+    goals: ['Cost Reduction', 'Innovation', 'Customer Experience', 'Operational Efficiency', 'Risk Mitigation', 'Compliance'],
+    current: [65, 45, 58, 72, 68, 82],
+    target: [85, 70, 80, 85, 90, 95]
+};
+
+const complianceData = {
+    frameworks: ['SOX', 'HIPAA', 'PCI-DSS', 'GDPR', 'ISO27001'],
+    categories: ['ERP Systems', 'CRM Platforms', 'Analytics', 'Security', 'HR Systems', 'Finance Apps'],
+    scores: [
+        [92, 78, 85, 88, 90],
+        [75, 82, 70, 85, 78],
+        [68, 45, 55, 72, 65],
+        [95, 88, 92, 90, 95],
+        [82, 90, 65, 88, 85],
+        [88, 75, 80, 82, 88]
+    ]
+};
+
+// Helper to update button states
+function updateButtonState(prefix, activeType) {
+    document.querySelectorAll(`[id^="${prefix}-btn-"]`).forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(`${prefix}-btn-${activeType}`).classList.add('active');
+}
+
+// COST BREAKDOWN CHART SWITCHING
+function switchCostChart(type) {
+    updateButtonState('cost', type);
+    const data = switchableChartData.cost;
+
+    let trace, layout;
+
+    if (type === 'bar') {
+        trace = [{
+            x: data.labels,
+            y: data.values,
+            type: 'bar',
+            marker: { color: data.colors },
+            hovertemplate: '<b>%{x}</b><br>$%{y:,.0f}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 80, l: 80, r: 20 },
+            yaxis: {
+                title: 'Annual Cost ($)',
+                tickformat: '$,.0f'
+            },
+            xaxis: { tickangle: -45 }
+        };
+    } else if (type === 'pie') {
+        trace = [{
+            labels: data.labels,
+            values: data.values,
+            type: 'pie',
+            marker: { colors: data.colors },
+            textinfo: 'label+percent',
+            hovertemplate: '<b>%{label}</b><br>$%{value:,.0f}<br>%{percent}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 20, l: 20, r: 20 },
+            showlegend: false
+        };
+    } else if (type === 'treemap') {
+        trace = [{
+            type: 'treemap',
+            labels: data.labels,
+            parents: data.labels.map(() => ''),
+            values: data.values,
+            marker: { colors: data.colors },
+            textinfo: 'label+value',
+            texttemplate: '<b>%{label}</b><br>$%{value:,.0f}',
+            hovertemplate: '<b>%{label}</b><br>$%{value:,.0f}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 10, b: 10, l: 10, r: 10 }
+        };
+    }
+
+    Plotly.newPlot('switchable-cost-chart', trace, layout, {responsive: true, displayModeBar: false});
+}
+
+// TIME FRAMEWORK CHART SWITCHING
+function switchTimeChart(type) {
+    updateButtonState('time', type);
+    const data = switchableChartData.time;
+
+    let trace, layout;
+
+    if (type === 'pie') {
+        trace = [{
+            labels: data.labels,
+            values: data.values,
+            type: 'pie',
+            marker: { colors: data.colors },
+            textinfo: 'label+value+percent',
+            hovertemplate: '<b>%{label}</b><br>%{value} apps<br>%{percent}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 20, l: 20, r: 20 },
+            showlegend: false
+        };
+    } else if (type === 'sunburst') {
+        trace = [{
+            type: 'sunburst',
+            labels: ['Portfolio', ...data.labels],
+            parents: ['', ...data.labels.map(() => 'Portfolio')],
+            values: [data.values.reduce((a,b) => a+b, 0), ...data.values],
+            marker: { colors: ['#E5E7EB', ...data.colors] },
+            branchvalues: 'total',
+            textinfo: 'label+value',
+            hovertemplate: '<b>%{label}</b><br>%{value} apps<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 10, b: 10, l: 10, r: 10 }
+        };
+    } else if (type === 'donut') {
+        trace = [{
+            labels: data.labels,
+            values: data.values,
+            type: 'pie',
+            hole: 0.5,
+            marker: { colors: data.colors },
+            textinfo: 'label+value',
+            hovertemplate: '<b>%{label}</b><br>%{value} apps<br>%{percent}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 20, l: 20, r: 20 },
+            showlegend: false,
+            annotations: [{
+                text: '211<br>Apps',
+                showarrow: false,
+                font: { size: 16, color: '#374151' }
+            }]
+        };
+    }
+
+    Plotly.newPlot('switchable-time-chart', trace, layout, {responsive: true, displayModeBar: false});
+}
+
+// RISK VS VALUE CHART SWITCHING
+function switchRiskChart(type) {
+    updateButtonState('risk', type);
+    const apps = switchableChartData.risk.apps;
+
+    let trace, layout;
+
+    // Color based on quadrant
+    const getColor = (risk, value) => {
+        if (risk < 50 && value >= 50) return '#10B981'; // Low risk, high value - green
+        if (risk >= 50 && value >= 50) return '#F59E0B'; // High risk, high value - orange (invest)
+        if (risk < 50 && value < 50) return '#3B82F6'; // Low risk, low value - blue
+        return '#EF4444'; // High risk, low value - red (retire)
+    };
+
+    if (type === 'scatter') {
+        trace = [{
+            x: apps.map(a => a.risk),
+            y: apps.map(a => a.value),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                color: apps.map(a => getColor(a.risk, a.value)),
+                size: 8,
+                opacity: 0.7
+            },
+            text: apps.map(a => a.name),
+            hovertemplate: '<b>%{text}</b><br>Risk: %{x:.0f}<br>Value: %{y:.0f}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 50, l: 50, r: 20 },
+            xaxis: { title: 'Risk Score (0-100)', range: [0, 100] },
+            yaxis: { title: 'Business Value (0-100)', range: [0, 100] },
+            shapes: [
+                // Quadrant lines
+                { type: 'line', x0: 50, x1: 50, y0: 0, y1: 100, line: { color: '#E5E7EB', width: 2, dash: 'dash' } },
+                { type: 'line', x0: 0, x1: 100, y0: 50, y1: 50, line: { color: '#E5E7EB', width: 2, dash: 'dash' } }
+            ]
+        };
+    } else if (type === 'bubble') {
+        trace = [{
+            x: apps.map(a => a.risk),
+            y: apps.map(a => a.value),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                color: apps.map(a => getColor(a.risk, a.value)),
+                size: apps.map(a => Math.sqrt(a.cost) / 50),
+                sizemode: 'diameter',
+                opacity: 0.6
+            },
+            text: apps.map(a => `${a.name}<br>Cost: $${a.cost.toLocaleString()}`),
+            hovertemplate: '<b>%{text}</b><br>Risk: %{x:.0f}<br>Value: %{y:.0f}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 50, l: 50, r: 20 },
+            xaxis: { title: 'Risk Score', range: [0, 100] },
+            yaxis: { title: 'Business Value', range: [0, 100] },
+            shapes: [
+                { type: 'line', x0: 50, x1: 50, y0: 0, y1: 100, line: { color: '#E5E7EB', width: 2, dash: 'dash' } },
+                { type: 'line', x0: 0, x1: 100, y0: 50, y1: 50, line: { color: '#E5E7EB', width: 2, dash: 'dash' } }
+            ]
+        };
+    } else if (type === 'heatmap') {
+        // Create 10x10 grid for heatmap
+        const gridSize = 10;
+        const z = Array(gridSize).fill(0).map(() => Array(gridSize).fill(0));
+        apps.forEach(app => {
+            const xi = Math.min(Math.floor(app.risk / 10), 9);
+            const yi = Math.min(Math.floor(app.value / 10), 9);
+            z[yi][xi]++;
+        });
+
+        trace = [{
+            z: z,
+            type: 'heatmap',
+            colorscale: [[0, '#F0FDF4'], [0.5, '#86EFAC'], [1, '#16A34A']],
+            hovertemplate: 'Risk: %{x}0-%{x}9<br>Value: %{y}0-%{y}9<br>Apps: %{z}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 50, l: 50, r: 20 },
+            xaxis: { title: 'Risk Score (0-100)', tickvals: [0,2,4,6,8], ticktext: ['0-20','20-40','40-60','60-80','80-100'] },
+            yaxis: { title: 'Business Value', tickvals: [0,2,4,6,8], ticktext: ['0-20','20-40','40-60','60-80','80-100'] }
+        };
+    }
+
+    Plotly.newPlot('switchable-risk-chart', trace, layout, {responsive: true, displayModeBar: false});
+}
+
+// HEALTH TRENDS CHART SWITCHING
+function switchHealthChart(type) {
+    updateButtonState('health', type);
+    const data = switchableChartData.health;
+
+    let traces, layout;
+
+    if (type === 'line') {
+        traces = [
+            {
+                x: data.months,
+                y: data.scores,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Health Score',
+                line: { color: '#3B82F6', width: 3 },
+                marker: { size: 8 },
+                yaxis: 'y'
+            },
+            {
+                x: data.months,
+                y: data.incidents,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Incidents',
+                line: { color: '#EF4444', width: 3 },
+                marker: { size: 8 },
+                yaxis: 'y2'
+            }
+        ];
+        layout = {
+            margin: { t: 20, b: 40, l: 50, r: 50 },
+            yaxis: { title: 'Health Score', range: [0, 100], side: 'left' },
+            yaxis2: { title: 'Incidents', range: [0, 25], overlaying: 'y', side: 'right' },
+            legend: { x: 0.5, y: 1.1, xanchor: 'center', orientation: 'h' }
+        };
+    } else if (type === 'area') {
+        traces = [
+            {
+                x: data.months,
+                y: data.scores,
+                type: 'scatter',
+                mode: 'lines',
+                fill: 'tozeroy',
+                name: 'Health Score',
+                line: { color: '#3B82F6' },
+                fillcolor: 'rgba(59, 130, 246, 0.3)'
+            }
+        ];
+        layout = {
+            margin: { t: 20, b: 40, l: 50, r: 20 },
+            yaxis: { title: 'Health Score', range: [0, 100] },
+            showlegend: false
+        };
+    } else if (type === 'bar') {
+        traces = [
+            {
+                x: data.months,
+                y: data.scores,
+                type: 'bar',
+                name: 'Health Score',
+                marker: { color: '#3B82F6' }
+            },
+            {
+                x: data.months,
+                y: data.incidents.map(i => i * 5), // Scale to show on same axis
+                type: 'bar',
+                name: 'Incidents (x5)',
+                marker: { color: '#EF4444' }
+            }
+        ];
+        layout = {
+            margin: { t: 20, b: 40, l: 50, r: 20 },
+            yaxis: { title: 'Score / Incidents' },
+            barmode: 'group',
+            legend: { x: 0.5, y: 1.1, xanchor: 'center', orientation: 'h' }
+        };
+    }
+
+    Plotly.newPlot('switchable-health-chart', traces, layout, {responsive: true, displayModeBar: false});
+}
+
+// DEPARTMENT BREAKDOWN CHART SWITCHING
+function switchDeptChart(type) {
+    updateButtonState('dept', type);
+    const data = switchableChartData.departments;
+
+    const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16'];
+
+    let trace, layout;
+
+    if (type === 'treemap') {
+        trace = [{
+            type: 'treemap',
+            labels: data.labels,
+            parents: data.labels.map(() => ''),
+            values: data.values,
+            marker: { colors: colors },
+            textinfo: 'label+value',
+            texttemplate: '<b>%{label}</b><br>$%{value:,.0f}',
+            hovertemplate: '<b>%{label}</b><br>$%{value:,.0f}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 10, b: 10, l: 10, r: 10 }
+        };
+    } else if (type === 'sunburst') {
+        trace = [{
+            type: 'sunburst',
+            labels: ['All Departments', ...data.labels],
+            parents: ['', ...data.labels.map(() => 'All Departments')],
+            values: [data.values.reduce((a,b) => a+b, 0), ...data.values],
+            marker: { colors: ['#E5E7EB', ...colors] },
+            branchvalues: 'total',
+            textinfo: 'label',
+            hovertemplate: '<b>%{label}</b><br>$%{value:,.0f}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 10, b: 10, l: 10, r: 10 }
+        };
+    } else if (type === 'bar') {
+        trace = [{
+            y: data.labels,
+            x: data.values,
+            type: 'bar',
+            orientation: 'h',
+            marker: { color: colors },
+            text: data.values.map(v => '$' + (v/1000000).toFixed(1) + 'M'),
+            textposition: 'outside',
+            hovertemplate: '<b>%{y}</b><br>$%{x:,.0f}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 50, l: 120, r: 60 },
+            xaxis: {
+                title: 'Annual Spend ($)',
+                tickformat: '$,.0f'
+            }
+        };
+    }
+
+    Plotly.newPlot('switchable-dept-chart', trace, layout, {responsive: true, displayModeBar: false});
+}
+
+// COST SAVINGS REALIZATION CHART SWITCHING
+function switchSavingsChart(type) {
+    updateButtonState('savings', type);
+
+    let traces, layout;
+
+    if (type === 'waterfall') {
+        traces = [{
+            type: 'waterfall',
+            orientation: 'v',
+            x: ['Current Cost', ...savingsData.categories, 'Target Cost'],
+            y: [22600000, -2100000, -1300000, -800000, -400000, -600000, 17400000],
+            connector: { line: { color: '#E5E7EB' } },
+            decreasing: { marker: { color: '#10B981' } },
+            increasing: { marker: { color: '#EF4444' } },
+            totals: { marker: { color: '#3B82F6' } },
+            textposition: 'outside',
+            text: ['$22.6M', '-$2.1M', '-$1.3M', '-$0.8M', '-$0.4M', '-$0.6M', '$17.4M'],
+            hovertemplate: '<b>%{x}</b><br>%{text}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 30, b: 80, l: 80, r: 20 },
+            yaxis: { title: 'Annual Cost ($)', tickformat: '$,.0f' },
+            xaxis: { tickangle: -30 },
+            showlegend: false
+        };
+    } else if (type === 'line') {
+        traces = [
+            {
+                x: savingsData.quarters,
+                y: savingsData.planned,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Planned Savings',
+                line: { color: '#3B82F6', width: 3, dash: 'dash' },
+                marker: { size: 8 }
+            },
+            {
+                x: savingsData.quarters,
+                y: savingsData.actual,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Actual Savings',
+                line: { color: '#10B981', width: 3 },
+                marker: { size: 10 },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(16, 185, 129, 0.2)'
+            }
+        ];
+        layout = {
+            margin: { t: 30, b: 40, l: 80, r: 20 },
+            yaxis: { title: 'Cumulative Savings ($)', tickformat: '$,.0f' },
+            legend: { x: 0.5, y: 1.15, xanchor: 'center', orientation: 'h' }
+        };
+    } else if (type === 'gauge') {
+        const totalPlanned = 5200000;
+        const totalActual = 4270000;
+        const percentage = (totalActual / totalPlanned) * 100;
+
+        traces = [{
+            type: 'indicator',
+            mode: 'gauge+number+delta',
+            value: totalActual,
+            number: { prefix: '$', valueformat: ',.0f' },
+            delta: { reference: totalPlanned, valueformat: ',.0f', prefix: '$' },
+            gauge: {
+                axis: { range: [0, 6000000], tickformat: '$,.0f' },
+                bar: { color: '#10B981' },
+                steps: [
+                    { range: [0, 3000000], color: '#FEF3C7' },
+                    { range: [3000000, 5000000], color: '#D1FAE5' },
+                    { range: [5000000, 6000000], color: '#A7F3D0' }
+                ],
+                threshold: {
+                    line: { color: '#3B82F6', width: 4 },
+                    thickness: 0.75,
+                    value: totalPlanned
+                }
+            },
+            title: { text: 'Savings Achievement', font: { size: 16 } }
+        }];
+        layout = {
+            margin: { t: 60, b: 20, l: 30, r: 30 }
+        };
+    }
+
+    Plotly.newPlot('switchable-savings-chart', traces, layout, {responsive: true, displayModeBar: false});
+}
+
+// PORTFOLIO EVOLUTION CHART SWITCHING
+function switchEvolutionChart(type) {
+    updateButtonState('evolution', type);
+
+    let traces, layout;
+
+    if (type === 'area') {
+        traces = [
+            {
+                x: evolutionData.years,
+                y: evolutionData.maintained,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Maintained',
+                fill: 'tonexty',
+                stackgroup: 'one',
+                line: { color: '#6B7280' }
+            },
+            {
+                x: evolutionData.years,
+                y: evolutionData.modernized,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Modernized',
+                fill: 'tonexty',
+                stackgroup: 'one',
+                line: { color: '#3B82F6' }
+            },
+            {
+                x: evolutionData.years,
+                y: evolutionData.retired,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Retired',
+                fill: 'tonexty',
+                stackgroup: 'one',
+                line: { color: '#EF4444' }
+            }
+        ];
+        layout = {
+            margin: { t: 30, b: 40, l: 50, r: 20 },
+            yaxis: { title: 'Applications' },
+            legend: { x: 0.5, y: 1.15, xanchor: 'center', orientation: 'h' }
+        };
+    } else if (type === 'bar') {
+        traces = [
+            { x: evolutionData.years, y: evolutionData.maintained, type: 'bar', name: 'Maintained', marker: { color: '#6B7280' } },
+            { x: evolutionData.years, y: evolutionData.modernized, type: 'bar', name: 'Modernized', marker: { color: '#3B82F6' } },
+            { x: evolutionData.years, y: evolutionData.retired, type: 'bar', name: 'Retired', marker: { color: '#EF4444' } }
+        ];
+        layout = {
+            margin: { t: 30, b: 40, l: 50, r: 20 },
+            barmode: 'stack',
+            yaxis: { title: 'Applications' },
+            legend: { x: 0.5, y: 1.15, xanchor: 'center', orientation: 'h' }
+        };
+    } else if (type === 'line') {
+        traces = [
+            { x: evolutionData.years, y: evolutionData.maintained, type: 'scatter', mode: 'lines+markers', name: 'Maintained', line: { color: '#6B7280', width: 3 } },
+            { x: evolutionData.years, y: evolutionData.modernized, type: 'scatter', mode: 'lines+markers', name: 'Modernized', line: { color: '#3B82F6', width: 3 } },
+            { x: evolutionData.years, y: evolutionData.retired, type: 'scatter', mode: 'lines+markers', name: 'Retired', line: { color: '#EF4444', width: 3 } }
+        ];
+        layout = {
+            margin: { t: 30, b: 40, l: 50, r: 20 },
+            yaxis: { title: 'Applications' },
+            legend: { x: 0.5, y: 1.15, xanchor: 'center', orientation: 'h' }
+        };
+    }
+
+    Plotly.newPlot('switchable-evolution-chart', traces, layout, {responsive: true, displayModeBar: false});
+}
+
+// AGE VS COST CHART SWITCHING
+function switchAgeCostChart(type) {
+    updateButtonState('agecost', type);
+    const apps = ageCostData.apps;
+
+    let traces, layout;
+
+    const getHealthColor = (health) => {
+        if (health >= 70) return '#10B981';
+        if (health >= 55) return '#F59E0B';
+        return '#EF4444';
+    };
+
+    if (type === 'scatter') {
+        traces = [{
+            x: apps.map(a => a.age),
+            y: apps.map(a => a.cost),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                color: apps.map(a => getHealthColor(a.health)),
+                size: 10,
+                opacity: 0.7
+            },
+            text: apps.map(a => `${a.name}<br>Health: ${a.health}`),
+            hovertemplate: '<b>%{text}</b><br>Age: %{x:.1f} years<br>Cost: $%{y:,.0f}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 50, l: 80, r: 20 },
+            xaxis: { title: 'Application Age (Years)' },
+            yaxis: { title: 'Annual Cost ($)', tickformat: '$,.0f' },
+            shapes: [
+                { type: 'line', x0: 7, x1: 7, y0: 0, y1: 500000, line: { color: '#EF4444', width: 2, dash: 'dash' } }
+            ],
+            annotations: [
+                { x: 7, y: 480000, text: 'Legacy Threshold', showarrow: false, font: { color: '#EF4444', size: 10 } }
+            ]
+        };
+    } else if (type === 'bubble') {
+        traces = [{
+            x: apps.map(a => a.age),
+            y: apps.map(a => a.cost),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                color: apps.map(a => getHealthColor(a.health)),
+                size: apps.map(a => a.health / 5),
+                sizemode: 'diameter',
+                opacity: 0.6
+            },
+            text: apps.map(a => `${a.name}<br>Health: ${a.health}`),
+            hovertemplate: '<b>%{text}</b><br>Age: %{x:.1f} years<br>Cost: $%{y:,.0f}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 50, l: 80, r: 20 },
+            xaxis: { title: 'Application Age (Years)' },
+            yaxis: { title: 'Annual Cost ($)', tickformat: '$,.0f' }
+        };
+    } else if (type === 'bar') {
+        // Group by age buckets
+        const buckets = ['0-2 years', '2-5 years', '5-7 years', '7-10 years', '10+ years'];
+        const bucketCosts = [0, 0, 0, 0, 0];
+        const bucketCounts = [0, 0, 0, 0, 0];
+
+        apps.forEach(a => {
+            let idx = a.age < 2 ? 0 : a.age < 5 ? 1 : a.age < 7 ? 2 : a.age < 10 ? 3 : 4;
+            bucketCosts[idx] += a.cost;
+            bucketCounts[idx]++;
+        });
+
+        traces = [{
+            x: buckets,
+            y: bucketCosts,
+            type: 'bar',
+            marker: { color: ['#10B981', '#3B82F6', '#F59E0B', '#F97316', '#EF4444'] },
+            text: bucketCounts.map(c => `${c} apps`),
+            textposition: 'auto',
+            hovertemplate: '<b>%{x}</b><br>Total Cost: $%{y:,.0f}<br>%{text}<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 40, l: 80, r: 20 },
+            yaxis: { title: 'Total Cost ($)', tickformat: '$,.0f' }
+        };
+    }
+
+    Plotly.newPlot('switchable-agecost-chart', traces, layout, {responsive: true, displayModeBar: false});
+}
+
+// STRATEGIC ALIGNMENT CHART SWITCHING
+function switchStrategicChart(type) {
+    updateButtonState('strategic', type);
+
+    let traces, layout;
+
+    if (type === 'radar') {
+        traces = [
+            {
+                type: 'scatterpolar',
+                r: [...strategicData.current, strategicData.current[0]],
+                theta: [...strategicData.goals, strategicData.goals[0]],
+                fill: 'toself',
+                name: 'Current',
+                fillcolor: 'rgba(59, 130, 246, 0.3)',
+                line: { color: '#3B82F6', width: 2 }
+            },
+            {
+                type: 'scatterpolar',
+                r: [...strategicData.target, strategicData.target[0]],
+                theta: [...strategicData.goals, strategicData.goals[0]],
+                fill: 'toself',
+                name: 'Target',
+                fillcolor: 'rgba(16, 185, 129, 0.2)',
+                line: { color: '#10B981', width: 2, dash: 'dash' }
+            }
+        ];
+        layout = {
+            polar: {
+                radialaxis: { visible: true, range: [0, 100] }
+            },
+            margin: { t: 40, b: 40, l: 60, r: 60 },
+            legend: { x: 0.5, y: -0.1, xanchor: 'center', orientation: 'h' }
+        };
+    } else if (type === 'bar') {
+        traces = [
+            {
+                x: strategicData.goals,
+                y: strategicData.current,
+                type: 'bar',
+                name: 'Current',
+                marker: { color: '#3B82F6' }
+            },
+            {
+                x: strategicData.goals,
+                y: strategicData.target,
+                type: 'bar',
+                name: 'Target',
+                marker: { color: '#10B981' }
+            }
+        ];
+        layout = {
+            margin: { t: 30, b: 80, l: 50, r: 20 },
+            barmode: 'group',
+            yaxis: { title: 'Alignment Score', range: [0, 100] },
+            xaxis: { tickangle: -30 },
+            legend: { x: 0.5, y: 1.1, xanchor: 'center', orientation: 'h' }
+        };
+    } else if (type === 'heatmap') {
+        // Gap analysis heatmap
+        const gaps = strategicData.goals.map((_, i) => strategicData.target[i] - strategicData.current[i]);
+
+        traces = [{
+            z: [gaps],
+            x: strategicData.goals,
+            y: ['Gap to Target'],
+            type: 'heatmap',
+            colorscale: [[0, '#10B981'], [0.5, '#FEF3C7'], [1, '#EF4444']],
+            text: [gaps.map(g => `${g} points`)],
+            texttemplate: '%{text}',
+            hovertemplate: '<b>%{x}</b><br>Gap: %{z} points<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 80, l: 30, r: 30 },
+            xaxis: { tickangle: -30 }
+        };
+    }
+
+    Plotly.newPlot('switchable-strategic-chart', traces, layout, {responsive: true, displayModeBar: false});
+}
+
+// COMPLIANCE HEATMAP CHART SWITCHING
+function switchComplianceChart(type) {
+    updateButtonState('compliance', type);
+
+    let traces, layout;
+
+    if (type === 'heatmap') {
+        traces = [{
+            z: complianceData.scores,
+            x: complianceData.frameworks,
+            y: complianceData.categories,
+            type: 'heatmap',
+            colorscale: [[0, '#FEE2E2'], [0.5, '#FEF3C7'], [1, '#D1FAE5']],
+            text: complianceData.scores.map(row => row.map(s => `${s}%`)),
+            texttemplate: '%{text}',
+            hovertemplate: '<b>%{y}</b><br>%{x}: %{z}%<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 20, b: 60, l: 120, r: 20 },
+            xaxis: { side: 'bottom' }
+        };
+    } else if (type === 'bar') {
+        // Average compliance by framework
+        const avgByFramework = complianceData.frameworks.map((_, fi) => {
+            const sum = complianceData.scores.reduce((acc, row) => acc + row[fi], 0);
+            return sum / complianceData.scores.length;
+        });
+
+        const colors = avgByFramework.map(v => v >= 80 ? '#10B981' : v >= 60 ? '#F59E0B' : '#EF4444');
+
+        traces = [{
+            x: complianceData.frameworks,
+            y: avgByFramework,
+            type: 'bar',
+            marker: { color: colors },
+            text: avgByFramework.map(v => `${v.toFixed(0)}%`),
+            textposition: 'outside',
+            hovertemplate: '<b>%{x}</b><br>Avg Compliance: %{y:.1f}%<extra></extra>'
+        }];
+        layout = {
+            margin: { t: 30, b: 40, l: 50, r: 20 },
+            yaxis: { title: 'Average Compliance %', range: [0, 100] }
+        };
+    } else if (type === 'radar') {
+        // Compliance by category as radar
+        const categoryAvgs = complianceData.categories.map((_, ci) => {
+            const sum = complianceData.scores[ci].reduce((a, b) => a + b, 0);
+            return sum / complianceData.scores[ci].length;
+        });
+
+        traces = [{
+            type: 'scatterpolar',
+            r: [...categoryAvgs, categoryAvgs[0]],
+            theta: [...complianceData.categories, complianceData.categories[0]],
+            fill: 'toself',
+            name: 'Avg Compliance',
+            fillcolor: 'rgba(59, 130, 246, 0.3)',
+            line: { color: '#3B82F6', width: 2 }
+        }];
+        layout = {
+            polar: {
+                radialaxis: { visible: true, range: [0, 100] }
+            },
+            margin: { t: 40, b: 40, l: 80, r: 80 },
+            showlegend: false
+        };
+    }
+
+    Plotly.newPlot('switchable-compliance-chart', traces, layout, {responsive: true, displayModeBar: false});
+}
+
+// Department Executive Scorecards
+const departmentData = {
+    departments: [
+        { name: 'IT Department', apps: 35, cost: 4200000, health: 68, retire: 8, invest: 12, migrate: 10, maintain: 5 },
+        { name: 'Finance', apps: 28, cost: 3100000, health: 72, retire: 5, invest: 10, migrate: 8, maintain: 5 },
+        { name: 'Police Department', apps: 24, cost: 2800000, health: 58, retire: 9, invest: 6, migrate: 6, maintain: 3 },
+        { name: 'Public Works', apps: 20, cost: 2400000, health: 61, retire: 7, invest: 5, migrate: 5, maintain: 3 },
+        { name: 'Human Resources', apps: 18, cost: 1900000, health: 75, retire: 3, invest: 8, migrate: 4, maintain: 3 },
+        { name: 'Fire Department', apps: 15, cost: 1600000, health: 55, retire: 6, invest: 4, migrate: 3, maintain: 2 },
+        { name: 'Planning & Dev', apps: 12, cost: 1400000, health: 70, retire: 2, invest: 5, migrate: 3, maintain: 2 },
+        { name: 'Parks & Recreation', apps: 10, cost: 1100000, health: 64, retire: 3, invest: 3, migrate: 2, maintain: 2 },
+        { name: 'Water & Utilities', apps: 8, cost: 980000, health: 59, retire: 3, invest: 2, migrate: 2, maintain: 1 },
+        { name: 'Legal Department', apps: 6, cost: 720000, health: 77, retire: 1, invest: 3, migrate: 1, maintain: 1 }
+    ]
+};
+
+// Toggle Department Scorecards section
+document.getElementById('toggle-dept-scorecards-btn').addEventListener('click', function() {
+    const collapsible = document.getElementById('dept-scorecards-collapsible');
+    const icon = document.getElementById('dept-scorecards-toggle-icon');
+
+    if (collapsible.style.display === 'none') {
+        collapsible.style.display = 'block';
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+
+        // Initialize scorecards when section opens
+        setTimeout(() => {
+            renderDepartmentScorecards();
+            renderDeptComparisonCharts();
+        }, 100);
+    } else {
+        collapsible.style.display = 'none';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+    }
+});
+
+function renderDepartmentScorecards() {
+    const container = document.getElementById('department-scorecards-container');
+    if (!container) return;
+
+    const getHealthColor = (health) => {
+        if (health >= 70) return { bg: 'from-green-500 to-green-600', text: 'text-green-600', badge: 'bg-green-100' };
+        if (health >= 60) return { bg: 'from-yellow-500 to-yellow-600', text: 'text-yellow-600', badge: 'bg-yellow-100' };
+        return { bg: 'from-red-500 to-red-600', text: 'text-red-600', badge: 'bg-red-100' };
+    };
+
+    let html = '';
+    departmentData.departments.forEach(dept => {
+        const colors = getHealthColor(dept.health);
+        const savingsEstimate = dept.retire * 85000; // Rough estimate per retired app
+
+        html += `
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-gradient-to-r ${colors.bg} p-4 text-white">
+                <h4 class="font-bold text-lg">${dept.name}</h4>
+                <p class="text-sm opacity-90">${dept.apps} Applications</p>
+            </div>
+            <div class="p-4 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Annual Cost</span>
+                    <span class="font-bold text-gray-800">$${(dept.cost / 1000000).toFixed(1)}M</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Health Score</span>
+                    <span class="font-bold ${colors.text}">${dept.health}/100</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Potential Savings</span>
+                    <span class="font-bold text-green-600">$${(savingsEstimate / 1000).toFixed(0)}K</span>
+                </div>
+                <div class="pt-2 border-t">
+                    <div class="flex justify-between text-xs">
+                        <span class="px-2 py-1 bg-red-100 text-red-700 rounded">Retire: ${dept.retire}</span>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded">Invest: ${dept.invest}</span>
+                        <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded">Migrate: ${dept.migrate}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function renderDeptComparisonCharts() {
+    const depts = departmentData.departments;
+    const colors = ['#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899', '#F43F5E', '#F97316'];
+
+    // Cost comparison chart
+    const costTrace = [{
+        y: depts.map(d => d.name),
+        x: depts.map(d => d.cost),
+        type: 'bar',
+        orientation: 'h',
+        marker: { color: colors },
+        text: depts.map(d => '$' + (d.cost / 1000000).toFixed(1) + 'M'),
+        textposition: 'outside',
+        hovertemplate: '<b>%{y}</b><br>$%{x:,.0f}<extra></extra>'
+    }];
+
+    const costLayout = {
+        margin: { t: 10, b: 40, l: 120, r: 60 },
+        xaxis: { title: 'Annual Cost ($)', tickformat: '$,.0f' },
+        yaxis: { automargin: true }
+    };
+
+    Plotly.newPlot('dept-cost-comparison-chart', costTrace, costLayout, {responsive: true, displayModeBar: false});
+
+    // Health comparison chart
+    const healthColors = depts.map(d => {
+        if (d.health >= 70) return '#10B981';
+        if (d.health >= 60) return '#F59E0B';
+        return '#EF4444';
+    });
+
+    const healthTrace = [{
+        y: depts.map(d => d.name),
+        x: depts.map(d => d.health),
+        type: 'bar',
+        orientation: 'h',
+        marker: { color: healthColors },
+        text: depts.map(d => d.health + '/100'),
+        textposition: 'outside',
+        hovertemplate: '<b>%{y}</b><br>Health: %{x}/100<extra></extra>'
+    }];
+
+    const healthLayout = {
+        margin: { t: 10, b: 40, l: 120, r: 40 },
+        xaxis: { title: 'Health Score', range: [0, 100] },
+        yaxis: { automargin: true }
+    };
+
+    Plotly.newPlot('dept-health-comparison-chart', healthTrace, healthLayout, {responsive: true, displayModeBar: false});
+}
 
 // Toggle predictions section
 document.getElementById('toggle-predictions-btn').addEventListener('click', function() {

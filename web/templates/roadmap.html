@@ -141,6 +141,23 @@
             </div>
         </div>
 
+        <!-- Gantt Timeline Visualization -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-project-diagram text-purple-600 mr-2"></i>
+                    Gantt Timeline View
+                </h2>
+                <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                    <button onclick="switchGanttView('gantt')" id="gantt-btn-gantt" class="gantt-switch-btn active px-3 py-1 text-xs font-medium rounded transition-all">Timeline</button>
+                    <button onclick="switchGanttView('waterfall')" id="gantt-btn-waterfall" class="gantt-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Waterfall</button>
+                    <button onclick="switchGanttView('resource')" id="gantt-btn-resource" class="gantt-switch-btn px-3 py-1 text-xs font-medium rounded transition-all">Resource</button>
+                </div>
+            </div>
+            <p class="text-sm text-gray-600 mb-4">Interactive view of implementation phases and milestones</p>
+            <div id="gantt-chart" style="height: 400px;"></div>
+        </div>
+
         <!-- Timeline and Phases -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
             <div class="flex items-center justify-between mb-6">
@@ -238,6 +255,21 @@
     .action-row:hover {
         background-color: #f9fafb;
     }
+
+    .gantt-switch-btn {
+        background-color: transparent;
+        color: #6B7280;
+        border: none;
+        cursor: pointer;
+    }
+    .gantt-switch-btn:hover {
+        background-color: #E5E7EB;
+        color: #374151;
+    }
+    .gantt-switch-btn.active {
+        background-color: #8B5CF6;
+        color: white;
+    }
 </style>
 
 <script>
@@ -283,6 +315,7 @@ async function loadRoadmap() {
         renderActionBreakdown();
         renderDependencyWarnings();
         renderEffortImpactMatrix();
+        renderGanttChart('gantt');
         renderTimeline();
 
         // Show content
@@ -636,6 +669,159 @@ async function exportRoadmap() {
     } catch (error) {
         alert('Failed to export roadmap: ' + error.message);
     }
+}
+
+// Gantt Chart Functions
+function switchGanttView(type) {
+    // Update button states
+    document.querySelectorAll('.gantt-switch-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(`gantt-btn-${type}`).classList.add('active');
+
+    renderGanttChart(type);
+}
+
+function renderGanttChart(type) {
+    const timeline = roadmapData.timeline || [];
+
+    if (timeline.length === 0) {
+        document.getElementById('gantt-chart').innerHTML = '<p class="text-center text-gray-500 py-8">No timeline data available</p>';
+        return;
+    }
+
+    let traces, layout;
+
+    const phaseColors = {
+        'quick_wins': '#10B981',
+        'short_term': '#3B82F6',
+        'medium_term': '#8B5CF6',
+        'long_term': '#F97316'
+    };
+
+    if (type === 'gantt') {
+        // Gantt-style horizontal bars
+        const phases = timeline.map(p => p.name);
+        const starts = timeline.map(p => new Date(p.start_date).getTime());
+        const ends = timeline.map(p => new Date(p.end_date).getTime());
+        const durations = timeline.map((p, i) => ends[i] - starts[i]);
+        const colors = timeline.map(p => phaseColors[p.phase] || '#6B7280');
+
+        traces = [{
+            type: 'bar',
+            y: phases,
+            x: durations.map(d => d / (1000 * 60 * 60 * 24)), // Convert to days
+            base: starts.map(s => {
+                const baseDate = new Date(timeline[0].start_date);
+                return (s - baseDate.getTime()) / (1000 * 60 * 60 * 24);
+            }),
+            orientation: 'h',
+            marker: { color: colors },
+            text: timeline.map(p => `${p.total_actions} actions • $${(p.total_savings/1000).toFixed(0)}k savings`),
+            textposition: 'inside',
+            insidetextanchor: 'middle',
+            hovertemplate: '<b>%{y}</b><br>Duration: %{x:.0f} days<br>%{text}<extra></extra>'
+        }];
+
+        // Add milestone markers
+        const milestoneX = [];
+        const milestoneY = [];
+        const milestoneText = [];
+
+        timeline.forEach(phase => {
+            phase.milestones.forEach(m => {
+                const phaseEnd = new Date(phase.end_date).getTime();
+                const baseDate = new Date(timeline[0].start_date).getTime();
+                milestoneX.push((phaseEnd - baseDate) / (1000 * 60 * 60 * 24));
+                milestoneY.push(phase.name);
+                milestoneText.push(m.name);
+            });
+        });
+
+        traces.push({
+            type: 'scatter',
+            x: milestoneX,
+            y: milestoneY,
+            mode: 'markers',
+            marker: { symbol: 'diamond', size: 12, color: '#EF4444', line: { color: 'white', width: 2 } },
+            text: milestoneText,
+            hovertemplate: '<b>Milestone</b><br>%{text}<extra></extra>',
+            showlegend: false
+        });
+
+        layout = {
+            margin: { t: 20, b: 60, l: 140, r: 20 },
+            xaxis: {
+                title: 'Days from Start',
+                showgrid: true,
+                gridcolor: '#E5E7EB'
+            },
+            yaxis: {
+                automargin: true,
+                categoryorder: 'array',
+                categoryarray: phases.reverse()
+            },
+            barmode: 'overlay',
+            showlegend: false
+        };
+    } else if (type === 'waterfall') {
+        // Cumulative savings waterfall
+        const cumulativeSavings = [];
+        let running = 0;
+        timeline.forEach(p => {
+            running += p.total_savings;
+            cumulativeSavings.push(running);
+        });
+
+        traces = [{
+            type: 'waterfall',
+            orientation: 'v',
+            x: timeline.map(p => p.name),
+            y: timeline.map(p => p.total_savings),
+            connector: { line: { color: '#E5E7EB' } },
+            increasing: { marker: { color: '#10B981' } },
+            decreasing: { marker: { color: '#EF4444' } },
+            textposition: 'outside',
+            text: timeline.map(p => '$' + (p.total_savings/1000).toFixed(0) + 'k'),
+            hovertemplate: '<b>%{x}</b><br>Savings: $%{y:,.0f}<extra></extra>'
+        }];
+
+        layout = {
+            margin: { t: 30, b: 80, l: 80, r: 20 },
+            yaxis: { title: 'Savings ($)', tickformat: '$,.0f' },
+            xaxis: { tickangle: -30 },
+            showlegend: false
+        };
+    } else if (type === 'resource') {
+        // Resource allocation view (actions per phase)
+        const actionTypes = ['retire', 'modernize', 'consolidate'];
+        const actionColors = { retire: '#EF4444', modernize: '#3B82F6', consolidate: '#F59E0B' };
+
+        traces = actionTypes.map(actionType => {
+            const counts = timeline.map(phase => {
+                const actions = phase.actions || [];
+                return actions.filter(a => a.action_type === actionType).length;
+            });
+
+            return {
+                x: timeline.map(p => p.name),
+                y: counts,
+                type: 'bar',
+                name: actionType.charAt(0).toUpperCase() + actionType.slice(1),
+                marker: { color: actionColors[actionType] }
+            };
+        });
+
+        layout = {
+            margin: { t: 30, b: 80, l: 50, r: 20 },
+            barmode: 'stack',
+            yaxis: { title: 'Number of Actions' },
+            xaxis: { tickangle: -30 },
+            legend: { x: 0.5, y: 1.1, xanchor: 'center', orientation: 'h' }
+        };
+    }
+
+    Plotly.newPlot('gantt-chart', traces, layout, {responsive: true, displayModeBar: false});
 }
 
 function showError(message) {

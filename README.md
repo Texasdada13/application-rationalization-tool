@@ -1,5 +1,13 @@
 # Application Rationalization Assessment Tool
 
+> **Portfolio Project** | Built to demonstrate enterprise IT consulting capabilities and full-stack development skills. This tool showcases real-world application portfolio management methodologies used by IT leaders to optimize technology investments.
+>
+> **Live Demo**: [application-rationalization-tool.onrender.com](https://application-rationalization-tool.onrender.com)
+>
+> **Interested in a custom implementation for your organization?** [Contact me](https://github.com/Texasdada13) for consulting services.
+
+---
+
 A comprehensive Python-based tool for evaluating and rationalizing software application portfolios. This tool helps organizations make data-driven decisions about their application landscape by calculating composite scores and generating actionable recommendations.
 
 ## Table of Contents
@@ -779,4 +787,18 @@ Built with:
 
 **Version**: 1.0.0
 **Last Updated**: November 2025
-**Author**: Application Rationalization Team
+**Author**: [Texasdada13](https://github.com/Texasdada13)
+**License**: MIT
+
+---
+
+### About This Project
+
+This tool demonstrates:
+- **Enterprise IT Consulting Skills**: Application rationalization, portfolio management, TIME framework methodology
+- **Full-Stack Development**: Python backend, Flask web framework, Pandas/NumPy data analysis, Scikit-learn ML
+- **Data Visualization**: Matplotlib, Seaborn, Plotly charts and dashboards
+- **Report Generation**: PDF, PowerPoint, and Excel automation with ReportLab and python-pptx
+- **Production Deployment**: Render cloud hosting, Gunicorn, environment configuration
+
+Built as a demonstration of capabilities for IT consulting and software engineering engagements.

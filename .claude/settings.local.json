@@ -9,7 +9,11 @@
       "Bash(findstr:*)",
       "Bash(git add:*)",
       "Bash(git checkout:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git push:*)",
+      "Bash(git restore:*)",
+      "Bash(powershell:*)",
+      "Bash(pip install:*)"
     ],
     "deny": [],
     "ask": []
