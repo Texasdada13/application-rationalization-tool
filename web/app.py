@@ -52,6 +52,7 @@ from src.risk_assessor import RiskAssessmentFramework
 from src.report_generator import AdvancedReportGenerator
 from src.benchmark_engine import BenchmarkEngine
 from src.nl_query_engine import NaturalLanguageQueryEngine
+from src.stakeholder_assessment_engine import StakeholderAssessmentEngine
 
 app = Flask(__name__)
 CORS(app)
@@ -65,6 +66,7 @@ ai_chat = AIChatAssistant()
 predictive_modeler = PredictiveModeler()
 smart_recommender = SmartRecommendationEngine()
 sentiment_analyzer = SentimentAnalyzer()
+stakeholder_engine = StakeholderAssessmentEngine()
 
 # Configure upload folder
 UPLOAD_FOLDER = Path(__file__).parent / 'uploads'
@@ -2506,6 +2508,277 @@ def get_portfolio_compliance():
     except Exception as e:
         logger.error(f"Portfolio compliance error: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+# ==========================
+# STAKEHOLDER ASSESSMENT
+# ==========================
+
+@app.route('/stakeholder-assessment')
+def stakeholder_assessment_page():
+    """Stakeholder Assessment Tool page"""
+    # Get summary stats
+    stakeholders = db.get_all_stakeholders()
+    interviews = db.get_all_interviews()
+
+    # Count by status
+    status_counts = {
+        'scheduled': len([i for i in interviews if i['status'] == 'Scheduled']),
+        'in_progress': len([i for i in interviews if i['status'] == 'In Progress']),
+        'completed': len([i for i in interviews if i['status'] == 'Completed']),
+        'reviewed': len([i for i in interviews if i['status'] == 'Reviewed'])
+    }
+
+    # Get templates
+    templates = stakeholder_engine.list_templates()
+
+    # Get stakeholder types and influence levels for dropdowns
+    stakeholder_types = stakeholder_engine.get_stakeholder_types()
+    influence_levels = stakeholder_engine.get_influence_levels()
+
+    return render_template('stakeholder_assessment.html',
+                          stakeholders=stakeholders,
+                          interviews=interviews,
+                          status_counts=status_counts,
+                          templates=templates,
+                          stakeholder_types=stakeholder_types,
+                          influence_levels=influence_levels)
+
+
+# Stakeholder API Endpoints
+@app.route('/api/stakeholders', methods=['GET'])
+def get_stakeholders():
+    """Get all stakeholders"""
+    stakeholders = db.get_all_stakeholders()
+    return jsonify(stakeholders)
+
+
+@app.route('/api/stakeholders', methods=['POST'])
+def create_stakeholder():
+    """Create a new stakeholder"""
+    try:
+        data = request.json
+        stakeholder = stakeholder_engine.create_stakeholder(
+            name=data['name'],
+            email=data['email'],
+            role=data['role'],
+            department=data['department'],
+            stakeholder_type=data['stakeholder_type'],
+            influence_level=data['influence_level'],
+            phone=data.get('phone', ''),
+            applications=data.get('applications', []),
+            notes=data.get('notes', '')
+        )
+        # Save to database
+        db.save_stakeholder(stakeholder.to_dict())
+        return jsonify(stakeholder.to_dict())
+    except Exception as e:
+        logger.error(f"Error creating stakeholder: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/stakeholders/<stakeholder_id>', methods=['GET'])
+def get_stakeholder(stakeholder_id):
+    """Get a specific stakeholder"""
+    stakeholder = db.get_stakeholder(stakeholder_id)
+    if stakeholder:
+        return jsonify(stakeholder)
+    return jsonify({'error': 'Stakeholder not found'}), 404
+
+
+@app.route('/api/stakeholders/<stakeholder_id>', methods=['PUT'])
+def update_stakeholder(stakeholder_id):
+    """Update a stakeholder"""
+    try:
+        data = request.json
+        data['id'] = stakeholder_id
+        db.save_stakeholder(data)
+        return jsonify(data)
+    except Exception as e:
+        logger.error(f"Error updating stakeholder: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/stakeholders/<stakeholder_id>', methods=['DELETE'])
+def delete_stakeholder(stakeholder_id):
+    """Delete a stakeholder"""
+    success = db.delete_stakeholder(stakeholder_id)
+    if success:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Stakeholder not found'}), 404
+
+
+# Interview API Endpoints
+@app.route('/api/interviews', methods=['GET'])
+def get_interviews():
+    """Get all interviews"""
+    status = request.args.get('status')
+    interviews = db.get_all_interviews(status)
+    return jsonify(interviews)
+
+
+@app.route('/api/interviews', methods=['POST'])
+def create_interview():
+    """Create a new interview session"""
+    try:
+        data = request.json
+        interview = stakeholder_engine.create_interview(
+            stakeholder_id=data['stakeholder_id'],
+            interviewer=data['interviewer'],
+            application_ids=data['application_ids'],
+            scheduled_date=data['scheduled_date'],
+            template_id=data.get('template_id', 'default')
+        )
+        # Save to database
+        db.save_interview(interview.to_dict())
+        return jsonify(interview.to_dict())
+    except Exception as e:
+        logger.error(f"Error creating interview: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/interviews/<interview_id>', methods=['GET'])
+def get_interview(interview_id):
+    """Get a specific interview"""
+    interview = db.get_interview(interview_id)
+    if interview:
+        # Also get responses
+        responses = db.get_interview_responses(interview_id)
+        interview['responses'] = responses
+        return jsonify(interview)
+    return jsonify({'error': 'Interview not found'}), 404
+
+
+@app.route('/api/interviews/<interview_id>', methods=['PUT'])
+def update_interview(interview_id):
+    """Update an interview"""
+    try:
+        data = request.json
+        data['id'] = interview_id
+        db.save_interview(data)
+        return jsonify(data)
+    except Exception as e:
+        logger.error(f"Error updating interview: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/interviews/<interview_id>', methods=['DELETE'])
+def delete_interview(interview_id):
+    """Delete an interview"""
+    success = db.delete_interview(interview_id)
+    if success:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Interview not found'}), 404
+
+
+@app.route('/api/interviews/<interview_id>/start', methods=['POST'])
+def start_interview(interview_id):
+    """Start an interview session"""
+    try:
+        interview = stakeholder_engine.start_interview(interview_id)
+        if interview:
+            db.save_interview(interview.to_dict())
+            return jsonify(interview.to_dict())
+        return jsonify({'error': 'Interview not found'}), 404
+    except Exception as e:
+        logger.error(f"Error starting interview: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/interviews/<interview_id>/complete', methods=['POST'])
+def complete_interview(interview_id):
+    """Complete an interview session"""
+    try:
+        interview = stakeholder_engine.complete_interview(interview_id)
+        if interview:
+            db.save_interview(interview.to_dict())
+            return jsonify(interview.to_dict())
+        return jsonify({'error': 'Interview not found'}), 404
+    except Exception as e:
+        logger.error(f"Error completing interview: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/interviews/<interview_id>/responses', methods=['POST'])
+def save_interview_response(interview_id):
+    """Save a response for an interview question"""
+    try:
+        data = request.json
+        response = stakeholder_engine.save_response(
+            interview_id=interview_id,
+            question_id=data['question_id'],
+            value=data['value'],
+            notes=data.get('notes', ''),
+            verbatim_quote=data.get('verbatim_quote', ''),
+            flagged=data.get('flagged', False)
+        )
+        if response:
+            db.save_interview_response(interview_id, response.to_dict())
+            return jsonify(response.to_dict())
+        return jsonify({'error': 'Could not save response'}), 400
+    except Exception as e:
+        logger.error(f"Error saving response: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Assessment Template Endpoints
+@app.route('/api/assessment-templates', methods=['GET'])
+def get_assessment_templates():
+    """Get all assessment templates"""
+    templates = stakeholder_engine.list_templates()
+    return jsonify(templates)
+
+
+@app.route('/api/assessment-templates/<template_id>', methods=['GET'])
+def get_assessment_template(template_id):
+    """Get a specific assessment template with all questions"""
+    template = stakeholder_engine.get_template(template_id)
+    if template:
+        return jsonify(template)
+    return jsonify({'error': 'Template not found'}), 404
+
+
+@app.route('/api/assessment-templates/<template_id>/categories', methods=['GET'])
+def get_template_categories(template_id):
+    """Get categories in a template"""
+    categories = stakeholder_engine.get_template_categories(template_id)
+    return jsonify(categories)
+
+
+# Analysis Endpoints
+@app.route('/api/stakeholder-analysis/interview/<interview_id>', methods=['GET'])
+def get_interview_analysis(interview_id):
+    """Get detailed analysis for a completed interview"""
+    analysis = stakeholder_engine.get_interview_analysis(interview_id)
+    return jsonify(analysis)
+
+
+@app.route('/api/stakeholder-analysis/application/<application_id>', methods=['GET'])
+def get_application_stakeholder_analysis(application_id):
+    """Get aggregated stakeholder analysis for an application"""
+    analysis = stakeholder_engine.get_application_stakeholder_analysis(application_id)
+    return jsonify(analysis)
+
+
+@app.route('/api/stakeholder-analysis/portfolio', methods=['GET'])
+def get_portfolio_stakeholder_summary():
+    """Get portfolio-wide stakeholder assessment summary"""
+    summary = stakeholder_engine.get_portfolio_stakeholder_summary()
+    return jsonify(summary)
+
+
+@app.route('/api/stakeholder-types', methods=['GET'])
+def get_stakeholder_types():
+    """Get list of stakeholder types"""
+    types = stakeholder_engine.get_stakeholder_types()
+    return jsonify(types)
+
+
+@app.route('/api/influence-levels', methods=['GET'])
+def get_influence_levels():
+    """Get list of influence levels"""
+    levels = stakeholder_engine.get_influence_levels()
+    return jsonify(levels)
 
 
 # ==========================

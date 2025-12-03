@@ -1,0 +1,970 @@
+{% extends "base.html" %}
+
+{% block title %}Stakeholder Assessment - Application Rationalization{% endblock %}
+
+{% block page_title %}Stakeholder Assessment{% endblock %}
+{% block page_subtitle %}Capture qualitative insights from client interviews{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Scheduled</p>
+                <p class="text-3xl font-bold text-blue-600">{{ status_counts.scheduled }}</p>
+            </div>
+            <i class="fas fa-calendar-alt text-3xl text-blue-200"></i>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">In Progress</p>
+                <p class="text-3xl font-bold text-yellow-600">{{ status_counts.in_progress }}</p>
+            </div>
+            <i class="fas fa-spinner text-3xl text-yellow-200"></i>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Completed</p>
+                <p class="text-3xl font-bold text-green-600">{{ status_counts.completed }}</p>
+            </div>
+            <i class="fas fa-check-circle text-3xl text-green-200"></i>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Total Stakeholders</p>
+                <p class="text-3xl font-bold text-purple-600">{{ stakeholders|length }}</p>
+            </div>
+            <i class="fas fa-users text-3xl text-purple-200"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="flex flex-wrap gap-4 mb-8">
+    <button onclick="openModal('stakeholder-modal')" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+        <i class="fas fa-user-plus mr-2"></i>Add Stakeholder
+    </button>
+    <button onclick="openModal('interview-modal')" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        <i class="fas fa-calendar-plus mr-2"></i>Schedule Interview
+    </button>
+    <button onclick="loadPortfolioAnalysis()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+        <i class="fas fa-chart-bar mr-2"></i>Portfolio Analysis
+    </button>
+</div>
+
+<!-- Main Content Tabs -->
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <!-- Tab Navigation -->
+    <div class="flex border-b border-gray-200">
+        <button onclick="switchTab('interviews')" id="tab-interviews" class="flex-1 px-6 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50">
+            <i class="fas fa-clipboard-list mr-2"></i>Interviews
+        </button>
+        <button onclick="switchTab('stakeholders')" id="tab-stakeholders" class="flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-800">
+            <i class="fas fa-users mr-2"></i>Stakeholders
+        </button>
+        <button onclick="switchTab('analysis')" id="tab-analysis" class="flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-800">
+            <i class="fas fa-chart-pie mr-2"></i>Analysis
+        </button>
+    </div>
+
+    <!-- Tab Content: Interviews -->
+    <div id="content-interviews" class="p-6">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b-2 border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Stakeholder</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Applications</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Status</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Score</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Date</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="interviews-tbody" class="divide-y divide-gray-200">
+                    {% if interviews %}
+                        {% for interview in interviews %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-gray-900">{{ interview.stakeholder_id[:8] }}...</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">
+                                {{ interview.application_ids|join(', ') if interview.application_ids else 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                {% if interview.status == 'Scheduled' %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{{ interview.status }}</span>
+                                {% elif interview.status == 'In Progress' %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ interview.status }}</span>
+                                {% elif interview.status == 'Completed' %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">{{ interview.status }}</span>
+                                {% else %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ interview.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center font-semibold">
+                                {% if interview.overall_score > 0 %}
+                                {{ interview.overall_score|round(1) }}%
+                                {% else %}
+                                --
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center text-sm text-gray-600">
+                                {{ interview.scheduled_date[:10] if interview.scheduled_date else 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                {% if interview.status == 'Scheduled' %}
+                                <button onclick="startInterview('{{ interview.id }}')" class="text-blue-600 hover:text-blue-800 mr-2" title="Start Interview">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                {% elif interview.status == 'In Progress' %}
+                                <button onclick="conductInterview('{{ interview.id }}')" class="text-yellow-600 hover:text-yellow-800 mr-2" title="Continue Interview">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% elif interview.status == 'Completed' %}
+                                <button onclick="viewAnalysis('{{ interview.id }}')" class="text-green-600 hover:text-green-800 mr-2" title="View Analysis">
+                                    <i class="fas fa-chart-bar"></i>
+                                </button>
+                                {% endif %}
+                                <button onclick="deleteInterview('{{ interview.id }}')" class="text-red-600 hover:text-red-800" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-calendar-times text-4xl mb-3"></i>
+                            <p>No interviews scheduled yet.</p>
+                            <button onclick="openModal('interview-modal')" class="mt-3 text-blue-600 hover:text-blue-800">
+                                Schedule your first interview
+                            </button>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab Content: Stakeholders -->
+    <div id="content-stakeholders" class="p-6 hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b-2 border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Department</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Type</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Influence</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="stakeholders-tbody" class="divide-y divide-gray-200">
+                    {% if stakeholders %}
+                        {% for stakeholder in stakeholders %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-gray-900">{{ stakeholder.name }}</div>
+                                <div class="text-sm text-gray-500">{{ stakeholder.email }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ stakeholder.role }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ stakeholder.department }}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                    {{ stakeholder.stakeholder_type }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                {% if stakeholder.influence_level == 'Decision Maker' %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ stakeholder.influence_level }}</span>
+                                {% elif stakeholder.influence_level == 'Key Influencer' %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">{{ stakeholder.influence_level }}</span>
+                                {% else %}
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ stakeholder.influence_level }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="editStakeholder('{{ stakeholder.id }}')" class="text-blue-600 hover:text-blue-800 mr-2" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteStakeholder('{{ stakeholder.id }}')" class="text-red-600 hover:text-red-800" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-users-slash text-4xl mb-3"></i>
+                            <p>No stakeholders added yet.</p>
+                            <button onclick="openModal('stakeholder-modal')" class="mt-3 text-blue-600 hover:text-blue-800">
+                                Add your first stakeholder
+                            </button>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab Content: Analysis -->
+    <div id="content-analysis" class="p-6 hidden">
+        <div id="analysis-content">
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-chart-pie text-4xl mb-3"></i>
+                <p>Click "Portfolio Analysis" to view aggregated stakeholder insights.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Stakeholder Modal -->
+<div id="stakeholder-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-gray-800">Add Stakeholder</h3>
+            <button onclick="closeModal('stakeholder-modal')" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="stakeholder-form" onsubmit="saveStakeholder(event)" class="p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input type="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                    <input type="text" name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                    <input type="text" name="department" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Stakeholder Type *</label>
+                    <select name="stakeholder_type" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        {% for type in stakeholder_types %}
+                        <option value="{{ type }}">{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Influence Level *</label>
+                    <select name="influence_level" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        {% for level in influence_levels %}
+                        <option value="{{ level }}">{{ level }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input type="tel" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="closeModal('stakeholder-modal')" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Save Stakeholder
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Schedule Interview Modal -->
+<div id="interview-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-gray-800">Schedule Interview</h3>
+            <button onclick="closeModal('interview-modal')" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="interview-form" onsubmit="saveInterview(event)" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Stakeholder *</label>
+                <select name="stakeholder_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select stakeholder...</option>
+                    {% for stakeholder in stakeholders %}
+                    <option value="{{ stakeholder.id }}">{{ stakeholder.name }} - {{ stakeholder.role }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Interviewer Name *</label>
+                <input type="text" name="interviewer" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Applications (comma-separated) *</label>
+                <input type="text" name="application_ids" required placeholder="e.g., SAP ERP, Salesforce" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Scheduled Date *</label>
+                <input type="datetime-local" name="scheduled_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Assessment Template</label>
+                <select name="template_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% for template in templates %}
+                    <option value="{{ template.id }}">{{ template.name }} ({{ template.question_count }} questions)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="closeModal('interview-modal')" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Schedule Interview
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Conduct Interview Modal -->
+<div id="conduct-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-gray-800">
+                <i class="fas fa-clipboard-list text-blue-600 mr-2"></i>
+                <span id="conduct-title">Conduct Interview</span>
+            </h3>
+            <button onclick="closeModal('conduct-modal')" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1">
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span id="progress-text">Question 1 of 30</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progress-bar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Category Header -->
+            <div class="mb-4">
+                <span id="question-category" class="px-3 py-1 text-sm font-semibold rounded-full bg-purple-100 text-purple-800">
+                    Category
+                </span>
+            </div>
+
+            <!-- Question -->
+            <div class="mb-6">
+                <h4 id="question-text" class="text-lg font-medium text-gray-800 mb-2">
+                    Question text here
+                </h4>
+                <p id="question-help" class="text-sm text-gray-500"></p>
+            </div>
+
+            <!-- Answer Input -->
+            <div id="answer-container" class="mb-6">
+                <!-- Dynamically populated based on question type -->
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea id="response-notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Optional notes..."></textarea>
+            </div>
+
+            <!-- Verbatim Quote -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Verbatim Quote</label>
+                <textarea id="response-quote" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Capture exact words from stakeholder..."></textarea>
+            </div>
+
+            <!-- Flag Response -->
+            <div class="flex items-center mb-4">
+                <input type="checkbox" id="response-flagged" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                <label for="response-flagged" class="ml-2 text-sm text-gray-700">Flag this response for follow-up</label>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-between">
+            <button onclick="previousQuestion()" id="btn-prev" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
+                <i class="fas fa-chevron-left mr-2"></i>Previous
+            </button>
+            <div class="flex gap-3">
+                <button onclick="saveDraft()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    <i class="fas fa-save mr-2"></i>Save Draft
+                </button>
+                <button onclick="nextQuestion()" id="btn-next" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Next<i class="fas fa-chevron-right ml-2"></i>
+                </button>
+                <button onclick="completeInterview()" id="btn-complete" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 hidden">
+                    <i class="fas fa-check mr-2"></i>Complete Interview
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Modal -->
+<div id="analysis-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-gray-800">
+                <i class="fas fa-chart-bar text-green-600 mr-2"></i>
+                Interview Analysis
+            </h3>
+            <button onclick="closeModal('analysis-modal')" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="analysis-modal-content" class="p-6 overflow-y-auto flex-1">
+            <!-- Dynamically populated -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let currentInterviewId = null;
+let currentQuestions = [];
+let currentQuestionIndex = 0;
+let currentResponses = {};
+
+// Tab switching
+function switchTab(tabName) {
+    // Hide all content
+    document.getElementById('content-interviews').classList.add('hidden');
+    document.getElementById('content-stakeholders').classList.add('hidden');
+    document.getElementById('content-analysis').classList.add('hidden');
+
+    // Reset all tabs
+    document.getElementById('tab-interviews').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50');
+    document.getElementById('tab-interviews').classList.add('text-gray-600');
+    document.getElementById('tab-stakeholders').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50');
+    document.getElementById('tab-stakeholders').classList.add('text-gray-600');
+    document.getElementById('tab-analysis').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50');
+    document.getElementById('tab-analysis').classList.add('text-gray-600');
+
+    // Show selected content and highlight tab
+    document.getElementById(`content-${tabName}`).classList.remove('hidden');
+    document.getElementById(`tab-${tabName}`).classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50');
+    document.getElementById(`tab-${tabName}`).classList.remove('text-gray-600');
+}
+
+// Modal functions
+function openModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+
+// Stakeholder functions
+async function saveStakeholder(event) {
+    event.preventDefault();
+    const form = document.getElementById('stakeholder-form');
+    const formData = new FormData(form);
+
+    const data = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        role: formData.get('role'),
+        department: formData.get('department'),
+        stakeholder_type: formData.get('stakeholder_type'),
+        influence_level: formData.get('influence_level'),
+        phone: formData.get('phone') || '',
+        notes: formData.get('notes') || ''
+    };
+
+    try {
+        const response = await fetch('/api/stakeholders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            closeModal('stakeholder-modal');
+            location.reload();
+        } else {
+            const error = await response.json();
+            alert('Error: ' + error.error);
+        }
+    } catch (error) {
+        alert('Error saving stakeholder: ' + error.message);
+    }
+}
+
+async function deleteStakeholder(id) {
+    if (!confirm('Are you sure you want to delete this stakeholder?')) return;
+
+    try {
+        const response = await fetch(`/api/stakeholders/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Error deleting stakeholder');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+// Interview functions
+async function saveInterview(event) {
+    event.preventDefault();
+    const form = document.getElementById('interview-form');
+    const formData = new FormData(form);
+
+    const applicationIds = formData.get('application_ids').split(',').map(s => s.trim());
+
+    const data = {
+        stakeholder_id: formData.get('stakeholder_id'),
+        interviewer: formData.get('interviewer'),
+        application_ids: applicationIds,
+        scheduled_date: formData.get('scheduled_date'),
+        template_id: formData.get('template_id') || 'default'
+    };
+
+    try {
+        const response = await fetch('/api/interviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            closeModal('interview-modal');
+            location.reload();
+        } else {
+            const error = await response.json();
+            alert('Error: ' + error.error);
+        }
+    } catch (error) {
+        alert('Error scheduling interview: ' + error.message);
+    }
+}
+
+async function startInterview(interviewId) {
+    try {
+        const response = await fetch(`/api/interviews/${interviewId}/start`, { method: 'POST' });
+        if (response.ok) {
+            conductInterview(interviewId);
+        } else {
+            alert('Error starting interview');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function conductInterview(interviewId) {
+    currentInterviewId = interviewId;
+
+    // Load interview data
+    try {
+        const interviewResponse = await fetch(`/api/interviews/${interviewId}`);
+        const interview = await interviewResponse.json();
+
+        // Load template questions
+        const templateResponse = await fetch(`/api/assessment-templates/${interview.template_id}`);
+        const template = await templateResponse.json();
+
+        currentQuestions = template.questions;
+        currentQuestionIndex = 0;
+        currentResponses = {};
+
+        // Load existing responses
+        if (interview.responses) {
+            interview.responses.forEach(r => {
+                currentResponses[r.question_id] = r;
+            });
+        }
+
+        document.getElementById('conduct-title').textContent = `Interview: ${interview.application_ids.join(', ')}`;
+        displayCurrentQuestion();
+        openModal('conduct-modal');
+    } catch (error) {
+        alert('Error loading interview: ' + error.message);
+    }
+}
+
+function displayCurrentQuestion() {
+    const question = currentQuestions[currentQuestionIndex];
+    const totalQuestions = currentQuestions.length;
+    const progress = ((currentQuestionIndex + 1) / totalQuestions * 100).toFixed(0);
+
+    // Update progress
+    document.getElementById('progress-text').textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
+    document.getElementById('progress-percent').textContent = `${progress}%`;
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+
+    // Update question info
+    document.getElementById('question-category').textContent = question.category;
+    document.getElementById('question-text').textContent = question.text;
+    document.getElementById('question-help').textContent = question.help_text || '';
+
+    // Build answer input based on question type
+    const container = document.getElementById('answer-container');
+    container.innerHTML = '';
+
+    const existingResponse = currentResponses[question.id];
+
+    if (question.question_type === 'Rating Scale (1-5)') {
+        container.innerHTML = `
+            <div class="flex justify-between items-center">
+                ${[1, 2, 3, 4, 5].map(n => `
+                    <label class="flex flex-col items-center cursor-pointer">
+                        <input type="radio" name="answer" value="${n}" class="w-6 h-6 text-blue-600" ${existingResponse && existingResponse.value == n ? 'checked' : ''}>
+                        <span class="mt-1 text-sm">${n}</span>
+                    </label>
+                `).join('')}
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-2">
+                <span>Very Poor</span>
+                <span>Excellent</span>
+            </div>
+        `;
+    } else if (question.question_type === 'Rating Scale (1-10)') {
+        container.innerHTML = `
+            <div class="grid grid-cols-10 gap-1">
+                ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `
+                    <label class="flex flex-col items-center cursor-pointer">
+                        <input type="radio" name="answer" value="${n}" class="w-5 h-5 text-blue-600" ${existingResponse && existingResponse.value == n ? 'checked' : ''}>
+                        <span class="mt-1 text-xs">${n}</span>
+                    </label>
+                `).join('')}
+            </div>
+        `;
+    } else if (question.question_type === 'Yes/No') {
+        container.innerHTML = `
+            <div class="flex gap-4">
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="answer" value="Yes" class="w-5 h-5 text-blue-600" ${existingResponse && existingResponse.value === 'Yes' ? 'checked' : ''}>
+                    <span class="ml-2">Yes</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="answer" value="No" class="w-5 h-5 text-blue-600" ${existingResponse && existingResponse.value === 'No' ? 'checked' : ''}>
+                    <span class="ml-2">No</span>
+                </label>
+            </div>
+        `;
+    } else if (question.question_type === 'Single Choice' || question.question_type === 'Multiple Choice') {
+        container.innerHTML = `
+            <div class="space-y-2">
+                ${question.options.map(opt => `
+                    <label class="flex items-center cursor-pointer p-2 rounded hover:bg-gray-50">
+                        <input type="radio" name="answer" value="${opt}" class="w-5 h-5 text-blue-600" ${existingResponse && existingResponse.value === opt ? 'checked' : ''}>
+                        <span class="ml-3">${opt}</span>
+                    </label>
+                `).join('')}
+            </div>
+        `;
+    } else if (question.question_type === 'Open Text') {
+        container.innerHTML = `
+            <textarea name="answer" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter response...">${existingResponse ? existingResponse.value : ''}</textarea>
+        `;
+    }
+
+    // Restore notes and flags
+    document.getElementById('response-notes').value = existingResponse ? existingResponse.notes : '';
+    document.getElementById('response-quote').value = existingResponse ? existingResponse.verbatim_quote : '';
+    document.getElementById('response-flagged').checked = existingResponse ? existingResponse.flagged : false;
+
+    // Update navigation buttons
+    document.getElementById('btn-prev').style.visibility = currentQuestionIndex === 0 ? 'hidden' : 'visible';
+
+    if (currentQuestionIndex === totalQuestions - 1) {
+        document.getElementById('btn-next').classList.add('hidden');
+        document.getElementById('btn-complete').classList.remove('hidden');
+    } else {
+        document.getElementById('btn-next').classList.remove('hidden');
+        document.getElementById('btn-complete').classList.add('hidden');
+    }
+}
+
+async function saveCurrentResponse() {
+    const question = currentQuestions[currentQuestionIndex];
+    let value;
+
+    if (question.question_type === 'Open Text') {
+        value = document.querySelector('textarea[name="answer"]')?.value || '';
+    } else {
+        value = document.querySelector('input[name="answer"]:checked')?.value || '';
+    }
+
+    if (!value && question.required) {
+        return false;
+    }
+
+    const responseData = {
+        question_id: question.id,
+        value: value,
+        notes: document.getElementById('response-notes').value,
+        verbatim_quote: document.getElementById('response-quote').value,
+        flagged: document.getElementById('response-flagged').checked
+    };
+
+    try {
+        const response = await fetch(`/api/interviews/${currentInterviewId}/responses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(responseData)
+        });
+
+        if (response.ok) {
+            const savedResponse = await response.json();
+            currentResponses[question.id] = savedResponse;
+            return true;
+        }
+    } catch (error) {
+        console.error('Error saving response:', error);
+    }
+
+    return false;
+}
+
+async function nextQuestion() {
+    if (await saveCurrentResponse()) {
+        if (currentQuestionIndex < currentQuestions.length - 1) {
+            currentQuestionIndex++;
+            displayCurrentQuestion();
+        }
+    } else {
+        alert('Please answer the question before continuing.');
+    }
+}
+
+async function previousQuestion() {
+    await saveCurrentResponse();
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        displayCurrentQuestion();
+    }
+}
+
+async function saveDraft() {
+    await saveCurrentResponse();
+    alert('Draft saved successfully!');
+}
+
+async function completeInterview() {
+    if (await saveCurrentResponse()) {
+        try {
+            const response = await fetch(`/api/interviews/${currentInterviewId}/complete`, { method: 'POST' });
+            if (response.ok) {
+                closeModal('conduct-modal');
+                location.reload();
+            } else {
+                alert('Error completing interview');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    } else {
+        alert('Please answer the last question before completing.');
+    }
+}
+
+async function deleteInterview(id) {
+    if (!confirm('Are you sure you want to delete this interview?')) return;
+
+    try {
+        const response = await fetch(`/api/interviews/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Error deleting interview');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function viewAnalysis(interviewId) {
+    try {
+        const response = await fetch(`/api/stakeholder-analysis/interview/${interviewId}`);
+        const analysis = await response.json();
+
+        const content = document.getElementById('analysis-modal-content');
+        content.innerHTML = `
+            <div class="space-y-6">
+                <!-- Overall Score -->
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800">Overall Score</h4>
+                            <p class="text-sm text-gray-600">${analysis.answered_questions} of ${analysis.total_questions} questions answered</p>
+                        </div>
+                        <div class="text-4xl font-bold text-blue-600">${analysis.overall_score.toFixed(1)}%</div>
+                    </div>
+                </div>
+
+                <!-- Category Scores -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Category Breakdown</h4>
+                    <div class="space-y-3">
+                        ${Object.entries(analysis.category_scores).map(([category, score]) => `
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-700">${category}</span>
+                                    <span class="font-semibold">${score.toFixed(1)}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: ${score}%"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Flagged Items -->
+                ${analysis.flagged_items.length > 0 ? `
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-flag text-red-600 mr-2"></i>Flagged Items (${analysis.flagged_items.length})
+                    </h4>
+                    <div class="space-y-2">
+                        ${analysis.flagged_items.map(item => `
+                            <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                                <p class="font-medium text-gray-800">${item.question_text}</p>
+                                <p class="text-sm text-gray-600 mt-1">Response: ${item.value}</p>
+                                ${item.notes ? `<p class="text-sm text-gray-500 mt-1">Notes: ${item.notes}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Key Quotes -->
+                ${analysis.open_text_responses.length > 0 ? `
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Key Insights</h4>
+                    <div class="space-y-2">
+                        ${analysis.open_text_responses.slice(0, 5).map(item => `
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <p class="text-sm font-medium text-gray-700">${item.question}</p>
+                                <p class="text-sm text-gray-600 mt-1">${item.response}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+
+        openModal('analysis-modal');
+    } catch (error) {
+        alert('Error loading analysis: ' + error.message);
+    }
+}
+
+async function loadPortfolioAnalysis() {
+    try {
+        const response = await fetch('/api/stakeholder-analysis/portfolio');
+        const summary = await response.json();
+
+        if (summary.error) {
+            document.getElementById('analysis-content').innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-exclamation-circle text-4xl mb-3"></i>
+                    <p>${summary.error}</p>
+                </div>
+            `;
+        } else {
+            document.getElementById('analysis-content').innerHTML = `
+                <div class="space-y-6">
+                    <!-- Summary Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                            <p class="text-sm text-blue-700 mb-1">Total Interviews</p>
+                            <p class="text-2xl font-bold text-blue-900">${summary.total_interviews}</p>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                            <p class="text-sm text-purple-700 mb-1">Total Stakeholders</p>
+                            <p class="text-2xl font-bold text-purple-900">${summary.total_stakeholders}</p>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                            <p class="text-sm text-green-700 mb-1">Apps Assessed</p>
+                            <p class="text-2xl font-bold text-green-900">${summary.total_applications_assessed}</p>
+                        </div>
+                        <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                            <p class="text-sm text-orange-700 mb-1">Avg Score</p>
+                            <p class="text-2xl font-bold text-orange-900">${summary.portfolio_average_score.toFixed(1)}%</p>
+                        </div>
+                    </div>
+
+                    <!-- Category Scores -->
+                    <div class="bg-white rounded-lg border p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Portfolio Category Scores</h4>
+                        <div class="space-y-3">
+                            ${Object.entries(summary.portfolio_category_scores).map(([category, score]) => `
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-gray-700">${category}</span>
+                                        <span class="font-semibold">${score.toFixed(1)}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full ${score >= 70 ? 'bg-green-600' : score >= 50 ? 'bg-yellow-500' : 'bg-red-600'}" style="width: ${score}%"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Applications by Score -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                            <p class="text-sm font-medium text-green-700 mb-2">High Scoring (70%+)</p>
+                            <p class="text-xl font-bold text-green-900">${summary.applications_by_score.high.length} apps</p>
+                        </div>
+                        <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                            <p class="text-sm font-medium text-yellow-700 mb-2">Medium (40-70%)</p>
+                            <p class="text-xl font-bold text-yellow-900">${summary.applications_by_score.medium.length} apps</p>
+                        </div>
+                        <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                            <p class="text-sm font-medium text-red-700 mb-2">Low Scoring (<40%)</p>
+                            <p class="text-xl font-bold text-red-900">${summary.applications_by_score.low.length} apps</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        switchTab('analysis');
+    } catch (error) {
+        alert('Error loading analysis: ' + error.message);
+    }
+}
+</script>
+{% endblock %}

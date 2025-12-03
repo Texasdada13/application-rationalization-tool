@@ -1,0 +1,6 @@
+Application Name,Owner,Business Value,Tech Health,Cost,Usage,Security,Strategic Fit,Redundancy,Comments
+SAP ERP,John Smith,9,6,850000,500,7,8,1,Core financial system
+Salesforce CRM,Jane Doe,8,8,120000,200,8,9,0,Sales and marketing
+Legacy HR System,Bob Johnson,5,3,75000,150,4,3,2,Candidate for replacement
+Custom Reporting Tool,Alice Brown,4,4,45000,50,5,4,3,Overlaps with Power BI
+Email Server,IT Team,10,7,95000,1000,8,7,0,Mission critical
