@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | Capital Projects Lifecycle Planner</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Custom styles -->
+    <style>
+        .sidebar-link {
+            @apply flex items-center px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-colors;
+        }
+        .sidebar-link.active {
+            @apply bg-blue-50 text-blue-700 border-r-4 border-blue-700;
+        }
+        .kpi-card {
+            @apply bg-white rounded-lg shadow p-6;
+        }
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-sm font-medium;
+        }
+        .status-advance { @apply bg-green-100 text-green-800; }
+        .status-monitor { @apply bg-amber-100 text-amber-800; }
+        .status-rescope { @apply bg-orange-100 text-orange-800; }
+        .status-defer { @apply bg-gray-100 text-gray-800; }
+        .status-cancel { @apply bg-red-100 text-red-800; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-lg flex-shrink-0">
+            <div class="p-6 border-b">
+                <h1 class="text-xl font-bold text-gray-800">Capital Projects</h1>
+                <p class="text-sm text-gray-500">Lifecycle Planner</p>
+            </div>
+            <nav class="mt-4">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('portfolio') }}" class="sidebar-link {% if request.endpoint == 'portfolio' %}active{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    Portfolio
+                </a>
+                <a href="{{ url_for('health_framework_view') }}" class="sidebar-link {% if request.endpoint == 'health_framework_view' %}active{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    Health Framework
+                </a>
+                <a href="{{ url_for('chat_page') }}" class="sidebar-link {% if request.endpoint == 'chat_page' %}active{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                    </svg>
+                    AI Assistant
+                </a>
+            </nav>
+            <div class="absolute bottom-0 w-64 p-4 border-t">
+                <p class="text-xs text-gray-400">Marion County Engineer's Office</p>
+                <p class="text-xs text-gray-400">Capital Improvement Program</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
+                <h2 class="text-2xl font-semibold text-gray-800">{{ title }}</h2>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">{{ now().strftime('%B %d, %Y') if now is defined else '' }}</span>
+                </div>
+            </header>
+            <div class="p-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

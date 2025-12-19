@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Filter Description Header -->
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Filtered Results</h3>
+            <p class="text-gray-500">{{ filter_description }}</p>
+        </div>
+        <div class="flex space-x-2">
+            <a href="{{ url_for('chat_page') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                Back to Chat
+            </a>
+            <a href="{{ url_for('portfolio') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition">
+                View All Projects
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Summary KPIs -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+        <p class="text-sm text-gray-500">Projects</p>
+        <p class="text-2xl font-bold text-gray-800">{{ summary.total_projects or 0 }}</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <p class="text-sm text-gray-500">Total Budget</p>
+        <p class="text-2xl font-bold text-gray-800">${{ '{:,.0f}'.format((summary.total_budget or 0) / 1000000) }}M</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <p class="text-sm text-gray-500">Avg Health</p>
+        <p class="text-2xl font-bold {% if (summary.avg_health_score or 0) >= 60 %}text-green-600{% elif (summary.avg_health_score or 0) >= 40 %}text-amber-600{% else %}text-red-600{% endif %}">
+            {{ '{:.0f}'.format(summary.avg_health_score or 0) }}
+        </p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <p class="text-sm text-gray-500">At Risk</p>
+        <p class="text-2xl font-bold {% if (summary.projects_at_risk or 0) > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+            {{ summary.projects_at_risk or 0 }}
+        </p>
+    </div>
+</div>
+
+{% if projects %}
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Quadrant Chart -->
+    {% if charts.quadrant %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Strategic Value vs Deliverability</h3>
+        <div id="quadrant-chart"></div>
+    </div>
+    {% endif %}
+
+    <!-- Status Distribution -->
+    {% if charts.status_pie %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Status Distribution</h3>
+        <div id="status-chart"></div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Projects Table -->
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="p-4 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Projects ({{ projects | length }})</h3>
+    </div>
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phase</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Budget</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Health</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Strategic</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Deliverability</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for project in projects %}
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location.href='{{ url_for('project_detail', project_id=project['Project ID']) }}'">
+                <td class="px-4 py-4">
+                    <div class="text-sm font-medium text-gray-900">{{ project['Project Name'] }}</div>
+                    <div class="text-sm text-gray-500">{{ project['Project ID'] }}</div>
+                </td>
+                <td class="px-4 py-4">
+                    {% set status = project.Status | lower | replace('-', '') | replace(' ', '') %}
+                    <span class="status-badge
+                        {% if status == 'advance' %}status-advance
+                        {% elif status == 'monitor' %}status-monitor
+                        {% elif status == 'rescope' %}status-rescope
+                        {% elif status == 'defer' %}status-defer
+                        {% elif status == 'cancel' %}status-cancel
+                        {% endif %}">
+                        {{ project.Status }}
+                    </span>
+                </td>
+                <td class="px-4 py-4 text-sm text-gray-500">{{ project['Current Phase'] }}</td>
+                <td class="px-4 py-4 text-sm text-gray-900">${{ '{:,.0f}'.format(project['Total Budget']) }}</td>
+                <td class="px-4 py-4">
+                    {% set health = project['Project Health Score'] | default(50) %}
+                    <span class="text-sm font-medium
+                        {% if health >= 60 %}text-green-600
+                        {% elif health >= 40 %}text-amber-600
+                        {% else %}text-red-600{% endif %}">
+                        {{ health | int }}
+                    </span>
+                </td>
+                <td class="px-4 py-4">
+                    {% set strategic = project['Strategic Value Score'] | default(50) %}
+                    <span class="text-sm">{{ strategic | int }}</span>
+                </td>
+                <td class="px-4 py-4">
+                    {% set deliver = project['Deliverability Score'] | default(50) %}
+                    <span class="text-sm">{{ deliver | int }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="bg-white rounded-lg shadow p-8 text-center">
+    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">No Projects Found</h3>
+    <p class="text-gray-500">No projects match the current filters.</p>
+    <a href="{{ url_for('portfolio') }}" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+        View All Projects
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    {% if charts.quadrant %}
+    Plotly.newPlot('quadrant-chart', {{ charts.quadrant | safe }}.data, {{ charts.quadrant | safe }}.layout, {responsive: true});
+    {% endif %}
+
+    {% if charts.status_pie %}
+    Plotly.newPlot('status-chart', {{ charts.status_pie | safe }}.data, {{ charts.status_pie | safe }}.layout, {responsive: true});
+    {% endif %}
+</script>
+{% endblock %}

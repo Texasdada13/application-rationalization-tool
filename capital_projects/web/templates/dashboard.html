@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Projects -->
+    <div class="kpi-card">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Total Projects</p>
+                <p class="text-3xl font-bold text-gray-800">{{ summary.total_projects or 0 }}</p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="mt-4 flex space-x-4 text-sm">
+            <span class="text-green-600">{{ summary.advance_count or 0 }} Advance</span>
+            <span class="text-amber-600">{{ summary.monitor_count or 0 }} Monitor</span>
+        </div>
+    </div>
+
+    <!-- Total Program Value -->
+    <div class="kpi-card">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Total Program Value</p>
+                <p class="text-3xl font-bold text-gray-800">${{ '{:,.0f}'.format((summary.total_budget or 0) / 1000000) }}M</p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-full">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="mt-4 text-sm">
+            <span class="text-gray-500">Spent: </span>
+            <span class="text-gray-700">${{ '{:,.0f}'.format((summary.total_spent or 0) / 1000000) }}M</span>
+        </div>
+    </div>
+
+    <!-- Average Health Score -->
+    <div class="kpi-card">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Avg Health Score</p>
+                <p class="text-3xl font-bold {% if (summary.avg_health_score or 0) >= 60 %}text-green-600{% elif (summary.avg_health_score or 0) >= 40 %}text-amber-600{% else %}text-red-600{% endif %}">
+                    {{ '{:.0f}'.format(summary.avg_health_score or 0) }}
+                </p>
+            </div>
+            <div class="p-3 {% if (summary.avg_health_score or 0) >= 60 %}bg-green-100{% elif (summary.avg_health_score or 0) >= 40 %}bg-amber-100{% else %}bg-red-100{% endif %} rounded-full">
+                <svg class="w-8 h-8 {% if (summary.avg_health_score or 0) >= 60 %}text-green-600{% elif (summary.avg_health_score or 0) >= 40 %}text-amber-600{% else %}text-red-600{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="mt-4 text-sm text-gray-500">
+            Out of 100 possible
+        </div>
+    </div>
+
+    <!-- Projects at Risk -->
+    <div class="kpi-card">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Projects at Risk</p>
+                <p class="text-3xl font-bold {% if (summary.projects_at_risk or 0) > 3 %}text-red-600{% elif (summary.projects_at_risk or 0) > 0 %}text-amber-600{% else %}text-green-600{% endif %}">
+                    {{ summary.projects_at_risk or 0 }}
+                </p>
+            </div>
+            <div class="p-3 {% if (summary.projects_at_risk or 0) > 3 %}bg-red-100{% elif (summary.projects_at_risk or 0) > 0 %}bg-amber-100{% else %}bg-green-100{% endif %} rounded-full">
+                <svg class="w-8 h-8 {% if (summary.projects_at_risk or 0) > 3 %}text-red-600{% elif (summary.projects_at_risk or 0) > 0 %}text-amber-600{% else %}text-green-600{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="mt-4 flex space-x-4 text-sm">
+            <span class="text-red-600">{{ summary.schedule_issues or 0 }} Schedule</span>
+            <span class="text-orange-600">{{ summary.budget_issues or 0 }} Budget</span>
+        </div>
+    </div>
+</div>
+
+<!-- Status Summary Cards -->
+<div class="grid grid-cols-5 gap-4 mb-8">
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+        <p class="text-2xl font-bold text-green-700">{{ summary.advance_count or 0 }}</p>
+        <p class="text-sm text-green-600">Advance</p>
+    </div>
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+        <p class="text-2xl font-bold text-amber-700">{{ summary.monitor_count or 0 }}</p>
+        <p class="text-sm text-amber-600">Monitor</p>
+    </div>
+    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+        <p class="text-2xl font-bold text-orange-700">{{ summary.rescope_count or 0 }}</p>
+        <p class="text-sm text-orange-600">Re-scope</p>
+    </div>
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+        <p class="text-2xl font-bold text-gray-700">{{ summary.defer_count or 0 }}</p>
+        <p class="text-sm text-gray-600">Defer</p>
+    </div>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+        <p class="text-2xl font-bold text-red-700">{{ summary.cancel_count or 0 }}</p>
+        <p class="text-sm text-red-600">Cancel</p>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Strategic Value vs Deliverability Quadrant -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Strategic Value vs Deliverability</h3>
+        <div id="quadrant-chart"></div>
+    </div>
+
+    <!-- Status Distribution -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Status Distribution</h3>
+        <div id="status-chart"></div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Projects by Phase -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Projects by Lifecycle Phase</h3>
+        <div id="phase-chart"></div>
+    </div>
+
+    <!-- Health Score Distribution -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Health Score Distribution</h3>
+        <div id="health-chart"></div>
+    </div>
+</div>
+
+<!-- Charts Row 3 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Top Projects by Budget -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Top 10 Projects by Budget</h3>
+        <div id="budget-chart"></div>
+    </div>
+
+    <!-- Budget by District -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Budget by Commissioner District</h3>
+        <div id="district-chart"></div>
+    </div>
+</div>
+
+<!-- Schedule vs Budget Health -->
+<div class="bg-white rounded-lg shadow p-6 mb-8">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Schedule Health vs Budget Health</h3>
+    <div id="health-scatter-chart"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Render charts
+    {% if charts.quadrant %}
+    Plotly.newPlot('quadrant-chart', {{ charts.quadrant | safe }}.data, {{ charts.quadrant | safe }}.layout, {responsive: true});
+    {% endif %}
+
+    {% if charts.status_pie %}
+    Plotly.newPlot('status-chart', {{ charts.status_pie | safe }}.data, {{ charts.status_pie | safe }}.layout, {responsive: true});
+    {% endif %}
+
+    {% if charts.phase_bar %}
+    Plotly.newPlot('phase-chart', {{ charts.phase_bar | safe }}.data, {{ charts.phase_bar | safe }}.layout, {responsive: true});
+    {% endif %}
+
+    {% if charts.health_distribution %}
+    Plotly.newPlot('health-chart', {{ charts.health_distribution | safe }}.data, {{ charts.health_distribution | safe }}.layout, {responsive: true});
+    {% endif %}
+
+    {% if charts.top_budget %}
+    Plotly.newPlot('budget-chart', {{ charts.top_budget | safe }}.data, {{ charts.top_budget | safe }}.layout, {responsive: true});
+    {% endif %}
+
+    {% if charts.district_budget %}
+    Plotly.newPlot('district-chart', {{ charts.district_budget | safe }}.data, {{ charts.district_budget | safe }}.layout, {responsive: true});
+    {% endif %}
+
+    {% if charts.health_scatter %}
+    Plotly.newPlot('health-scatter-chart', {{ charts.health_scatter | safe }}.data, {{ charts.health_scatter | safe }}.layout, {responsive: true});
+    {% endif %}
+</script>
+{% endblock %}

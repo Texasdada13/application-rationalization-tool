@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Filters -->
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="flex flex-wrap gap-4 items-center">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="filter-status" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">All Statuses</option>
+                <option value="Advance">Advance</option>
+                <option value="Monitor">Monitor</option>
+                <option value="Re-scope">Re-scope</option>
+                <option value="Defer">Defer</option>
+                <option value="Cancel">Cancel</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phase</label>
+            <select id="filter-phase" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">All Phases</option>
+                <option value="Concept/Idea">Concept/Idea</option>
+                <option value="Feasibility/Planning">Feasibility/Planning</option>
+                <option value="Design">Design</option>
+                <option value="Right-of-Way Acquisition">Right-of-Way Acquisition</option>
+                <option value="Permitting/Utility Coordination">Permitting/Utility Coordination</option>
+                <option value="Procurement/Letting">Procurement/Letting</option>
+                <option value="Active Construction">Active Construction</option>
+                <option value="Substantial Completion">Substantial Completion</option>
+                <option value="Final Acceptance/Closeout">Final Acceptance/Closeout</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">District</label>
+            <select id="filter-district" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">All Districts</option>
+                <option value="1">District 1</option>
+                <option value="2">District 2</option>
+                <option value="3">District 3</option>
+                <option value="4">District 4</option>
+                <option value="5">District 5</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select id="filter-type" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">All Types</option>
+                <option value="Road Widening">Road Widening</option>
+                <option value="Resurfacing">Resurfacing</option>
+                <option value="Safety Improvement">Safety Improvement</option>
+                <option value="Intersection Improvement">Intersection Improvement</option>
+                <option value="Bridge">Bridge</option>
+                <option value="Stormwater">Stormwater</option>
+                <option value="Sidewalk/Trail">Sidewalk/Trail</option>
+                <option value="Traffic Signals">Traffic Signals</option>
+                <option value="New Road Construction">New Road Construction</option>
+            </select>
+        </div>
+        <div class="ml-auto">
+            <button onclick="exportData()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                Export CSV
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Projects Table -->
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phase</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">District</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Complete</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200" id="projects-tbody">
+            {% for project in projects %}
+            <tr class="project-row hover:bg-gray-50 cursor-pointer"
+                data-status="{{ project.Status }}"
+                data-phase="{{ project['Current Phase'] }}"
+                data-district="{{ project.District }}"
+                data-type="{{ project['Project Type'] }}"
+                onclick="window.location.href='{{ url_for('project_detail', project_id=project['Project ID']) }}'">
+                <td class="px-4 py-4">
+                    <div class="text-sm font-medium text-gray-900">{{ project['Project Name'] }}</div>
+                    <div class="text-sm text-gray-500">{{ project['Project ID'] }} | {{ project.Corridor }}</div>
+                </td>
+                <td class="px-4 py-4">
+                    {% set status = project.Status | lower | replace('-', '') | replace(' ', '') %}
+                    <span class="status-badge
+                        {% if status == 'advance' %}status-advance
+                        {% elif status == 'monitor' %}status-monitor
+                        {% elif status == 'rescope' %}status-rescope
+                        {% elif status == 'defer' %}status-defer
+                        {% elif status == 'cancel' %}status-cancel
+                        {% endif %}">
+                        {{ project.Status }}
+                    </span>
+                </td>
+                <td class="px-4 py-4 text-sm text-gray-500">{{ project['Current Phase'] }}</td>
+                <td class="px-4 py-4 text-sm text-gray-500">{{ project['Project Type'] }}</td>
+                <td class="px-4 py-4 text-sm text-gray-500">{{ project.District }}</td>
+                <td class="px-4 py-4 text-sm text-gray-900">${{ '{:,.0f}'.format(project['Total Budget']) }}</td>
+                <td class="px-4 py-4">
+                    <div class="flex items-center">
+                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ project['Percent Complete'] }}%"></div>
+                        </div>
+                        <span class="text-sm text-gray-600">{{ project['Percent Complete'] | int }}%</span>
+                    </div>
+                </td>
+                <td class="px-4 py-4">
+                    {% set health = project['Project Health Score'] | default(50) %}
+                    <span class="text-sm font-medium
+                        {% if health >= 60 %}text-green-600
+                        {% elif health >= 40 %}text-amber-600
+                        {% else %}text-red-600{% endif %}">
+                        {{ health | int }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4 text-sm text-gray-500">
+    Showing <span id="visible-count">{{ projects | length }}</span> of {{ projects | length }} projects
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Filter functionality
+    const filters = ['status', 'phase', 'district', 'type'];
+
+    filters.forEach(filter => {
+        document.getElementById(`filter-${filter}`).addEventListener('change', applyFilters);
+    });
+
+    function applyFilters() {
+        const statusFilter = document.getElementById('filter-status').value;
+        const phaseFilter = document.getElementById('filter-phase').value;
+        const districtFilter = document.getElementById('filter-district').value;
+        const typeFilter = document.getElementById('filter-type').value;
+
+        const rows = document.querySelectorAll('.project-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const status = row.dataset.status;
+            const phase = row.dataset.phase;
+            const district = row.dataset.district;
+            const type = row.dataset.type;
+
+            const statusMatch = !statusFilter || status === statusFilter;
+            const phaseMatch = !phaseFilter || phase === phaseFilter;
+            const districtMatch = !districtFilter || district === districtFilter;
+            const typeMatch = !typeFilter || type === typeFilter;
+
+            if (statusMatch && phaseMatch && districtMatch && typeMatch) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('visible-count').textContent = visibleCount;
+    }
+
+    function exportData() {
+        window.location.href = '{{ url_for("export_data") }}';
+    }
+</script>
+{% endblock %}

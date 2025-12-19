@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Back Button -->
+<a href="{{ url_for('portfolio') }}" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+    </svg>
+    Back to Portfolio
+</a>
+
+<!-- Project Header -->
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">{{ project['Project Name'] }}</h1>
+            <p class="text-gray-500 mt-1">{{ project['Project ID'] }} | {{ project.Corridor }}, {{ project.Area }}</p>
+        </div>
+        <div class="text-right">
+            {% set status = project.Status | lower | replace('-', '') | replace(' ', '') %}
+            <span class="status-badge text-lg
+                {% if status == 'advance' %}status-advance
+                {% elif status == 'monitor' %}status-monitor
+                {% elif status == 'rescope' %}status-rescope
+                {% elif status == 'defer' %}status-defer
+                {% elif status == 'cancel' %}status-cancel
+                {% endif %}">
+                {{ project.Status }}
+            </span>
+            <p class="text-sm text-gray-500 mt-2">Commissioner District {{ project.District }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Score Cards -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <p class="text-sm text-gray-500">Health Score</p>
+        {% set health = project['Project Health Score'] | default(50) %}
+        <p class="text-3xl font-bold {% if health >= 60 %}text-green-600{% elif health >= 40 %}text-amber-600{% else %}text-red-600{% endif %}">
+            {{ health | int }}
+        </p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <p class="text-sm text-gray-500">Strategic Value</p>
+        <p class="text-3xl font-bold text-blue-600">{{ project['Strategic Value Score'] | default(50) | int }}</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <p class="text-sm text-gray-500">Deliverability</p>
+        <p class="text-3xl font-bold text-purple-600">{{ project['Deliverability Score'] | default(50) | int }}</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <p class="text-sm text-gray-500">Schedule Health</p>
+        {% set sched = project['Schedule Health'] | default(50) %}
+        <p class="text-3xl font-bold {% if sched >= 60 %}text-green-600{% elif sched >= 40 %}text-amber-600{% else %}text-red-600{% endif %}">
+            {{ sched | int }}
+        </p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <p class="text-sm text-gray-500">Budget Health</p>
+        {% set budg = project['Budget Health'] | default(50) %}
+        <p class="text-3xl font-bold {% if budg >= 60 %}text-green-600{% elif budg >= 40 %}text-amber-600{% else %}text-red-600{% endif %}">
+            {{ budg | int }}
+        </p>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Project Details -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Details</h3>
+        <dl class="space-y-3">
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Type</dt>
+                <dd class="text-gray-900 font-medium">{{ project['Project Type'] }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Current Phase</dt>
+                <dd class="text-gray-900 font-medium">{{ project['Current Phase'] }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Project Manager</dt>
+                <dd class="text-gray-900 font-medium">{{ project['Project Manager'] }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Department</dt>
+                <dd class="text-gray-900 font-medium">{{ project.Department }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">External Partners</dt>
+                <dd class="text-gray-900 font-medium">{{ project['External Partners'] or 'None' }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">TIP ID</dt>
+                <dd class="text-gray-900 font-medium">{{ project['TIP ID'] or 'N/A' }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">LRTP Reference</dt>
+                <dd class="text-gray-900 font-medium">{{ project['LRTP Reference'] or 'N/A' }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <!-- Schedule Information -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Schedule</h3>
+        <dl class="space-y-3">
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Planned Start</dt>
+                <dd class="text-gray-900 font-medium">{{ project['Planned Start'] or 'TBD' }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Planned End</dt>
+                <dd class="text-gray-900 font-medium">{{ project['Planned End'] or 'TBD' }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Actual Start</dt>
+                <dd class="text-gray-900 font-medium">{{ project['Actual Start'] or 'Not Started' }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Actual End</dt>
+                <dd class="text-gray-900 font-medium">{{ project['Actual End'] or 'In Progress' }}</dd>
+            </div>
+        </dl>
+        <div class="mt-6">
+            <p class="text-sm text-gray-500 mb-2">Progress</p>
+            <div class="w-full bg-gray-200 rounded-full h-4">
+                <div class="bg-blue-600 h-4 rounded-full" style="width: {{ project['Percent Complete'] }}%"></div>
+            </div>
+            <p class="text-right text-sm text-gray-600 mt-1">{{ project['Percent Complete'] | int }}% Complete</p>
+        </div>
+    </div>
+
+    <!-- Budget Information -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Budget</h3>
+        <dl class="space-y-3">
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Total Budget</dt>
+                <dd class="text-gray-900 font-medium">${{ '{:,.0f}'.format(project['Total Budget']) }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Spent to Date</dt>
+                <dd class="text-gray-900 font-medium">${{ '{:,.0f}'.format(project['Spent to Date']) }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Forecast at Completion</dt>
+                {% set forecast = project['Forecast at Completion'] or project['Total Budget'] %}
+                {% set variance = project['Total Budget'] - forecast %}
+                <dd class="font-medium {% if variance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                    ${{ '{:,.0f}'.format(forecast) }}
+                </dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Variance</dt>
+                <dd class="font-medium {% if variance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                    {% if variance >= 0 %}+{% endif %}${{ '{:,.0f}'.format(variance) }}
+                </dd>
+            </div>
+        </dl>
+        <div class="mt-6">
+            <p class="text-sm text-gray-500 mb-2">Budget Utilization</p>
+            {% set utilization = (project['Spent to Date'] / project['Total Budget'] * 100) if project['Total Budget'] > 0 else 0 %}
+            <div class="w-full bg-gray-200 rounded-full h-4">
+                <div class="{% if utilization > 100 %}bg-red-600{% else %}bg-green-600{% endif %} h-4 rounded-full" style="width: {{ [utilization, 100] | min }}%"></div>
+            </div>
+            <p class="text-right text-sm text-gray-600 mt-1">{{ utilization | int }}% of Budget</p>
+        </div>
+    </div>
+
+    <!-- Risk & Public Sentiment -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Risk & Stakeholders</h3>
+        <dl class="space-y-3">
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Overall Risk Rating</dt>
+                {% set risk = project['Overall Risk Rating'] | default(5) %}
+                <dd class="font-medium {% if risk <= 3 %}text-green-600{% elif risk <= 6 %}text-amber-600{% else %}text-red-600{% endif %}">
+                    {{ risk }}/10 {% if risk <= 3 %}(Low){% elif risk <= 6 %}(Medium){% else %}(High){% endif %}
+                </dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-500">Public Sentiment</dt>
+                {% set sentiment = project['Public Sentiment'] | default('Neutral') %}
+                <dd class="font-medium {% if sentiment == 'Positive' %}text-green-600{% elif sentiment == 'Negative' %}text-red-600{% elif sentiment == 'Mixed' %}text-amber-600{% else %}text-gray-600{% endif %}">
+                    {{ sentiment }}
+                </dd>
+            </div>
+        </dl>
+    </div>
+</div>
+
+<!-- Scoring Dimensions -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Strategic Value Components -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Strategic Value Components</h3>
+        <div class="space-y-4">
+            {% for dim, label in [
+                ('Strategic Alignment', 'Strategic Alignment'),
+                ('Safety Benefit', 'Safety Benefit'),
+                ('Congestion Relief', 'Congestion Relief'),
+                ('Economic Development', 'Economic Development'),
+                ('Resilience Benefit', 'Resilience Benefit')
+            ] %}
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600">{{ label }}</span>
+                    <span class="font-medium">{{ project[dim] | default(5) }}/10</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ project[dim] | default(5) * 10 }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Deliverability Components -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Deliverability Components</h3>
+        <div class="space-y-4">
+            {% for dim, label in [
+                ('ROW Readiness', 'Right-of-Way Readiness'),
+                ('Utility Readiness', 'Utility Readiness'),
+                ('Permit Readiness', 'Permit Readiness'),
+                ('Design Completeness', 'Design Completeness'),
+                ('Funding Certainty', 'Funding Certainty')
+            ] %}
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600">{{ label }}</span>
+                    <span class="font-medium">{{ project[dim] | default(5) }}/10</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-purple-600 h-2 rounded-full" style="width: {{ project[dim] | default(5) * 10 }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Status Rationale -->
+{% if project['Status Rationale'] %}
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Status Rationale</h3>
+    <p class="text-gray-700">{{ project['Status Rationale'] }}</p>
+</div>
+{% endif %}
+
+<!-- Notes -->
+{% if project.Notes %}
+<div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Notes</h3>
+    <p class="text-gray-700">{{ project.Notes }}</p>
+</div>
+{% endif %}
+
+{% endblock %}
